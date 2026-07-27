@@ -105,10 +105,15 @@ def calcular_base(time_id, sigla):
 def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
+# ✅ CÁLCULO NOVO E MAIS REALISTA
 def prob_estatistica(valor, media):
-    if valor<=0:return 50
-    dif = (valor/media)-1
-    return max(10,min(95,round(50+(dif*35),0)))
+    if valor <= 0 or media <= 0:
+        return 50
+    # Diferença percentual suave
+    dif = (valor / media) - 1
+    # Variação pequena: em vez de ir de 10 a 95, fica entre 30 e 80
+    prob = 50 + (dif * 25)
+    return max(30, min(80, round(prob, 0)))
 
 # ==============================
 # INTERFACE PRINCIPAL
@@ -172,7 +177,7 @@ try:
                     st.write(f"Faltas: {df['fal']}")
 
             # ==============================
-            # ✅ ESTIMATIVA COM % DE PROBABILIDADE
+            # ESTIMATIVA COM % AJUSTADA
             # ==============================
             st.markdown("---")
             st.subheader("📊 ESTIMATIVA GERAL DO JOGO + CHANCE DE ACONTECER")
