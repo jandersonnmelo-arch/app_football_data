@@ -2,61 +2,60 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, timedelta
-import threading
 
 # ==============================
-# 🔒 CONFIGURAÇÕES OCULTAS
+# CONFIGURAÇÃO + CACHE
 # ==============================
 st.set_page_config(page_title="Análise Completa + Probabilidades", page_icon="⚽", layout="wide")
 st.title("⚽ Análise + Desempenho + Estimativa Total do Jogo")
 
 API_KEY = st.secrets["CHAVE_FD"]
-BOT_TOKEN = st.secrets["BOT_TOKEN"]
-CHAT_ID = st.secrets["CHAT_ID"]
-HORARIO_ALERTA = "07:00"
-try:
-    DIAS_BUSCA = int(st.secrets.get("DIAS_BUSCA", 7))
-except:
-    DIAS_BUSCA = 7
-
 HEADERS = {"X-Auth-Token": API_KEY}
 
-# ==============================
-# 📤 ENVIO TELEGRAM (ADICIONADO, NÃO ALTERA O RESTO)
-# ==============================
-def enviar_telegram(mensagem):
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        requests.post(url, data={"chat_id": CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}, timeout=10)
-        print("✅ Enviado ao Telegram")
-    except Exception as e:
-        print(f"❌ Erro envio: {str(e)}")
+# Opção de dias direto na tela
+DIAS_BUSCA = st.number_input("Buscar quantos dias à frente?", min_value=1, max_value=14, value=7)
 
 # ==============================
-# 📊 MÉDIAS E LIGAS (ORIGINAL + CONFIRMADO)
+# MÉDIAS PARA TODAS AS LIGAS
 # ==============================
 MEDIAS_LIGA = {
+    # BRASIL
     "BSA": {"esc":9.0,"laterais":8.5,"tiro_meta":4.7,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa":3.8},
     "BRB": {"esc":8.5,"laterais":9.0,"tiro_meta":5.0,"fin":9.0,"chute_gol":3.5,"fal":27.5,"defesa":4.2},
-    "CLI": {"esc":9.5,"laterais":7.2,"tiro_meta":4.3,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa":3.4},
-    "PL": {"esc":10.2,"laterais":6.8,"tiro_meta":4.0,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa":3.1},
-    "PD": {"esc":9.0,"laterais":7.8,"tiro_meta":4.5,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa":3.6},
+    # PRINCIPAIS DO MUNDO
+    "WC": {"esc":8.8,"laterais":7.0,"tiro_meta":4.2,"fin":10.0,"chute_gol":4.5,"fal":24.0,"defesa":3.5},
+    "CL": {"esc":9.5,"laterais":7.2,"tiro_meta":4.3,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa":3.4},
     "BL1": {"esc":9.8,"laterais":6.5,"tiro_meta":3.7,"fin":12.5,"chute_gol":5.8,"fal":21.0,"defesa":2.8},
-    "SA": {"esc":8.7,"laterais":9.2,"tiro_meta":5.0,"fin":9.5,"chute_gol":3.8,"fal":25.5,"defesa":4.0}
-}
-
-LIGAS = {
-    "🇧🇷 Brasileirão Série A": "BSA",
-    "🇧🇷 Brasileirão Série B": "BRB", # ✅ CONFIRMADO
-    "🏆 Libertadores": "CLI",
-    "🏴 Premier League": "PL",
-    "🇪🇸 La Liga": "PD",
-    "🇩🇪 Bundesliga": "BL1",
-    "🇮🇹 Serie A": "SA"
+    "ED": {"esc":9.2,"laterais":7.5,"tiro_meta":4.5,"fin":11.0,"chute_gol":5.0,"fal":22.5,"defesa":3.2},
+    "PD": {"esc":9.0,"laterais":7.8,"tiro_meta":4.5,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa":3.6},
+    "FL1": {"esc":9.5,"laterais":7.0,"tiro_meta":4.2,"fin":10.8,"chute_gol":4.8,"fal":23.0,"defesa":3.3},
+    "ELC": {"esc":8.5,"laterais":8.0,"tiro_meta":4.8,"fin":9.2,"chute_gol":4.0,"fal":25.5,"defesa":3.9},
+    "PPL": {"esc":8.8,"laterais":7.8,"tiro_meta":4.6,"fin":10.2,"chute_gol":4.3,"fal":24.5,"defesa":3.7},
+    "EC": {"esc":9.0,"laterais":7.5,"tiro_meta":4.4,"fin":10.5,"chute_gol":4.6,"fal":23.0,"defesa":3.4},
+    "SA": {"esc":8.7,"laterais":9.2,"tiro_meta":5.0,"fin":9.5,"chute_gol":3.8,"fal":25.5,"defesa":4.0},
+    "PL": {"esc":10.2,"laterais":6.8,"tiro_meta":4.0,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa":3.1}
 }
 
 # ==============================
-# 🔍 FUNÇÕES ORIGINAIS (NÃO MEXI EM NADA)
+# TODOS OS CAMPEONATOS DA IMAGEM
+# ==============================
+LIGAS = {
+    "🌍 FIFA World Cup": "WC",
+    "🏆 UEFA Champions League": "CL",
+    "🇩🇪 Bundesliga": "BL1",
+    "🇳🇱 Eredivisie": "ED",
+    "🇧🇷 Campeonato Brasileiro Série A": "BSA",
+    "🇪🇸 Primera División": "PD",
+    "🇫🇷 Ligue 1": "FL1",
+    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship": "ELC",
+    "🇵🇹 Primeira Liga": "PPL",
+    "🌍 European Championship": "EC",
+    "🇮🇹 Serie A": "SA",
+    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL"
+}
+
+# ==============================
+# FUNÇÕES COM CACHE (ORIGINAIS)
 # ==============================
 @st.cache_data(ttl=3600)
 def buscar_jogos(sigla, dias=DIAS_BUSCA):
@@ -136,60 +135,7 @@ def prob_estatistica(valor, media):
     return max(30, min(80, round(prob, 0)))
 
 # ==============================
-# 📤 GERA RELATÓRIO COMPLETO PARA TELEGRAM
-# ==============================
-def gerar_relatorio_telegram(sigla):
-    jogos = buscar_jogos(sigla)
-    if not jogos:
-        return f"🔔 Nenhum jogo encontrado para hoje/próximos {DIAS_BUSCA} dias."
-    
-    msg = f"🔔 RELATÓRIO AUTOMÁTICO | {datetime.now().strftime('%d/%m %H:%M')}\nCampeonato: {list(LIGAS.keys())[list(LIGAS.values()).index(sigla)]}\n\n"
-    
-    for jogo in jogos:
-        casa = jogo.get("homeTeam",{})
-        fora = jogo.get("awayTeam",{})
-        dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
-        
-        dc = calcular_base(casa.get("id"), sigla)
-        df = calcular_base(fora.get("id"), sigla)
-        conf = max(dc['pV'], df['pD'])
-        
-        if conf >=70:
-            msg += f"""🚨 ALTA CONFIANÇA ≥70% ⚽
-{casa.get('name')} 🆚 {fora.get('name')}
-📅 {dt.strftime('%d/%m às %H:%M')}
-
-✅ {casa.get('name')}: {dc['pV']}%
-✅ {fora.get('name')}: {df['pD']}%
-⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%
-
-📊 MÉDIAS:
-⚽ Gols: {round((dc['mg']+df['mg'])/2,2)} | Escanteios: {round((dc['esc']+df['esc'])/2,1)}
-🎯 Chutes: {round((dc['chute_gol']+df['chute_gol'])/2,1)} | Faltas: {round((dc['fal']+df['fal'])/2,1)}
-🔢 Mais 2.5: {round((dc['ma25']+df['ma25'])/2,0)}% | Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%
----
-"""
-    return msg if len(msg)>50 else "🔔 Nenhum jogo com confiança ≥70% encontrado."
-
-# ==============================
-# 🤖 LOOP AUTOMÁTICO IGUAL VOCÊ QUERIA
-# ==============================
-def servico_automatico():
-    print("✅ SISTEMA INICIADO — original football-data + envio automático")
-    while True:
-        if datetime.now().strftime("%H:%M") == HORARIO_ALERTA:
-            print(f"⏰ Enviando alerta das {HORARIO_ALERTA}...")
-            msg_final = f"🔔 VERIFICAÇÃO DIÁRIA DAS {HORARIO_ALERTA}\n\n"
-            for sigla in LIGAS.values():
-                msg_final += gerar_relatorio_telegram(sigla) + "\n"
-            enviar_telegram(msg_final)
-            time.sleep(120)
-        time.sleep(30)
-
-threading.Thread(target=servico_automatico, daemon=True).start()
-
-# ==============================
-# 🖥️ INTERFACE ORIGINAL (TUDO EXATAMENTE COMO ESTAVA)
+# INTERFACE PRINCIPAL
 # ==============================
 try:
     escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
@@ -290,4 +236,4 @@ try:
 
 except Exception as e:
     st.error(f"Aguarde ou recarregue: {str(e)}")
-            
+    
