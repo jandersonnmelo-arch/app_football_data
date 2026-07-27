@@ -10,7 +10,7 @@ import threading
 st.set_page_config(page_title="⚽ Análise Completa + Telegram", page_icon="⚽", layout="wide")
 st.title("⚽ Análise de Jogos + Envio Automático Telegram")
 
-# 🔒 CHAVES OCULTAS (adicione essas 3 no Secrets do Streamlit)
+# 🔒 CHAVES OCULTAS
 API_KEY = st.secrets["CHAVE_FD"]
 BOT_TOKEN = st.secrets["BOT_TOKEN"]
 CHAT_ID = st.secrets["CHAT_ID"]
@@ -20,7 +20,8 @@ try:
 except:
     DIAS_BUSCA = 7
 
-HORARIO_ALERTA = "07:00"
+# ⏰ AJUSTE AQUI O HORÁRIO DO ALERTA (formato HH:MM)
+HORARIO_ALERTA = "08:30"  # ← Mude para o horário que quiser!
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
@@ -153,33 +154,65 @@ def prob_estatistica(valor, media):
     return max(30, min(80, round(50 + (dif * 25), 0)))
 
 # ==============================
-# 🤖 ENVIO AUTOMÁTICO (PLANO FUNDO)
+# 📝 FUNÇÃO AUXILIAR: MENSAGEM COMPLETA DO JOGO
+# ==============================
+def gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf):
+    return f"""
+⚽ *{casa['name']} 🆚 {fora['name']}*
+📅 {dt.strftime('%d/%m às %H:%M')}
+
+📊 *Probabilidades:*
+✅ {casa['name']}: {dc['pV']}%
+⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%
+✅ {fora['name']}: {df['pD']}%
+
+🔀 *Dupla Chance:*
+1X: {round((dup['1X']+dupla_chance(df['pV'],df['pE'],df['pD'])['1X'])/2,1)}%
+X2: {round((dup['X2']+dupla_chance(df['pV'],df['pE'],df['pD'])['X2'])/2,1)}%
+12: {round((dup['12']+dupla_chance(df['pV'],df['pE'],df['pD'])['12'])/2,1)}%
+
+📈 *Métricas do Jogo:*
+⚽ Média Gols: {media_gols}
+🔢 Mais 2.5 Gols: {prob_mais25}%
+🔄 Ambos Marcam: {prob_ambos}%
+📐 Escanteios: {total_esc}
+👟 Faltas: {total_fal}
+
+📋 *Últimos 5 Jogos:*
+🟢 {casa['name']}: {' '.join(dc['resumo']) if dc['resumo'] else 'Sem dados'}
+🔴 {fora['name']}: {' '.join(df['resumo']) if df['resumo'] else 'Sem dados'}
+
+{'🚨 *ALTA CONFIANÇA ACIMA DE 70%!*' if conf >=70 else ''}
+---
+"""
+
+# ==============================
+# 🤖 ENVIO AUTOMÁTICO COM RESUMO COMPLETO
 # ==============================
 def servico_automatico():
     while True:
         if datetime.now().strftime("%H:%M") == HORARIO_ALERTA:
             jogos = buscar_jogos("TODAS", DIAS_BUSCA)
-            msg = f"🔔 RELATÓRIO AUTOMÁTICO | {datetime.now().strftime('%d/%m %H:%M')}\nJogos com Alta Confiança ≥70%\n\n"
-            tem_alerta = False
+            msg = f"🔔 *RELATÓRIO AUTOMÁTICO DIÁRIO*\n🕒 Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n📅 Período: {DIAS_BUSCA} dias à frente\n\n"
+            
             for jogo in jogos:
                 sigla_j = jogo["competition"]["code"]
-                dc = calcular_base(jogo["homeTeam"]["id"], sigla_j)
-                df = calcular_base(jogo["awayTeam"]["id"], sigla_j)
-                conf = max(dc["pV"], df["pD"])
-                if conf >=70:
-                    tem_alerta = True
-                    dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
-                    msg += f"""🚨 ALTA CONFIANÇA ⚽
-{jogo['homeTeam']['name']} 🆚 {jogo['awayTeam']['name']}
-📅 {dt.strftime('%d/%m às %H:%M')}
+                casa = jogo["homeTeam"]
+                fora = jogo["awayTeam"]
+                dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
+                dc = calcular_base(casa["id"], sigla_j)
+                df = calcular_base(fora["id"], sigla_j)
+                dup = dupla_chance(dc["pV"],dc["pE"],dc["pD"])
+                media_gols = round((dc['mg']+df['mg'])/2,2)
+                prob_mais25 = round((dc['ma25']+df['ma25'])/2,0)
+                prob_ambos = round((dc['amb']+df['amb'])/2,0)
+                total_esc = round((dc['esc']+df['esc'])/2,1)
+                total_fal = round((dc['fal']+df['fal'])/2,1)
+                conf = max(dc['pV'], df['pD'])
 
-✅ Casa: {dc['pV']}%
-✅ Fora: {df['pD']}%
-⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%
-⚽ Média Gols: {round((dc['mg']+df['mg'])/2,2)}
----
-"""
-            if tem_alerta: enviar_telegram(msg)
+                msg += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf)
+
+            enviar_telegram(msg)
             time.sleep(120)
         time.sleep(30)
 
@@ -200,7 +233,7 @@ if st.button("🔍 Atualizar e Enviar Agora"):
         st.info("ℹ️ Nenhum jogo encontrado ou aguarde atualização.")
     else:
         st.success(f"✅ {len(jogos)} jogos encontrados!")
-        msg_relatorio = f"🔔 RELATÓRIO SOLICITADO | {datetime.now().strftime('%d/%m %H:%M')}\nPeríodo: {dias_usuario} dias\n\n"
+        msg_relatorio = f"🔔 *RELATÓRIO SOLICITADO*\n🕒 Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n📅 Período: {dias_usuario} dias à frente\n\n"
         
         for jogo in jogos:
             sigla_j = jogo["competition"]["code"]
@@ -210,8 +243,17 @@ if st.button("🔍 Atualizar e Enviar Agora"):
             dc = calcular_base(casa["id"], sigla_j)
             df = calcular_base(fora["id"], sigla_j)
             dup = dupla_chance(dc["pV"],dc["pE"],dc["pD"])
-            medias_base = MEDIAS_LIGA[sigla_j]
+            media_gols = round((dc['mg']+df['mg'])/2,2)
+            prob_mais25 = round((dc['ma25']+df['ma25'])/2,0)
+            prob_ambos = round((dc['amb']+df['amb'])/2,0)
+            total_esc = round((dc['esc']+df['esc'])/2,1)
+            total_fal = round((dc['fal']+df['fal'])/2,1)
+            conf = max(dc['pV'], df['pD'])
 
+            # Adiciona mensagem completa no relatório
+            msg_relatorio += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf)
+
+            # Exibição na tela continua igual
             st.markdown("---")
             st.subheader(f"⚽ {casa['name']} 🆚 {fora['name']} | {dt.strftime('%d/%m %H:%M')}")
 
@@ -242,27 +284,12 @@ if st.button("🔍 Atualizar e Enviar Agora"):
 
             st.markdown("---")
             st.subheader("📊 ESTIMATIVA GERAL DO JOGO")
-            total_esc = round((dc['esc'] + df['esc'])/2,1)
-            total_lat = round((dc['laterais'] + df['laterais'])/2,1)
-            total_tm = round((dc['tiro_meta'] + df['tiro_meta'])/2,1)
-            total_fin = round((dc['fin'] + df['fin'])/2,1)
-            total_cg = round((dc['chute_gol'] + df['chute_gol'])/2,1)
-            total_fal = round((dc['fal'] + df['fal'])/2,1)
-            media_gols = round((dc['mg'] + df['mg'])/2,2)
-            prob_mais25 = round((dc['ma25'] + df['ma25'])/2,0)
-            prob_ambos = round((dc['amb'] + df['amb'])/2,0)
-
             st.write(f"⚽ Média Gols: {media_gols} | Mais 2.5: {prob_mais25}% | Ambos Marcam: {prob_ambos}%")
-            st.write(f"📐 Escanteios: {total_esc} | Laterais: {total_lat} | Tiros Meta: {total_tm}")
-            st.write(f"👟 Finalizações: {total_fin} | Chutes Gol: {total_cg} | Faltas: {total_fal}")
+            st.write(f"📐 Escanteios: {total_esc} | Faltas: {total_fal}")
 
-            if max(dc['pV'], df['pD']) >=70:
+            if conf >=70:
                 st.error("🚨 ALTA CONFIANÇA ACIMA DE 70%!")
-                msg_relatorio += f"""🚨 {casa['name']} x {fora['name']} | {dt.strftime('%d/%m %H:%M')}
-Casa: {dc['pV']}% | Fora: {df['pD']}% | Gols: {media_gols}
----
-"""
         
         enviar_telegram(msg_relatorio)
-        st.success("✅ Análise pronta e enviada ao Telegram!")
+        st.success("✅ Análise completa enviada ao Telegram!")
         
