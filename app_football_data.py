@@ -36,7 +36,7 @@ MEDIAS = {
 }
 
 # ==============================
-# FUNÇÕES CORRIGIDAS
+# FUNÇÕES
 # ==============================
 def buscar_jogos(sigla):
     hoje = datetime.utcnow().date()
@@ -118,7 +118,7 @@ def estimativas(dc,df,sigla):
     }
 
 # ==============================
-# INTERFACE
+# INTERFACE PRINCIPAL
 # ==============================
 try:
     escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
@@ -169,9 +169,10 @@ try:
                 st.write(f"Escanteios: {est['esc']} | Cartões: {est['car']}")
                 st.write(f"Faltas: {est['fal']} | Finalizações: {est['fin']}")
                 st.divider()
-                st.info("ℹ️ Plano grátis não tem dado individual — valores estimados:")
-                st.write(f"→ Sofre Falta: {est['fal_jogador_est']} por jogo")
-                st.write(f"→ Finaliza: {est['fin_jogador_est']} por jogo")
+                st.info("ℹ️ Plano grátis NÃO TEM lista de nomes de jogadores — valores estimados por posição:")
+                st.write(f"🔹 **Atacante**: Finaliza ~ {round(est['fin_jogador_est']*1.5,1)} | Sofre falta ~ {round(est['fal_jogador_est']*1.3,1)}")
+                st.write(f"🔹 **Meio-campo**: Finaliza ~ {est['fin_jogador_est']} | Sofre falta ~ {est['fal_jogador_est']}")
+                st.write(f"🔹 **Defensor**: Finaliza ~ {round(est['fin_jogador_est']*0.5,1)} | Sofre falta ~ {round(est['fal_jogador_est']*0.8,1)}")
 
                 if max(dc['pV'], df['pD']) >=75:
                     st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
