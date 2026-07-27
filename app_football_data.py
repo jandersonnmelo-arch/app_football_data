@@ -4,56 +4,14 @@ import time
 from datetime import datetime, timedelta
 
 # ==============================
-# CONFIGURAÇÃO + CACHE PARA NÃO BLOQUEAR
+# CONFIGURAÇÃO + CACHE
 # ==============================
-st.set_page_config(page_title="Análise Estável", page_icon="⚽", layout="wide")
-st.title("⚽ Análise Estável + Desempenho do Time")
+st.set_page_config(page_title="Análise Completa do Jogo", page_icon="⚽", layout="wide")
+st.title("⚽ Análise + Desempenho + Estimativa Total do Jogo")
 
 API_KEY = st.secrets["CHAVE_FD"]
 HEADERS = {"X-Auth-Token": API_KEY}
-TEMPORADA = 2025
 
-# Cache: busca só 1 vez e reutiliza os dados
-@st.cache_data(ttl=3600) # Mantém por 1 hora
-def buscar_jogos(sigla):
-    time.sleep(0.5) # Pequena pausa para não sobrecarregar
-    hoje = datetime.utcnow().date()
-    try:
-        r = requests.get(
-            f"https://api.football-data.org/v4/competitions/{sigla}/matches",
-            headers=HEADERS,
-            params={"status":"SCHEDULED"},
-            timeout=15
-        )
-        if r.status_code == 429:
-            st.warning("⏳ Limite de requisições atingido — aguarde alguns minutos...")
-            return []
-        r.raise_for_status()
-        return [
-            j for j in r.json().get("matches",[])
-            if datetime.fromisoformat(j["utcDate"].replace("Z","")).date() <= hoje + timedelta(days=7)
-        ]
-    except:
-        return []
-
-@st.cache_data(ttl=3600)
-def ultimos_5_jogos(time_id, sigla):
-    time.sleep(0.3)
-    try:
-        r = requests.get(
-            f"https://api.football-data.org/v4/teams/{time_id}/matches",
-            headers=HEADERS,
-            params={"competitions":sigla,"status":"FINISHED","limit":5},
-            timeout=15
-        )
-        if r.status_code == 429: return []
-        return r.json().get("matches", [])
-    except:
-        return []
-
-# ==============================
-# DEMAIS FUNÇÕES E DADOS
-# ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"laterais":8.5,"tiro_meta":4.7,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa":3.8},
     "BRB": {"esc":8.5,"laterais":9.0,"tiro_meta":5.0,"fin":9.0,"chute_gol":3.5,"fal":27.5,"defesa":4.2},
@@ -74,11 +32,49 @@ LIGAS = {
     "🇮🇹 Serie A": "SA"
 }
 
+# ==============================
+# FUNÇÕES COM CACHE
+# ==============================
+@st.cache_data(ttl=3600)
+def buscar_jogos(sigla):
+    time.sleep(0.5)
+    hoje = datetime.utcnow().date()
+    try:
+        r = requests.get(
+            f"https://api.football-data.org/v4/competitions/{sigla}/matches",
+            headers=HEADERS,
+            params={"status":"SCHEDULED"},
+            timeout=15
+        )
+        if r.status_code == 429:
+            st.warning("⏳ Limite temporário — aguarde alguns minutos...")
+            return []
+        return [j for j in r.json().get("matches",[]) 
+                if datetime.fromisoformat(j["utcDate"].replace("Z","")).date() <= hoje + timedelta(days=7)]
+    except:
+        return []
+
+@st.cache_data(ttl=3600)
+def ultimos_5_jogos(time_id, sigla):
+    time.sleep(0.3)
+    try:
+        r = requests.get(
+            f"https://api.football-data.org/v4/teams/{time_id}/matches",
+            headers=HEADERS,
+            params={"competitions":sigla,"status":"FINISHED","limit":5},
+            timeout=15
+        )
+        return r.json().get("matches", [])
+    except:
+        return []
+
 def calcular_base(time_id, sigla):
     jogos = ultimos_5_jogos(time_id, sigla)
     medias = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     if not jogos:
-        return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"amb":50,"esc":medias["esc"],"laterais":medias["laterais"],"tiro_meta":medias["tiro_meta"],"fin":medias["fin"],"chute_gol":medias["chute_gol"],"fal":medias["fal"],"defesa":medias["defesa"],"resumo":[]}
+        return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"amb":50,
+                "esc":medias["esc"],"laterais":medias["laterais"],"tiro_meta":medias["tiro_meta"],
+                "fin":medias["fin"],"chute_gol":medias["chute_gol"],"fal":medias["fal"],"defesa":medias["defesa"],"resumo":[]}
     v=e=d=gf=gs=amb=0; resumo=[]
     for j in jogos:
         cid = j.get("homeTeam",{}).get("id")
@@ -109,22 +105,16 @@ def calcular_base(time_id, sigla):
 def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
-def prob_estatistica(valor, media):
-    if valor<=0:return 50
-    dif = (valor/media)-1
-    return max(10,min(95,round(50+(dif*35),0)))
-
 # ==============================
-# INTERFACE
+# INTERFACE PRINCIPAL
 # ==============================
 try:
     escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
     sigla = LIGAS[escolha]
-    medias_base = MEDIAS_LIGA[sigla]
 
     jogos = buscar_jogos(sigla)
     if not jogos:
-        st.info("ℹ️ Aguardando dados ou limite temporário — aguarde alguns minutos e recarregue.")
+        st.info("ℹ️ Aguardando dados ou limite temporário — aguarde alguns minutos.")
     else:
         st.success(f"✅ {len(jogos)} jogos encontrados!")
         for jogo in jogos:
@@ -141,7 +131,7 @@ try:
 
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader("📈 Probabilidades")
+                st.subheader("📈 Probabilidades Gerais")
                 st.write(f"✅ {casa.get('name')}: {dc['pV']}%")
                 st.write(f"⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%")
                 st.write(f"✅ {fora.get('name')}: {df['pD']}%")
@@ -156,24 +146,44 @@ try:
                 st.write(f"🔴 {fora.get('name')}: {' '.join(df['resumo']) if df['resumo'] else 'Sem dados'}")
 
             with col2:
-                st.subheader("📐 Estimativa por Desempenho")
+                st.subheader("📐 Estatísticas por Equipe")
                 c1,c2 = st.columns(2)
                 with c1:
                     st.markdown(f"🏠 {casa.get('name')}")
-                    st.write(f"Escanteios: {dc['esc']} ({prob_estatistica(dc['esc'],medias_base['esc'])}%)")
-                    st.write(f"Laterais: {dc['laterais']} ({prob_estatistica(dc['laterais'],medias_base['laterais'])}%)")
-                    st.write(f"Finalizações: {dc['fin']} ({prob_estatistica(dc['fin'],medias_base['fin'])}%)")
-                    st.write(f"Chute a Gol: {dc['chute_gol']} ({prob_estatistica(dc['chute_gol'],medias_base['chute_gol'])}%)")
-                    st.write(f"Faltas: {dc['fal']} ({prob_estatistica(dc['fal'],medias_base['fal'])}%)")
-                    st.write(f"Defesa Goleiro: {dc['defesa']} ({prob_estatistica(dc['defesa'],medias_base['defesa'])}%)")
+                    st.write(f"Escanteios: {dc['esc']}")
+                    st.write(f"Laterais: {dc['laterais']}")
+                    st.write(f"Tiro de Meta: {dc['tiro_meta']}")
+                    st.write(f"Finalizações: {dc['fin']}")
+                    st.write(f"Chute a Gol: {dc['chute_gol']}")
+                    st.write(f"Faltas: {dc['fal']}")
                 with c2:
                     st.markdown(f"🚩 {fora.get('name')}")
-                    st.write(f"Escanteios: {df['esc']} ({prob_estatistica(df['esc'],medias_base['esc'])}%)")
-                    st.write(f"Laterais: {df['laterais']} ({prob_estatistica(df['laterais'],medias_base['laterais'])}%)")
-                    st.write(f"Finalizações: {df['fin']} ({prob_estatistica(df['fin'],medias_base['fin'])}%)")
-                    st.write(f"Chute a Gol: {df['chute_gol']} ({prob_estatistica(df['chute_gol'],medias_base['chute_gol'])}%)")
-                    st.write(f"Faltas: {df['fal']} ({prob_estatistica(df['fal'],medias_base['fal'])}%)")
-                    st.write(f"Defesa Goleiro: {df['defesa']} ({prob_estatistica(df['defesa'],medias_base['defesa'])}%)")
+                    st.write(f"Escanteios: {df['esc']}")
+                    st.write(f"Laterais: {df['laterais']}")
+                    st.write(f"Tiro de Meta: {df['tiro_meta']}")
+                    st.write(f"Finalizações: {df['fin']}")
+                    st.write(f"Chute a Gol: {df['chute_gol']}")
+                    st.write(f"Faltas: {df['fal']}")
+
+            # ==============================
+            # ESTIMATIVA TOTAL DO JOGO COM TIRO DE META
+            # ==============================
+            st.markdown("---")
+            st.subheader("📊 ESTIMATIVA GERAL DO JOGO (Baseado nos últimos 5 de cada time)")
+            t1, t2, t3 = st.columns(3)
+            with t1:
+                st.metric("Total Escanteios", round((dc['esc'] + df['esc'])/2,1))
+                st.metric("Total Laterais", round((dc['laterais'] + df['laterais'])/2,1))
+                st.metric("Total Tiro de Meta", round((dc['tiro_meta'] + df['tiro_meta'])/2,1))
+            with t2:
+                st.metric("Total Finalizações", round((dc['fin'] + df['fin'])/2,1))
+                st.metric("Total Chutes a Gol", round((dc['chute_gol'] + df['chute_gol'])/2,1))
+                st.metric("Total Faltas", round((dc['fal'] + df['fal'])/2,1))
+            with t3:
+                st.metric("Média Gols do Jogo", round((dc['mg'] + df['mg'])/2,2))
+                st.metric("Mais de 2.5 Gols", f"{round((dc['ma25'] + df['ma25'])/2,0)}%")
+                st.metric("Ambos Marcam", f"{round((dc['amb'] + df['amb'])/2,0)}%")
+                st.metric("Total Defesas", round((dc['defesa'] + df['defesa'])/2,1))
 
             if max(dc['pV'], df['pD']) >=75:
                 st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
