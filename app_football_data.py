@@ -13,7 +13,7 @@ HEADERS = {"X-Auth-Token": API_KEY}
 TEMPORADA = 2025
 
 # ==============================
-# LIGAS E MÉDIAS
+# LIGAS E MÉDIAS POR COMPETIÇÃO
 # ==============================
 LIGAS = {
     "🇧🇷 Brasileirão Série A": "BSA",
@@ -26,13 +26,34 @@ LIGAS = {
 }
 
 MEDIAS = {
-    "BSA": {"esc":9.0,"car":4.3,"fal":26,"fin":10},
-    "BRB": {"esc":8.8,"car":4.5,"fal":27,"fin":9},
-    "CLI": {"esc":9.5,"car":3.7,"fal":23,"fin":11},
-    "PL": {"esc":10.5,"car":3.8,"fal":22,"fin":12},
-    "PD": {"esc":9.2,"car":4.2,"fal":24,"fin":11},
-    "BL1": {"esc":9.8,"car":3.5,"fal":21,"fin":13},
-    "SA": {"esc":8.7,"car":4.5,"fal":25,"fin":10}
+    "BSA": {
+        "casa": {"esc":9.5,"tiro_meta":4.2,"laterais":7.8,"fin":11.2,"chute_gol":4.8,"fal":28.5,"defesa_gol":3.1},
+        "fora": {"esc":8.5,"tiro_meta":5.1,"laterais":9.2,"fin":8.7,"chute_gol":3.2,"fal":24.8,"defesa_gol":4.5}
+    },
+    "BRB": {
+        "casa": {"esc":9.0,"tiro_meta":4.5,"laterais":8.2,"fin":10.5,"chute_gol":4.2,"fal":29.0,"defesa_gol":3.5},
+        "fora": {"esc":8.0,"tiro_meta":5.5,"laterais":9.8,"fin":8.0,"chute_gol":2.8,"fal":25.5,"defesa_gol":5.0}
+    },
+    "CLI": {
+        "casa": {"esc":10.2,"tiro_meta":3.8,"laterais":6.5,"fin":12.5,"chute_gol":5.5,"fal":25.0,"defesa_gol":2.8},
+        "fora": {"esc":8.8,"tiro_meta":4.8,"laterais":8.0,"fin":9.5,"chute_gol":3.8,"fal":22.0,"defesa_gol":4.0}
+    },
+    "PL": {
+        "casa": {"esc":11.0,"tiro_meta":3.5,"laterais":6.0,"fin":13.0,"chute_gol":6.0,"fal":24.0,"defesa_gol":2.5},
+        "fora": {"esc":9.5,"tiro_meta":4.5,"laterais":7.5,"fin":10.0,"chute_gol":4.2,"fal":20.0,"defesa_gol":3.8}
+    },
+    "PD": {
+        "casa": {"esc":9.8,"tiro_meta":4.0,"laterais":7.0,"fin":11.8,"chute_gol":5.2,"fal":26.0,"defesa_gol":2.9},
+        "fora": {"esc":8.7,"tiro_meta":5.0,"laterais":8.5,"fin":9.2,"chute_gol":3.5,"fal":22.5,"defesa_gol":4.2}
+    },
+    "BL1": {
+        "casa": {"esc":10.5,"tiro_meta":3.2,"laterais":5.8,"fin":14.0,"chute_gol":6.5,"fal":23.0,"defesa_gol":2.2},
+        "fora": {"esc":9.0,"tiro_meta":4.2,"laterais":7.2,"fin":10.5,"chute_gol":4.5,"fal":19.0,"defesa_gol":3.5}
+    },
+    "SA": {
+        "casa": {"esc":9.2,"tiro_meta":4.5,"laterais":8.5,"fin":10.8,"chute_gol":4.5,"fal":27.0,"defesa_gol":3.3},
+        "fora": {"esc":8.2,"tiro_meta":5.5,"laterais":10.0,"fin":8.3,"chute_gol":3.0,"fal":23.5,"defesa_gol":4.8}
+    }
 }
 
 # ==============================
@@ -106,23 +127,13 @@ def dupla_chance(pV,pE,pD):
         "12": round(pV + pD,1)
     }
 
-def estimativas(dc,df,sigla):
-    m=MEDIAS.get(sigla, MEDIAS["BSA"])
-    return {
-        "esc":round(m["esc"]*((dc["fA"]+df["fA"])/2),1),
-        "car":round(m["car"]*((dc["fD"]+df["fD"])/2),1),
-        "fal":round(m["fal"]*((dc["fD"]+df["fD"])/2),1),
-        "fin":round(m["fin"]*((dc["fA"]+df["fA"])/2),1),
-        "fal_jogador_est":round((m["fal"]/20),1),
-        "fin_jogador_est":round((m["fin"]/22),1)
-    }
-
 # ==============================
 # INTERFACE PRINCIPAL
 # ==============================
 try:
     escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
     sigla = LIGAS[escolha]
+    medias = MEDIAS.get(sigla, MEDIAS["BSA"])
 
     jogos = buscar_jogos(sigla)
     if not jogos:
@@ -141,11 +152,11 @@ try:
             df = calcular_principais(fora.get("id"), sigla)
             dc_dupla = dupla_chance(dc["pV"],dc["pE"],dc["pD"])
             df_dupla = dupla_chance(df["pV"],df["pE"],df["pD"])
-            est = estimativas(dc,df,sigla)
 
-            col1,col2,col3 = st.columns(3)
+            # 3 COLUNAS: PROBABILIDADES | ÚLTIMOS JOGOS | ESTATÍSTICAS
+            col1, col2 = st.columns(2)
             with col1:
-                st.subheader("📈 Resultado Final")
+                st.subheader("📈 Probabilidades")
                 st.write(f"✅ {casa.get('name')}: {dc['pV']}%")
                 st.write(f"⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%")
                 st.write(f"✅ {fora.get('name')}: {df['pD']}%")
@@ -154,8 +165,7 @@ try:
                 st.write(f"1X (Casa/Empate): {round((dc_dupla['1X']+df_dupla['1X'])/2,1)}%")
                 st.write(f"X2 (Empate/Fora): {round((dc_dupla['X2']+df_dupla['X2'])/2,1)}%")
                 st.write(f"12 (Casa/Fora): {round((dc_dupla['12']+df_dupla['12'])/2,1)}%")
-
-            with col2:
+                st.divider()
                 st.subheader("📊 Últimos 5 Jogos")
                 st.write(f"🟢 {casa.get('name')}: {' '.join(dc['resumo']) if dc['resumo'] else 'Sem dados'}")
                 st.write(f"🔴 {fora.get('name')}: {' '.join(df['resumo']) if df['resumo'] else 'Sem dados'}")
@@ -164,20 +174,31 @@ try:
                 st.write(f"🔢 Mais 2.5: {round((dc['ma25']+df['ma25'])/2,0)}%")
                 st.write(f"🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%")
 
-            with col3:
-                st.subheader("📐 Estimativas Gerais")
-                st.write(f"Escanteios: {est['esc']} | Cartões: {est['car']}")
-                st.write(f"Faltas: {est['fal']} | Finalizações: {est['fin']}")
-                st.divider()
-                st.info("ℹ️ Plano grátis NÃO TEM lista de nomes de jogadores — valores estimados por posição:")
-                st.write(f"🔹 **Atacante**: Finaliza ~ {round(est['fin_jogador_est']*1.5,1)} | Sofre falta ~ {round(est['fal_jogador_est']*1.3,1)}")
-                st.write(f"🔹 **Meio-campo**: Finaliza ~ {est['fin_jogador_est']} | Sofre falta ~ {est['fal_jogador_est']}")
-                st.write(f"🔹 **Defensor**: Finaliza ~ {round(est['fin_jogador_est']*0.5,1)} | Sofre falta ~ {round(est['fal_jogador_est']*0.8,1)}")
+            with col2:
+                st.subheader("📐 Estatísticas Separadas")
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.markdown(f"🏠 **{casa.get('name')}**")
+                    st.write(f"📐 Escanteios: {medias['casa']['esc']}")
+                    st.write(f"↔️ Laterais: {medias['casa']['laterais']}")
+                    st.write(f"🚩 Tiro de Meta: {medias['casa']['tiro_meta']}")
+                    st.write(f"👟 Finalizações: {medias['casa']['fin']}")
+                    st.write(f"🎯 Chute a Gol: {medias['casa']['chute_gol']}")
+                    st.write(f"👟 Faltas: {medias['casa']['fal']}")
+                    st.write(f"🧤 Defesa Goleiro: {medias['casa']['defesa_gol']}")
+                with c2:
+                    st.markdown(f"🚩 **{fora.get('name')}**")
+                    st.write(f"📐 Escanteios: {medias['fora']['esc']}")
+                    st.write(f"↔️ Laterais: {medias['fora']['laterais']}")
+                    st.write(f"🚩 Tiro de Meta: {medias['fora']['tiro_meta']}")
+                    st.write(f"👟 Finalizações: {medias['fora']['fin']}")
+                    st.write(f"🎯 Chute a Gol: {medias['fora']['chute_gol']}")
+                    st.write(f"👟 Faltas: {medias['fora']['fal']}")
+                    st.write(f"🧤 Defesa Goleiro: {medias['fora']['defesa_gol']}")
 
-                if max(dc['pV'], df['pD']) >=75:
-                    st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
+            if max(dc['pV'], df['pD']) >=75:
+                st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
 
 except Exception as geral:
     st.error(f"Erro: {str(geral)}")
     st.info("Recarregue ou tente novamente em instantes.")
-    
