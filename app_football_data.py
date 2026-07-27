@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # ==============================
 # CONFIGURAÇÃO + CACHE
 # ==============================
-st.set_page_config(page_title="Análise Completa do Jogo", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="Análise Completa + Probabilidades", page_icon="⚽", layout="wide")
 st.title("⚽ Análise + Desempenho + Estimativa Total do Jogo")
 
 API_KEY = st.secrets["CHAVE_FD"]
@@ -105,12 +105,18 @@ def calcular_base(time_id, sigla):
 def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
+def prob_estatistica(valor, media):
+    if valor<=0:return 50
+    dif = (valor/media)-1
+    return max(10,min(95,round(50+(dif*35),0)))
+
 # ==============================
 # INTERFACE PRINCIPAL
 # ==============================
 try:
     escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
     sigla = LIGAS[escolha]
+    medias_base = MEDIAS_LIGA[sigla]
 
     jogos = buscar_jogos(sigla)
     if not jogos:
@@ -166,24 +172,43 @@ try:
                     st.write(f"Faltas: {df['fal']}")
 
             # ==============================
-            # ESTIMATIVA TOTAL DO JOGO COM TIRO DE META
+            # ✅ ESTIMATIVA COM % DE PROBABILIDADE
             # ==============================
             st.markdown("---")
-            st.subheader("📊 ESTIMATIVA GERAL DO JOGO (Baseado nos últimos 5 de cada time)")
+            st.subheader("📊 ESTIMATIVA GERAL DO JOGO + CHANCE DE ACONTECER")
+            total_esc = round((dc['esc'] + df['esc'])/2,1)
+            total_lat = round((dc['laterais'] + df['laterais'])/2,1)
+            total_tm = round((dc['tiro_meta'] + df['tiro_meta'])/2,1)
+            total_fin = round((dc['fin'] + df['fin'])/2,1)
+            total_cg = round((dc['chute_gol'] + df['chute_gol'])/2,1)
+            total_fal = round((dc['fal'] + df['fal'])/2,1)
+            total_def = round((dc['defesa'] + df['defesa'])/2,1)
+            media_gols = round((dc['mg'] + df['mg'])/2,2)
+            prob_mais25 = round((dc['ma25'] + df['ma25'])/2,0)
+            prob_ambos = round((dc['amb'] + df['amb'])/2,0)
+
+            pe = prob_estatistica(total_esc, medias_base['esc'])
+            pl = prob_estatistica(total_lat, medias_base['laterais'])
+            ptm = prob_estatistica(total_tm, medias_base['tiro_meta'])
+            pfin = prob_estatistica(total_fin, medias_base['fin'])
+            pcg = prob_estatistica(total_cg, medias_base['chute_gol'])
+            pfal = prob_estatistica(total_fal, medias_base['fal'])
+            pdef = prob_estatistica(total_def, medias_base['defesa'])
+
             t1, t2, t3 = st.columns(3)
             with t1:
-                st.metric("Total Escanteios", round((dc['esc'] + df['esc'])/2,1))
-                st.metric("Total Laterais", round((dc['laterais'] + df['laterais'])/2,1))
-                st.metric("Total Tiro de Meta", round((dc['tiro_meta'] + df['tiro_meta'])/2,1))
+                st.write(f"📐 Escanteios: **{total_esc}**  ({pe}%)")
+                st.write(f"↔️ Laterais: **{total_lat}**  ({pl}%)")
+                st.write(f"🚩 Tiro de Meta: **{total_tm}**  ({ptm}%)")
             with t2:
-                st.metric("Total Finalizações", round((dc['fin'] + df['fin'])/2,1))
-                st.metric("Total Chutes a Gol", round((dc['chute_gol'] + df['chute_gol'])/2,1))
-                st.metric("Total Faltas", round((dc['fal'] + df['fal'])/2,1))
+                st.write(f"👟 Finalizações: **{total_fin}**  ({pfin}%)")
+                st.write(f"🎯 Chutes a Gol: **{total_cg}**  ({pcg}%)")
+                st.write(f"👟 Faltas: **{total_fal}**  ({pfal}%)")
             with t3:
-                st.metric("Média Gols do Jogo", round((dc['mg'] + df['mg'])/2,2))
-                st.metric("Mais de 2.5 Gols", f"{round((dc['ma25'] + df['ma25'])/2,0)}%")
-                st.metric("Ambos Marcam", f"{round((dc['amb'] + df['amb'])/2,0)}%")
-                st.metric("Total Defesas", round((dc['defesa'] + df['defesa'])/2,1))
+                st.write(f"🧤 Defesas: **{total_def}**  ({pdef}%)")
+                st.write(f"⚽ Média Gols: **{media_gols}**")
+                st.write(f"🔢 Mais 2.5 Gols: **{prob_mais25}%**")
+                st.write(f"🔄 Ambos Marcam: **{prob_ambos}%**")
 
             if max(dc['pV'], df['pD']) >=75:
                 st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
