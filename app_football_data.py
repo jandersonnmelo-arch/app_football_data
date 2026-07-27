@@ -7,7 +7,7 @@ st.set_page_config(page_title="Análise + Mercados - Football-Data", page_icon="
 st.title("📊 Análise Completa + Estimativas | Football-Data.org")
 
 # 🔴 COLE SUA CHAVE AQUI
-API_KEY = st.secrets["51d62042229e4f4a9532b6376203e602"]
+API_KEY = st.secrets["CHAVE_FD"]
 HEADERS = {"X-Auth-Token": API_KEY}
 
 
