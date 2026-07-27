@@ -1,202 +1,163 @@
 import streamlit as st
-import pandas as pd
 import requests
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Análise + Mercados - Football-Data", page_icon="📊", layout="wide")
-st.title("📊 Análise Completa + Estimativas | Football-Data.org")
+# ==============================
+# CONFIGURAÇÃO
+# ==============================
+st.set_page_config(page_title="Análise Completa | Football-Data", page_icon="⚽", layout="wide")
+st.title("⚽ Análise + Dupla Chance + Últimos 5 Jogos")
 
-# 🔴 COLE SUA CHAVE AQUI
 API_KEY = st.secrets["CHAVE_FD"]
 HEADERS = {"X-Auth-Token": API_KEY}
+TEMPORADA = 2025
 
-
-COMPETICOES = {
+# ==============================
+# LIGAS E MÉDIAS
+# ==============================
+LIGAS = {
+    "🇧🇷 Brasileirão Série A": "BSA",
+    "🇧🇷 Brasileirão Série B": "BRB",
+    "🏆 Libertadores": "CLI",
     "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
     "🇪🇸 La Liga": "PD",
     "🇩🇪 Bundesliga": "BL1",
-    "🇮🇹 Serie A": "SA",
-    "🇫🇷 Ligue 1": "FL1",
-    "🏆 Champions League": "CL",
-    "🇧🇷 Brasileirão Série A": "BSA"
+    "🇮🇹 Serie A": "SA"
 }
 
-# MÉDIAS ESTATÍSTICAS POR LIGA (base em dados reais da temporada)
-MEDIAS_LIGAS = {
-    "PL": {"escanteios":10.5, "cartoes":3.8, "faltas":22, "finalizacoes":12},
-    "PD": {"escanteios":9.2, "cartoes":4.2, "faltas":24, "finalizacoes":11},
-    "BL1": {"escanteios":9.8, "cartoes":3.5, "faltas":21, "finalizacoes":13},
-    "SA": {"escanteios":8.7, "cartoes":4.5, "faltas":25, "finalizacoes":10},
-    "FL1": {"escanteios":8.5, "cartoes":3.9, "faltas":23, "finalizacoes":11},
-    "CL": {"escanteios":9.5, "cartoes":3.6, "faltas":22, "finalizacoes":12},
-    "BSA": {"escanteios":9.0, "cartoes":4.3, "faltas":26, "finalizacoes":10}
+MEDIAS = {
+    "BSA": {"esc":9.0,"car":4.3,"fal":26,"fin":10},
+    "BRB": {"esc":8.8,"car":4.5,"fal":27,"fin":9},
+    "CLI": {"esc":9.5,"car":3.7,"fal":23,"fin":11},
+    "PL": {"esc":10.5,"car":3.8,"fal":22,"fin":12},
+    "PD": {"esc":9.2,"car":4.2,"fal":24,"fin":11},
+    "BL1": {"esc":9.8,"car":3.5,"fal":21,"fin":13},
+    "SA": {"esc":8.7,"car":4.5,"fal":25,"fin":10}
 }
 
+# ==============================
+# FUNÇÕES PRINCIPAIS
+# ==============================
 def buscar_jogos(sigla):
-    url = f"https://api.football-data.org/v4/competitions/{sigla}/matches"
+    hoje = datetime.utcnow().date()
     try:
-        r = requests.get(url, headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
-        r.raise_for_status()
+        r = requests.get(f"https://api.football-data.org/v4/competitions/{sigla}/matches",
+                        headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
+        return [j for j in r.json().get("matches",[]) 
+                if datetime.fromisoformat(j["utcDate"].replace("Z","")).date() <= hoje + timedelta(days=7)]
+    except:
+        return []
+
+def ultimos_5_jogos(time_id, sigla):
+    try:
+        r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
+                        headers=HEADERS, params={"competitions":sigla,"status":"FINISHED","limit":5}, timeout=15)
         return r.json().get("matches", [])
     except:
         return []
 
-def buscar_ultimos_jogos(time_id, sigla):
-    url = f"https://api.football-data.org/v4/teams/{time_id}/matches?competitions={sigla}&status=FINISHED&limit=10"
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        return r.json().get("matches", [])
-    except:
-        return []
-
-def calcular_dados(time_id, sigla):
-    jogos = buscar_ultimos_jogos(time_id, sigla)
+def calcular_principais(time_id, sigla):
+    jogos = ultimos_5_jogos(time_id, sigla)
     if not jogos:
-        return {"V":0,"E":0,"D":0,"MediaGols":2.5,"Mais25":50,"AmbosMarcam":50,"FatorAtaque":1,"FatorDefesa":1}
-    v = e = d = gf = gs = 0
-    tem_ambos = 0
+        return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"amb":50,"fA":1,"fD":1,"resumo":[]}
+    v=e=d=gf=gs=amb=0
+    resumo = []
     for j in jogos:
-        casa_id = j["homeTeam"]["id"]
-        gols_casa = j["score"]["fullTime"]["home"] or 0
-        gols_fora = j["score"]["fullTime"]["away"] or 0
-        if casa_id == time_id:
-            gf += gols_casa
-            gs += gols_fora
-            if gols_casa > gols_fora: v +=1
-            elif gols_casa == gols_fora: e +=1
-            else: d +=1
+        cid = j["homeTeam"]["id"]
+        gc = j["score"]["fullTime"]["home"] or 0
+        ga = j["score"]["fullTime"]["away"] or 0
+        if cid == time_id:
+            gf += gc; gs += ga
+            if gc>ga: v+=1; resumo.append("✅ Vitória")
+            elif gc==ga: e+=1; resumo.append("⚖️ Empate")
+            else: d+=1; resumo.append("❌ Derrota")
         else:
-            gf += gols_fora
-            gs += gols_casa
-            if gols_fora > gols_casa: v +=1
-            elif gols_fora == gols_casa: e +=1
-            else: d +=1
-        if gols_casa >0 and gols_fora>0: tem_ambos +=1
-    total = len(jogos)
-    media = round((gf+gs)/total,2)
-    fator_ataque = round((gf/total)/1.5,2) # Compara com média geral de 1.5 gols
-    fator_defesa = round((gs/total)/1.5,2)
+            gf += ga; gs += gc
+            if ga>gc: v+=1; resumo.append("✅ Vitória")
+            elif ga==gc: e+=1; resumo.append("⚖️ Empate")
+            else: d+=1; resumo.append("❌ Derrota")
+        if gc>0 and ga>0: amb+=1
+    t=len(jogos)
     return {
-        "Vitórias":v, "Empates":e, "Derrotas":d,
-        "ProbVitoria":round((v/total)*100,1),
-        "ProbEmpate":round((e/total)*100,1),
-        "ProbDerrota":round((d/total)*100,1),
-        "MediaGols":media,
-        "Mais25":round(70 if media>2.5 else 45,0),
-        "AmbosMarcam":round((tem_ambos/total)*100,0),
-        "FatorAtaque":fator_ataque,
-        "FatorDefesa":fator_defesa
+        "pV":round((v/t)*100,1), "pE":round((e/t)*100,1), "pD":round((d/t)*100,1),
+        "mg":round((gf+gs)/t,2), "ma25":round(70 if (gf+gs)/t>2.5 else 45,0),
+        "amb":round((amb/t)*100,0), "fA":round((gf/t)/1.5,2), "fD":round((gs/t)/1.5,2),
+        "resumo":resumo
     }
 
-def calcular_estimativas(dados_casa, dados_fora, sigla_liga):
-    media_liga = MEDIAS_LIGAS[sigla_liga]
-    # Ajusta a média da liga conforme o desempenho dos times
-    escanteios = round(media_liga["escanteios"] * ((dados_casa["FatorAtaque"] + dados_fora["FatorAtaque"])/2),1)
-    cartoes = round(media_liga["cartoes"] * ((dados_casa["FatorDefesa"] + dados_fora["FatorDefesa"])/2),1)
-    faltas = round(media_liga["faltas"] * ((dados_casa["FatorDefesa"] + dados_fora["FatorDefesa"])/2),1)
-    finalizacoes = round(media_liga["finalizacoes"] * ((dados_casa["FatorAtaque"] + dados_fora["FatorAtaque"])/2),1)
+def dupla_chance(pV,pE,pD):
     return {
-        "Escanteios":escanteios,
-        "Cartões Totais":cartoes,
-        "Faltas":faltas,
-        "Finalizações":finalizacoes,
-        "Mais 9.5 Escanteios":round(70 if escanteios>9.5 else 45,0),
-        "Mais 3.5 Cartões":round(65 if cartoes>3.5 else 40,0),
-        "Mais 22.5 Faltas":round(60 if faltas>22.5 else 45,0),
-        "Mais 11.5 Finalizações":round(65 if finalizacoes>11.5 else 40,0)
+        "1X": round(pV + pE,1),
+        "X2": round(pE + pD,1),
+        "12": round(pV + pD,1)
     }
 
-# Interface
-comp = st.selectbox("Escolha a Competição", list(COMPETICOES.keys()))
-dias = st.slider("Próximos dias", 1,14,7)
+def estimativas(dc,df,sigla):
+    m=MEDIAS[sigla]
+    return {
+        "esc":round(m["esc"]*((dc["fA"]+df["fA"])/2),1),
+        "car":round(m["car"]*((dc["fD"]+df["fD"])/2),1),
+        "fal":round(m["fal"]*((dc["fD"]+df["fD"])/2),1),
+        "fin":round(m["fin"]*((dc["fA"]+df["fA"])/2),1),
+        "fal_jogador_est":round((dc["fal"]+df["fal"])/20,1),
+        "fin_jogador_est":round((dc["fin"]+df["fin"])/22,1)
+    }
 
-jogos = buscar_jogos(COMPETICOES[comp])
+# ==============================
+# INTERFACE
+# ==============================
+escolha = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
+sigla = LIGAS[escolha]
+
+jogos = buscar_jogos(sigla)
 if not jogos:
-    st.warning("Nenhum jogo encontrado ou erro na API. Confira sua chave.")
+    st.warning("ℹ️ Nenhum jogo agendado para os próximos 7 dias na fonte.")
 else:
-    hoje_utc = datetime.utcnow()
-    limite = hoje_utc + timedelta(days=dias)
-    filtrado = []
-    for j in jogos:
-        data_str = j.get("utcDate")
-        if not data_str: continue
-        try:
-            dt = datetime.fromisoformat(data_str.replace("Z",""))
-            if hoje_utc <= dt <= limite: filtrado.append(j)
-        except: pass
+    st.success(f"✅ {len(jogos)} jogos encontrados!")
+    for jogo in jogos:
+        casa = jogo["homeTeam"]
+        fora = jogo["awayTeam"]
+        dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
+        
+        st.markdown("---")
+        st.subheader(f"⚽ {casa['name']} 🆚 {fora['name']} | {dt.strftime('%d/%m %H:%M')}")
 
-    if not filtrado:
-        st.info("Sem partidas no período. Aumente os dias ou mude a liga.")
-    else:
-        st.success(f"✅ {len(filtrado)} partidas encontradas!")
-        for jogo in filtrado:
-            casa = jogo["homeTeam"]
-            fora = jogo["awayTeam"]
-            data_br = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00")).strftime("%d/%m %H:%M")
-            
-            st.markdown("---")
-            st.subheader(f"⚽ {casa['name']} 🆚 {fora['name']} | {data_br}")
-            
-            # Cálculo dos dados
-            dados_casa = calcular_dados(casa["id"], COMPETICOES[comp])
-            dados_fora = calcular_dados(fora["id"], COMPETICOES[comp])
-            estimativas = calcular_estimativas(dados_casa, dados_fora, COMPETICOES[comp])
+        dc = calcular_principais(casa["id"], sigla)
+        df = calcular_principais(fora["id"], sigla)
+        dc_dupla = dupla_chance(dc["pV"],dc["pE"],dc["pD"])
+        df_dupla = dupla_chance(df["pV"],df["pE"],df["pD"])
+        est = estimativas(dc,df,sigla)
 
-            # 1. Probabilidades Principais
-            st.subheader("📈 Probabilidades Estatísticas")
-            df_prob = pd.DataFrame({
-                "Mercado": ["Vitória Mandante","Empate","Vitória Visitante","Média de Gols","Mais de 2.5 Gols","Ambos Marcam"],
-                "Valor": [
-                    f"{dados_casa['ProbVitoria']}%",
-                    f"{round((dados_casa['ProbEmpate']+dados_fora['ProbEmpate'])/2,1)}%",
-                    f"{dados_fora['ProbDerrota']}%",
-                    f"{round((dados_casa['MediaGols']+dados_fora['MediaGols'])/2,2)}",
-                    f"{round((dados_casa['Mais25']+dados_fora['Mais25'])/2,0)}%",
-                    f"{round((dados_casa['AmbosMarcam']+dados_fora['AmbosMarcam'])/2,0)}%"
-                ]
-            })
-            st.dataframe(df_prob, use_container_width=True, hide_index=True)
+        col1,col2,col3 = st.columns(3)
+        with col1:
+            st.subheader("📈 Resultado Final")
+            st.write(f"✅ {casa['name']}: {dc['pV']}%")
+            st.write(f"⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%")
+            st.write(f"✅ {fora['name']}: {df['pD']}%")
+            st.divider()
+            st.subheader("🔀 Dupla Chance")
+            st.write(f"1X (Casa/Empate): {round((dc_dupla['1X']+df_dupla['1X'])/2,1)}%")
+            st.write(f"X2 (Empate/Fora): {round((dc_dupla['X2']+df_dupla['X2'])/2,1)}%")
+            st.write(f"12 (Casa/Fora): {round((dc_dupla['12']+df_dupla['12'])/2,1)}%")
 
-            # 2. ESTIMATIVAS ADICIONAIS
-            st.subheader("📊 Estimativas de Estatísticas do Jogo")
-            df_est = pd.DataFrame({
-                "Item": ["Escanteios (média estimada)","Cartões Totais","Faltas","Finalizações",
-                        "Mais de 9.5 Escanteios","Mais de 3.5 Cartões","Mais de 22.5 Faltas","Mais de 11.5 Finalizações"],
-                "Valor Estimado": [
-                    f"{estimativas['Escanteios']}",
-                    f"{estimativas['Cartões Totais']}",
-                    f"{estimativas['Faltas']}",
-                    f"{estimativas['Finalizações']}",
-                    f"{estimativas['Mais 9.5 Escanteios']}%",
-                    f"{estimativas['Mais 3.5 Cartões']}%",
-                    f"{estimativas['Mais 22.5 Faltas']}%",
-                    f"{estimativas['Mais 11.5 Finalizações']}%"
-                ]
-            })
-            st.dataframe(df_est, use_container_width=True, hide_index=True)
+        with col2:
+            st.subheader("📊 Últimos 5 Jogos")
+            st.write(f"🟢 {casa['name']}: {' '.join(dc['resumo'])}")
+            st.write(f"🔴 {fora['name']}: {' '.join(df['resumo'])}")
+            st.divider()
+            st.write(f"📊 Média Gols: {round((dc['mg']+df['mg'])/2,2)}")
+            st.write(f"🔢 Mais 2.5: {round((dc['ma25']+df['ma25'])/2,0)}%")
+            st.write(f"🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%")
 
-            # Alerta de alta confiança
-            max_prob = max(dados_casa['ProbVitoria'], dados_fora['ProbDerrota'])
-            if max_prob >=75:
-                st.error(f"🚨 ALERTA DE ALTA CONFIANÇA: Probabilidade acima de 75%!")
-            elif max_prob >=60:
-                st.warning(f"⚠️ Chance elevada: {max_prob}%")
+        with col3:
+            st.subheader("📐 Estimativas Gerais")
+            st.write(f"Escanteios: {est['esc']} | Cartões: {est['car']}")
+            st.write(f"Faltas: {est['fal']} | Finalizações: {est['fin']}")
+            st.divider()
+            st.info("ℹ️ Estimativa p/ jogador (plano grátis não tem dado individual):")
+            st.write(f"→ Sofre Falta: {est['fal_jogador_est']} por jogo")
+            st.write(f"→ Finaliza: {est['fin_jogador_est']} por jogo")
 
-            # Sugestão de mercados
-            st.subheader("💡 Mercados com maior tendência:")
-            sug = []
-            if max_prob >=60:
-                sug.append(f"→ Vitória de {casa['name'] if dados_casa['ProbVitoria']>dados_fora['ProbDerrota'] else fora['name']}")
-            media_total = round((dados_casa['MediaGols']+dados_fora['MediaGols'])/2,2)
-            if media_total >=2.2:
-                sug.append("→ Mais de 2.5 Gols")
-            if round((dados_casa['AmbosMarcam']+dados_fora['AmbosMarcam'])/2,0) >=55:
-                sug.append("→ Ambos Marcam - Sim")
-            if estimativas['Mais 9.5 Escanteios'] >=60:
-                sug.append("→ Mais de 9.5 Escanteios")
-            if estimativas['Mais 3.5 Cartões'] >=60:
-                sug.append("→ Mais de 3.5 Cartões")
-            if not sug:
-                sug.append("→ Jogo equilibrado, evite apostas de resultado direto")
-            for s in sug: st.write(s)
-                
+        if max(dc['pV'], df['pD']) >=75:
+            st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
+    
