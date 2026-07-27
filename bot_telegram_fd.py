@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 
 # ==============================================
-# 🔴 COLOQUE AQUI SEUS DADOS NOVOS
+# 🔴 SEUS DADOS
 # ==============================================
 CHAVE_FOOTBALL_DATA = "51d62042229e4f4a9532b6376203e602"
 TOKEN_BOT_NOVO = "8289316862:AAFIhpQqoc2kRlW6B6I5zk5pqmecXaPMpmw"
@@ -13,7 +13,7 @@ LIMITE_ALERTA = 75
 
 CABECALHO = {"X-Auth-Token": CHAVE_FOOTBALL_DATA}
 
-LIGAS = {
+TODAS_LIGAS = {
     "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
     "🇪🇸 La Liga": "PD",
     "🇩🇪 Bundesliga": "BL1",
@@ -33,31 +33,37 @@ MEDIAS = {
     "BSA": {"esc":9.0,"car":4.3,"fal":26,"fin":10}
 }
 
-# --------------------------
-# FUNÇÃO DE ENVIAR MENSAGEM
-# --------------------------
-def msg(texto):
+def enviar(texto):
     url = f"https://api.telegram.org/bot{TOKEN_BOT_NOVO}/sendMessage"
-    try:
-        requests.get(url, params={
-            "chat_id": SEU_ID_TELEGRAM,
-            "text": texto,
-            "parse_mode": "Markdown",
-            "disable_web_page_preview": True
-        }, timeout=15)
-    except Exception as e:
-        print(f"Erro: {e}")
+    requests.get(url, params={
+        "chat_id": SEU_ID_TELEGRAM,
+        "text": texto,
+        "parse_mode": "Markdown",
+        "disable_web_page_preview": True
+    }, timeout=15)
 
-# --------------------------
-# BUSCAR JOGOS E HISTÓRICO
-# --------------------------
-def jogos(sigla):
-    try:
-        r = requests.get(f"https://api.football-data.org/v4/competitions/{sigla}/matches",
-                        headers=CABECALHO, params={"status":"SCHEDULED"}, timeout=15)
-        return r.json().get("matches", [])
-    except:
-        return []
+def buscar_todos_jogos_do_dia():
+    hoje_utc = datetime.utcnow().date()
+    todos = []
+    for nome_liga, sigla in TODAS_LIGAS.items():
+        try:
+            r = requests.get(f"https://api.football-data.org/v4/competitions/{sigla}/matches",
+                            headers=CABECALHO, params={"status":"SCHEDULED"}, timeout=15)
+            jogos = r.json().get("matches", [])
+            for j in jogos:
+                try:
+                    data_j = datetime.fromisoformat(j["utcDate"].replace("Z","")).date()
+                    if data_j == hoje_utc:
+                        j["liga_nome"] = nome_liga
+                        j["liga_sigla"] = sigla
+                        todos.append(j)
+                except:
+                    continue
+        except:
+            continue
+    # Ordena por horário do jogo
+    todos.sort(key=lambda x: x["utcDate"])
+    return todos
 
 def historico(time_id, sigla):
     try:
@@ -67,9 +73,6 @@ def historico(time_id, sigla):
     except:
         return []
 
-# --------------------------
-# CÁLCULOS
-# --------------------------
 def calc(time_id, sigla):
     j = historico(time_id, sigla)
     if not j: return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"amb":50,"fA":1,"fD":1}
@@ -103,63 +106,58 @@ def estima(dc, df, sigla):
         "esc": round(m["esc"]*((dc["fA"]+df["fA"])/2),1),
         "car": round(m["car"]*((dc["fD"]+df["fD"])/2),1),
         "fal": round(m["fal"]*((dc["fD"]+df["fD"])/2),1),
-        "fin": round(m["fin"]*((dc["fA"]+df["fA"])/2),1),
-        "maisc95": round(70 if m["esc"]>9.5 else 45,0),
-        "maisc35": round(65 if m["car"]>3.5 else 40,0)
+        "fin": round(m["fin"]*((dc["fA"]+df["fA"])/2),1)
     }
 
 # --------------------------
-# EXECUÇÃO PRINCIPAL
+# EXECUÇÃO
 # --------------------------
 if __name__ == "__main__":
-    msg("⚽ *NOVO BOT - FOOTBALL-DATA.ORG* ⚽\nTudo integrado do zero!")
+    enviar("⚽ *JOGOS DE HOJE - TODAS AS LIGAS* ⚽\nLista completa + Análises")
     time.sleep(1)
 
-    for nome_liga, sigla in LIGAS.items():
-        lista = jogos(sigla)
-        if not lista: continue
-        msg(f"\n🏆 *{nome_liga}*")
-        time.sleep(0.5)
+    jogos_do_dia = buscar_todos_jogos_do_dia()
+    if not jogos_do_dia:
+        enviar("ℹ️ Nenhum jogo agendado para hoje nas competições selecionadas.")
+    else:
+        enviar(f"✅ Encontrados {len(jogos_do_dia)} jogos para hoje!")
+        time.sleep(1)
 
-        for jogo in lista:
-            data_jogo = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
-            if data_jogo.date() > (datetime.utcnow() + timedelta(days=7)).date(): continue
+        for jogo in jogos_do_dia:
             casa = jogo["homeTeam"]
             fora = jogo["awayTeam"]
-            dc = calc(casa["id"], sigla)
-            df = calc(fora["id"], sigla)
-            est = estima(dc, df, sigla)
+            dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
+            dc = calc(casa["id"], jogo["liga_sigla"])
+            df = calc(fora["id"], jogo["liga_sigla"])
+            est = estima(dc, df, jogo["liga_sigla"])
 
-            texto = f"""
+            msg = f"""
+{jogo['liga_nome']}
 ⚽ {casa['name']} 🆚 {fora['name']}
-📅 {data_jogo.strftime('%d/%m %H:%M')}
+⏰ {dt.strftime('%H:%M')}
 
 📈 Probabilidades:
 ✅ {casa['name']}: {dc['pV']}%
 ⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%
 ✅ {fora['name']}: {df['pD']}%
 📊 Média Gols: {round((dc['mg']+df['mg'])/2,2)}
-🔢 Mais 2.5: {round((dc['ma25']+df['ma25'])/2,0)}%
-🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%
 
 📊 Estimativas:
-📐 Escanteios: {est['esc']} | +9.5: {est['maisc95']}%
-🟨 Cartões: {est['car']} | +3.5: {est['maisc35']}%
-👟 Faltas / Finalizações: {est['fal']} / {est['fin']}
+📐 Escanteios: {est['esc']}
+🟨 Cartões: {est['car']}
+👟 Faltas: {est['fal']} | 🎯 Finalizações: {est['fin']}
             """
-            msg(texto.strip())
-            time.sleep(0.7)
+            enviar(msg.strip())
+            time.sleep(0.8)
 
-            # ALERTA
-            maior = max(dc['pV'], df['pD'])
-            if maior >= LIMITE_ALERTA:
-                msg(f"""
+            if max(dc['pV'], df['pD']) >= LIMITE_ALERTA:
+                enviar(f"""
 🚨 *ALERTA ACIMA DE 75%!* 🚨
-{casa['name']} vs {fora['name']}
-Chance: {maior}%
-Favorito: {casa['name'] if dc['pV']>df['pD'] else fora['name']}
+{jogo['liga_nome']} | {casa['name']} vs {fora['name']}
+Chance: {max(dc['pV'], df['pD'])}%
                 """.strip())
                 time.sleep(0.5)
 
-    msg("\n✅ Concluído! Bons greens! 🍀")
+    enviar("\n✅ Fim da lista de hoje! Bons greens! 🍀")
+    
          
