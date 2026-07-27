@@ -113,8 +113,8 @@ def estimativas(dc,df,sigla):
         "car":round(m["car"]*((dc["fD"]+df["fD"])/2),1),
         "fal":round(m["fal"]*((dc["fD"]+df["fD"])/2),1),
         "fin":round(m["fin"]*((dc["fA"]+df["fA"])/2),1),
-        "fal_jogador_est":round((dc["fal"]+df["fal"])/20,1),
-        "fin_jogador_est":round((dc["fin"]+df["fin"])/22,1)
+        "fal_jogador_est":round((m["fal"]/20),1),
+        "fin_jogador_est":round((m["fin"]/22),1)
     }
 
 # ==============================
@@ -169,7 +169,7 @@ try:
                 st.write(f"Escanteios: {est['esc']} | Cartões: {est['car']}")
                 st.write(f"Faltas: {est['fal']} | Finalizações: {est['fin']}")
                 st.divider()
-                st.info("ℹ️ Plano grátis não tem dado individual por jogador — valores estimados:")
+                st.info("ℹ️ Plano grátis não tem dado individual — valores estimados:")
                 st.write(f"→ Sofre Falta: {est['fal_jogador_est']} por jogo")
                 st.write(f"→ Finaliza: {est['fin_jogador_est']} por jogo")
 
