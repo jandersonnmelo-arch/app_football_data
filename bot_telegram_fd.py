@@ -3,18 +3,17 @@ import time
 from datetime import datetime, timedelta
 
 # ==============================================
-# 🔴 COLOQUE SEUS DADOS AQUI!
+# 🔴 COLOQUE AQUI SEUS DADOS NOVOS
 # ==============================================
-API_KEY = "51d62042229e4f4a9532b6376203e602"       # Sua chave do football-data.org
-BOT_TOKEN = "8289316862:AAFIhpQqoc2kRlW6B6I5zk5pqmecXaPMpmw"    # Do @BotFather
-SEU_CHAT_ID = "1100260912"       # Que você já tem
+CHAVE_FOOTBALL_DATA = "51d62042229e4f4a9532b6376203e602"
+TOKEN_BOT_NOVO = "8289316862:AAFIhpQqoc2kRlW6B6I5zk5pqmecXaPMpmw"
+SEU_ID_TELEGRAM = "1100260912"
 LIMITE_ALERTA = 75
 # ==============================================
 
-HEADERS = {"X-Auth-Token": API_KEY}
+CABECALHO = {"X-Auth-Token": CHAVE_FOOTBALL_DATA}
 
-# Ligas e médias estatísticas (igual ao app)
-COMPETICOES = {
+LIGAS = {
     "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
     "🇪🇸 La Liga": "PD",
     "🇩🇪 Bundesliga": "BL1",
@@ -24,53 +23,61 @@ COMPETICOES = {
     "🇧🇷 Brasileirão Série A": "BSA"
 }
 
-MEDIAS_LIGAS = {
-    "PL": {"escanteios":10.5, "cartoes":3.8, "faltas":22, "finalizacoes":12},
-    "PD": {"escanteios":9.2, "cartoes":4.2, "faltas":24, "finalizacoes":11},
-    "BL1": {"escanteios":9.8, "cartoes":3.5, "faltas":21, "finalizacoes":13},
-    "SA": {"escanteios":8.7, "cartoes":4.5, "faltas":25, "finalizacoes":10},
-    "FL1": {"escanteios":8.5, "cartoes":3.9, "faltas":23, "finalizacoes":11},
-    "CL": {"escanteios":9.5, "cartoes":3.6, "faltas":22, "finalizacoes":12},
-    "BSA": {"escanteios":9.0, "cartoes":4.3, "faltas":26, "finalizacoes":10}
+MEDIAS = {
+    "PL": {"esc":10.5,"car":3.8,"fal":22,"fin":12},
+    "PD": {"esc":9.2,"car":4.2,"fal":24,"fin":11},
+    "BL1": {"esc":9.8,"car":3.5,"fal":21,"fin":13},
+    "SA": {"esc":8.7,"car":4.5,"fal":25,"fin":10},
+    "FL1": {"esc":8.5,"car":3.9,"fal":23,"fin":11},
+    "CL": {"esc":9.5,"car":3.6,"fal":22,"fin":12},
+    "BSA": {"esc":9.0,"car":4.3,"fal":26,"fin":10}
 }
 
 # --------------------------
-# FUNÇÕES AUXILIARES
+# FUNÇÃO DE ENVIAR MENSAGEM
 # --------------------------
-def enviar(texto):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    requests.get(url, params={
-        "chat_id": SEU_CHAT_ID,
-        "text": texto,
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": True
-    }, timeout=15)
-
-def buscar_jogos(sigla):
-    url = f"https://api.football-data.org/v4/competitions/{sigla}/matches"
+def msg(texto):
+    url = f"https://api.telegram.org/bot{TOKEN_BOT_NOVO}/sendMessage"
     try:
-        r = requests.get(url, headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
+        requests.get(url, params={
+            "chat_id": SEU_ID_TELEGRAM,
+            "text": texto,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }, timeout=15)
+    except Exception as e:
+        print(f"Erro: {e}")
+
+# --------------------------
+# BUSCAR JOGOS E HISTÓRICO
+# --------------------------
+def jogos(sigla):
+    try:
+        r = requests.get(f"https://api.football-data.org/v4/competitions/{sigla}/matches",
+                        headers=CABECALHO, params={"status":"SCHEDULED"}, timeout=15)
         return r.json().get("matches", [])
     except:
         return []
 
-def buscar_historico(time_id, sigla):
-    url = f"https://api.football-data.org/v4/teams/{time_id}/matches?competitions={sigla}&status=FINISHED&limit=10"
+def historico(time_id, sigla):
     try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
+        r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
+                        headers=CABECALHO, params={"competitions":sigla,"status":"FINISHED","limit":10}, timeout=15)
         return r.json().get("matches", [])
     except:
         return []
 
-def calcular_dados(time_id, sigla):
-    jogos = buscar_historico(time_id, sigla)
-    if not jogos:
-        return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"ambos":50,"fatA":1,"fatD":1}
+# --------------------------
+# CÁLCULOS
+# --------------------------
+def calc(time_id, sigla):
+    j = historico(time_id, sigla)
+    if not j: return {"pV":50,"pE":33,"pD":17,"mg":2.5,"ma25":50,"amb":50,"fA":1,"fD":1}
     v=e=d=gf=gs=amb=0
-    for j in jogos:
-        cid = j["homeTeam"]["id"]
-        gc = j["score"]["fullTime"]["home"] or 0
-        ga = j["score"]["fullTime"]["away"] or 0
+    for x in j:
+        cid = x["homeTeam"]["id"]
+        gc = x["score"]["fullTime"]["home"] or 0
+        ga = x["score"]["fullTime"]["away"] or 0
         if cid == time_id:
             gf += gc; gs += ga
             if gc>ga: v+=1
@@ -82,81 +89,77 @@ def calcular_dados(time_id, sigla):
             elif ga==gc: e+=1
             else: d+=1
         if gc>0 and ga>0: amb+=1
-    t = len(jogos)
+    t = len(j)
     return {
         "pV":round((v/t)*100,1), "pE":round((e/t)*100,1), "pD":round((d/t)*100,1),
         "mg":round((gf+gs)/t,2), "ma25":round(70 if (gf+gs)/t>2.5 else 45,0),
-        "ambos":round((amb/t)*100,0),
-        "fatA":round((gf/t)/1.5,2), "fatD":round((gs/t)/1.5,2)
+        "amb":round((amb/t)*100,0),
+        "fA":round((gf/t)/1.5,2), "fD":round((gs/t)/1.5,2)
     }
 
-def estimar(dc, df, sigla):
-    m = MEDIAS_LIGAS[sigla]
-    esc = round(m["escanteios"] * ((dc["fatA"]+df["fatA"])/2),1)
-    car = round(m["cartoes"] * ((dc["fatD"]+df["fatD"])/2),1)
-    fal = round(m["faltas"] * ((dc["fatD"]+df["fatD"])/2),1)
-    fin = round(m["finalizacoes"] * ((dc["fatA"]+df["fatA"])/2),1)
+def estima(dc, df, sigla):
+    m = MEDIAS[sigla]
     return {
-        "esc":esc, "car":car, "fal":fal, "fin":fin,
-        "maisc95":round(70 if esc>9.5 else 45,0),
-        "maisc35":round(65 if car>3.5 else 40,0),
-        "maisF225":round(60 if fal>22.5 else 45,0),
-        "maisFi115":round(65 if fin>11.5 else 40,0)
+        "esc": round(m["esc"]*((dc["fA"]+df["fA"])/2),1),
+        "car": round(m["car"]*((dc["fD"]+df["fD"])/2),1),
+        "fal": round(m["fal"]*((dc["fD"]+df["fD"])/2),1),
+        "fin": round(m["fin"]*((dc["fA"]+df["fA"])/2),1),
+        "maisc95": round(70 if m["esc"]>9.5 else 45,0),
+        "maisc35": round(65 if m["car"]>3.5 else 40,0)
     }
 
 # --------------------------
 # EXECUÇÃO PRINCIPAL
 # --------------------------
 if __name__ == "__main__":
-    enviar("⚽ *ANÁLISE COMPLETA - FOOTBALL-DATA.ORG* ⚽\n📊 Probabilidades + Estimativas + Mercados\n🚨 Alerta acima de 75%")
+    msg("⚽ *NOVO BOT - FOOTBALL-DATA.ORG* ⚽\nTudo integrado do zero!")
     time.sleep(1)
 
-    for nome_liga, sigla in COMPETICOES.items():
-        jogos = buscar_jogos(sigla)
-        if not jogos: continue
-        enviar(f"\n🏆 *{nome_liga}*")
+    for nome_liga, sigla in LIGAS.items():
+        lista = jogos(sigla)
+        if not lista: continue
+        msg(f"\n🏆 *{nome_liga}*")
         time.sleep(0.5)
 
-        for jogo in jogos:
-            dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
-            if dt.date() > (datetime.utcnow() + timedelta(days=7)).date(): continue
+        for jogo in lista:
+            data_jogo = datetime.fromisoformat(jogo["utcDate"].replace("Z","-04:00"))
+            if data_jogo.date() > (datetime.utcnow() + timedelta(days=7)).date(): continue
             casa = jogo["homeTeam"]
             fora = jogo["awayTeam"]
-            dc = calcular_dados(casa["id"], sigla)
-            df = calcular_dados(fora["id"], sigla)
-            est = estimar(dc, df, sigla)
+            dc = calc(casa["id"], sigla)
+            df = calc(fora["id"], sigla)
+            est = estima(dc, df, sigla)
 
-            msg = f"""
+            texto = f"""
 ⚽ {casa['name']} 🆚 {fora['name']}
-📅 {dt.strftime('%d/%m %H:%M')}
+📅 {data_jogo.strftime('%d/%m %H:%M')}
 
-📈 *Probabilidades:*
+📈 Probabilidades:
 ✅ {casa['name']}: {dc['pV']}%
 ⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}%
 ✅ {fora['name']}: {df['pD']}%
 📊 Média Gols: {round((dc['mg']+df['mg'])/2,2)}
 🔢 Mais 2.5: {round((dc['ma25']+df['ma25'])/2,0)}%
-🔄 Ambos Marcam: {round((dc['ambos']+df['ambos'])/2,0)}%
+🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%
 
-📊 *Estimativas:*
+📊 Estimativas:
 📐 Escanteios: {est['esc']} | +9.5: {est['maisc95']}%
 🟨 Cartões: {est['car']} | +3.5: {est['maisc35']}%
-👟 Faltas: {est['fal']} | +22.5: {est['maisF225']}%
-🎯 Finalizações: {est['fin']} | +11.5: {est['maisFi115']}%
+👟 Faltas / Finalizações: {est['fal']} / {est['fin']}
             """
-            enviar(msg.strip())
-            time.sleep(0.8)
+            msg(texto.strip())
+            time.sleep(0.7)
 
-            # ALERTA ESPECIAL
+            # ALERTA
             maior = max(dc['pV'], df['pD'])
             if maior >= LIMITE_ALERTA:
-                enviar(f"""
-🚨 *ALERTA DE ALTA CONFIANÇA!* 🚨
-🔹 {casa['name']} vs {fora['name']}
-🔹 Probabilidade: {maior}%
-🔹 Favorito: {casa['name'] if dc['pV']>df['pD'] else fora['name']}
+                msg(f"""
+🚨 *ALERTA ACIMA DE 75%!* 🚨
+{casa['name']} vs {fora['name']}
+Chance: {maior}%
+Favorito: {casa['name'] if dc['pV']>df['pD'] else fora['name']}
                 """.strip())
                 time.sleep(0.5)
 
-    enviar("\n✅ Análise finalizada! Bons greens! 🍀")
-  
+    msg("\n✅ Concluído! Bons greens! 🍀")
+         
