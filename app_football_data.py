@@ -105,13 +105,10 @@ def calcular_base(time_id, sigla):
 def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
-# ✅ CÁLCULO NOVO E MAIS REALISTA
 def prob_estatistica(valor, media):
     if valor <= 0 or media <= 0:
         return 50
-    # Diferença percentual suave
     dif = (valor / media) - 1
-    # Variação pequena: em vez de ir de 10 a 95, fica entre 30 e 80
     prob = 50 + (dif * 25)
     return max(30, min(80, round(prob, 0)))
 
@@ -215,8 +212,9 @@ try:
                 st.write(f"🔢 Mais 2.5 Gols: **{prob_mais25}%**")
                 st.write(f"🔄 Ambos Marcam: **{prob_ambos}%**")
 
-            if max(dc['pV'], df['pD']) >=75:
-                st.error("🚨 ALTA CONFIANÇA ACIMA DE 75%!")
+            # ✅ ALERTA AJUSTADO PARA 70%
+            if max(dc['pV'], df['pD']) >=70:
+                st.error("🚨 ALTA CONFIANÇA ACIMA DE 70%!")
 
 except Exception as e:
     st.error(f"Aguarde ou recarregue: {str(e)}")
