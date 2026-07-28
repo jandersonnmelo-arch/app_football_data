@@ -16,9 +16,9 @@ BOT_TOKEN = st.secrets["BOT_TOKEN"]
 CHAT_ID = st.secrets["CHAT_ID"]
 
 try:
-    DIAS_BUSCA = int(st.secrets.get("DIAS_BUSCA",7))
+    DIAS_BUSCA = int(st.secrets.get("DIAS_BUSCA", 7))
 except:
-    DIAS_BUSCA =7
+    DIAS_BUSCA = 7
 
 HORARIO_ALERTA = "08:30"
 HEADERS = {"X-Auth-Token": API_KEY}
@@ -38,7 +38,7 @@ def enviar_telegram(msg):
         resposta = requests.post(url, data=payload, timeout=15)
         return resposta.status_code == 200
     except Exception as e:
-        st.error(f"Erro envio: {str(e)}")
+        st.error(f"Erro no envio: {str(e)}")
         return False
 
 # ==============================
@@ -152,13 +152,13 @@ TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 def buscar_jogos(sigla, dias):
     time.sleep(0.5)
     hoje = datetime.utcnow().date()
-    lista=[]
-    for s in (TODAS_SIGLAS if sigla=="TODAS" else [sigla]):
+    lista = []
+    for s in (TODAS_SIGLAS if sigla == "TODAS" else [sigla]):
         try:
             r = requests.get(f"https://api.football-data.org/v4/competitions/{s}/matches",
                             headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
-            if r.status_code==200:
-                for j in r.json().get("matches",[]):
+            if r.status_code == 200:
+                for j in r.json().get("matches", []):
                     try:
                         dt = datetime.fromisoformat(j["utcDate"].replace("Z",""))
                         if dt.date() <= hoje + timedelta(days=dias):
@@ -175,12 +175,12 @@ def ultimos_5(time_id):
     try:
         r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
                         headers=HEADERS, params={"status":"FINISHED","limit":5}, timeout=15)
-        dados = r.json().get("matches",[])
+        dados = r.json().get("matches", [])
         if dados:
             return dados
         r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
                         headers=HEADERS, params={"limit":10}, timeout=15)
-        return [j for j in r.json().get("matches",[]) if j.get("status")=="FINISHED"][:5]
+        return [j for j in r.json().get("matches", []) if j.get("status") == "FINISHED"][:5]
     except:
         return []
 
@@ -218,57 +218,57 @@ def calcular_base(time_id, sigla, eh_casa=False):
                         "fin":med["fin"],"chute_gol":med["chute_gol"],"fal":med["fal"],"defesa_gk":med["defesa_gk"],
                         "resumo":["📊 Média da Liga"]*5,"placares":["Sem dados → Média"]}
         
-        v=e=d=gf=gs=amb=0
-        resumo=[]
-        placares=[]
-        total_cartao=0
+        v = e = d = gf = gs = amb = 0
+        resumo = []
+        placares = []
+        total_cartao = 0
         for j in jogos:
             try:
                 cid = j["homeTeam"]["id"]
-                gc = j["score"]["fullTime"].get("home",0) or 0
-                ga = j["score"]["fullTime"].get("away",0) or 0
+                gc = j["score"]["fullTime"].get("home", 0) or 0
+                ga = j["score"]["fullTime"].get("away", 0) or 0
                 if cid == time_id:
-                    gf+=gc
-                    gs+=ga
-                    if gc>ga:
-                        v+=1
+                    gf += gc
+                    gs += ga
+                    if gc > ga:
+                        v += 1
                         resumo.append("✅")
-                    elif gc==ga:
-                        e+=1
+                    elif gc == ga:
+                        e += 1
                         resumo.append("⚖️")
                     else:
-                        d+=1
+                        d += 1
                         resumo.append("❌")
                     placares.append(f"{gc}x{ga}")
                 else:
-                    gf+=ga
-                    gs+=gc
-                    if ga>gc:
-                        v+=1
+                    gf += ga
+                    gs += gc
+                    if ga > gc:
+                        v += 1
                         resumo.append("✅")
-                    elif ga==gc:
-                        e+=1
+                    elif ga == gc:
+                        e += 1
                         resumo.append("⚖️")
                     else:
-                        d+=1
+                        d += 1
                         resumo.append("❌")
                     placares.append(f"{ga}x{gc}")
-                if gc>0 and ga>0:
-                    amb+=1
-                total_cartao += med["cartao"]/5
+                if gc > 0 and ga > 0:
+                    amb += 1
+                total_cartao += med["cartao"] / 5
             except:
                 continue
         
-        t=len(jogos)
-        media_gols_time = (gf+gs)/t
-        fator_gols = media_gols_time / med["gols"] if med["gols"]>0 else 1
-        fator_esc = media_gols_time / med["gols"] if med["gols"]>0 else 1
-        fator_chute = media_gols_time / med["gols"] if med["gols"]>0 else 1
-        fator_defesa = med["gols"] / media_gols_time if media_gols_time>0 else 1
+        t = len(jogos)
+        media_gols_time = (gf + gs) / t
+        fator_gols = media_gols_time / med["gols"] if med["gols"] > 0 else 1
+        fator_esc = media_gols_time / med["gols"] if med["gols"] > 0 else 1
+        fator_chute = media_gols_time / med["gols"] if med["gols"] > 0 else 1
+        fator_defesa = med["gols"] / media_gols_time if media_gols_time > 0 else 1
         
-        pv_base = (v/t)*100
-        pe_base = (e/t)*100
-        pd_base = (d/t)*100
+        pv_base = (v / t) * 100
+        pe_base = (e / t) * 100
+        pd_base = (d / t) * 100
         
         if eh_casa:
             pv_base *= 1.15
@@ -283,34 +283,34 @@ def calcular_base(time_id, sigla, eh_casa=False):
         total = pv_base + pe_base + pd_base
         if total == 0:
             total = 1
-        pv = round(pv_base/total*100,1)
-        pe = round(pe_base/total*100,1)
-        pd = round(pd_base/total*100,1)
+        pv = round(pv_base / total * 100, 1)
+        pe = round(pe_base / total * 100, 1)
+        pd = round(pd_base / total * 100, 1)
         
-        mais15 = round(med["mais15"] * fator_gols,0)
-        menos15 = round(100 - mais15,0)
-        mais25 = round(med["mais25"] * fator_gols,0)
-        menos25 = round(100 - mais25,0)
-        menos35 = round(med["menos35"] / fator_gols if fator_gols>0 else med["menos35"],0)
+        mais15 = round(med["mais15"] * fator_gols, 0)
+        menos15 = round(100 - mais15, 0)
+        mais25 = round(med["mais25"] * fator_gols, 0)
+        menos25 = round(100 - mais25, 0)
+        menos35 = round(med["menos35"] / fator_gols if fator_gols > 0 else med["menos35"], 0)
         
-        esc_mais75 = round(med["esc_mais75"] * fator_esc,0)
-        esc_menos125 = round(med["esc_menos125"] / fator_esc if fator_esc>0 else med["esc_menos125"],0)
+        esc_mais75 = round(med["esc_mais75"] * fator_esc, 0)
+        esc_menos125 = round(med["esc_menos125"] / fator_esc if fator_esc > 0 else med["esc_menos125"], 0)
         
-        chute_mais95 = round(med["chute_mais95"] * fator_chute,0)
-        chute_menos95 = round(100 - chute_mais95,0)
+        chute_mais95 = round(med["chute_mais95"] * fator_chute, 0)
+        chute_menos95 = round(100 - chute_mais95, 0)
         
-        defesa_mais35 = round(med["defesa_mais35"] * fator_defesa,0)
-        defesa_menos35 = round(100 - defesa_mais35,0)
+        defesa_mais35 = round(med["defesa_mais35"] * fator_defesa, 0)
+        defesa_menos35 = round(100 - defesa_mais35, 0)
         
-        cartao_mais3 = round(med["cartao_mais3"] * (total_cartao/med["cartao"] if med["cartao"]>0 else 1),0)
-        cartao_menos3 = round(100 - cartao_mais3,0)
+        cartao_mais3 = round(med["cartao_mais3"] * (total_cartao / med["cartao"] if med["cartao"] > 0 else 1), 0)
+        cartao_menos3 = round(100 - cartao_mais3, 0)
         
-        fator_a = (gf/t)/1.5 if gf>0 else 1
-        fator_d = (gs/t)/1.5 if gs>0 else 1
+        fator_a = (gf / t) / 1.5 if gf > 0 else 1
+        fator_d = (gs / t) / 1.5 if gs > 0 else 1
         
         return {
             "pV":pv,"pE":pe,"pD":pd,
-            "mg":round(media_gols_time,2),
+            "mg":round(media_gols_time, 2),
             "mais15":mais15,"menos15":menos15,
             "mais25":mais25,"menos25":menos25,
             "menos35":menos35,
@@ -328,7 +328,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
             "resumo":resumo,"placares":placares
         }
     except Exception as e:
-        st.error(f"Erro cálculo: {str(e)}")
+        st.error(f"Erro no cálculo: {str(e)}")
         med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
         return {"pV":med["vit_casa"] if eh_casa else med["vit_fora"],"pE":med["empate"],"pD":med["vit_fora"] if eh_casa else med["vit_casa"],
                 "mg":med["gols"],"mais15":med["mais15"],"menos15":med["menos15"],
@@ -341,7 +341,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
                 "fin":med["fin"],"chute_gol":med["chute_gol"],"fal":med["fal"],"defesa_gk":med["defesa_gk"],
                 "resumo":["📊 Média da Liga"]*5,"placares":["Erro → Média"]}
 
-def dupla(v,e,d):
+def dupla(v, e, d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
@@ -424,7 +424,4 @@ def alerta():
                         defesa_menos35 = round((dc['defesa_menos35']+df['defesa_menos35'])/2,0)
                         amb = round((dc['amb']+df['amb'])/2,0)
                         cartao_mais = round((dc['cartao_mais3']+df['cartao_mais3'])/2,0)
-                        cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3'])/2,0)
-                        total_esc = round((dc['esc']+df['esc'])/2,1)
-                        total_fal = round(dc['fal'] + df['fal'],1)
-         
+                        cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3']
