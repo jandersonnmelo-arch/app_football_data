@@ -24,7 +24,7 @@ try:
 except:
     DIAS_BUSCA = 7
 
-# ⏰ ALERTA ÀS 07:00 MANAUS
+# ⏰ ALERTA ÀS 07:00 HORÁRIO MANAUS
 HORARIO_ALERTA = "07:00"
 HEADERS = {"X-Auth-Token": API_KEY}
 
@@ -46,20 +46,6 @@ MEDIAS_LIGA = {
             "mais4tiro":42,"menos4tiro":58,
             "mais8laterais":48,"menos8laterais":52,
             "arbitro_cartao":7.2,"arbitro_falta":28.8},
-    "WC": {"esc":8.2,"cartao":3.0,"cartao_1t":1.3,"cartao_2t":1.7,"fin":10.0,"chute_gol":4.2,"fal":25.0,"defesa_gk":4.0,"gols":2.5,
-           "gols_1t":1.0,"gols_2t":1.5,
-           "tiro_meta":4.5,"laterais":8.0,
-           "vit_casa":42,"vit_fora":32,"empate":26,
-           "mais15":74,"menos15":26,"mais25":53,"menos25":47,"menos35":80,"mais35gols":36,
-           "mais15cartao":93,"mais25cartao":58,"menos65cartao":90,
-           "mais75esc":55,"menos125esc":91,
-           "mais25fin":35,"menos25fin":94,
-           "mais95chute":40,"menos95chute":60,
-           "mais25fal":52,"menos25fal":48,
-           "mais35defesa":62,"menos35defesa":38,
-           "mais4tiro":40,"menos4tiro":60,
-           "mais8laterais":45,"menos8laterais":55,
-           "arbitro_cartao":7.0,"arbitro_falta":28.0},
     "CL": {"esc":9.5,"cartao":2.7,"cartao_1t":1.1,"cartao_2t":1.6,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
            "gols_1t":1.2,"gols_2t":1.7,
            "tiro_meta":4.0,"laterais":7.8,
@@ -74,20 +60,6 @@ MEDIAS_LIGA = {
            "mais4tiro":38,"menos4tiro":62,
            "mais8laterais":42,"menos8laterais":58,
            "arbitro_cartao":6.8,"arbitro_falta":27.5},
-    "BSA": {"esc":9.0,"cartao":3.2,"cartao_1t":1.4,"cartao_2t":1.8,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
-            "gols_1t":1.1,"gols_2t":1.5,
-            "tiro_meta":4.7,"laterais":8.5,
-            "vit_casa":45,"vit_fora":30,"empate":25,
-            "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,"mais35gols":38,
-            "mais15cartao":92,"mais25cartao":60,"menos65cartao":88,
-            "mais75esc":58,"menos125esc":92,
-            "mais25fin":32,"menos25fin":95,
-            "mais95chute":38,"menos95chute":62,
-            "mais25fal":55,"menos25fal":50,
-            "mais35defesa":65,"menos35defesa":35,
-            "mais4tiro":42,"menos4tiro":58,
-            "mais8laterais":48,"menos8laterais":52,
-            "arbitro_cartao":7.2,"arbitro_falta":28.8},
     "BL1": {"esc":9.8,"cartao":2.8,"cartao_1t":1.2,"cartao_2t":1.6,"fin":12.0,"chute_gol":5.5,"fal":24.5,"defesa_gk":3.2,"gols":3.1,
             "gols_1t":1.3,"gols_2t":1.8,
             "tiro_meta":3.8,"laterais":7.5,
@@ -266,7 +238,8 @@ def calcular_base(time_id, sigla, eh_casa=False):
             "mesc_1t":round(med["esc"]*0.45*fator,1), "mesc_2t":round(med["esc"]*0.55*fator,1),
             "mfin":round(med["fin"]*fator,1),"mchute":round(med["chute_gol"]*fator,1),
             "mfal":round(med["fal"]*fator,1),"mdefesa":round(med["defesa_gk"]/fator if fator>0 else med["defesa_gk"],1),
-            "amb":dados_geral["amb"],,"resumo":resumo,"placares":placares,
+            "amb":dados_geral["amb"],
+            "resumo":resumo,"placares":placares,
             "casa":{"mdefesa":round((med["defesa_gk"]/(dados_casa["mg"]/med["gols"])) if dados_casa["mg"]>0 else med["defesa_gk"],1)},
             "fora":{"mdefesa":round((med["defesa_gk"]/(dados_fora["mg"]/med["gols"])) if dados_fora["mg"]>0 else med["defesa_gk"],1)},
             "arbitro_cartao":med["arbitro_cartao"], "arbitro_falta":med["arbitro_falta"]
@@ -286,7 +259,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
 def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 # ==============================
-# 📝 MENSAGEM COMPLETA COM TODAS ANÁLISES
+# 📝 RELATÓRIO COMPLETO DO JOGO
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
     mg_total = round((dc['mg']+df['mg']),1)
@@ -305,7 +278,7 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
     mdefesa_total = round((dc['mdefesa']+df['mdefesa']),1)
     mimp_total = round((mcartao_total / 1.3),1)
 
-    # Indicadores acima de 70%
+    # INDICADORES ACIMA DE 70%
     indicadores = []
     if dup['X2'] >=70: indicadores.append(f"🟢 Dupla Chance X2 ({dup['X2']}%)")
     if (dc['mais15']+df['mais15'])/2 >=70: indicadores.append(f"🟢 Mais 1.5 gols ({round((dc['mais15']+df['mais15'])/2,0)}%)")
@@ -342,9 +315,9 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 🧤 {casa}: {dc['mdefesa']} defesas por jogo | Em casa: {dc['casa']['mdefesa']}
 🧤 {fora}: {df['mdefesa']} defesas por jogo | Fora de casa: {df['fora']['mdefesa']}
 
-⚽ ANÁLISE DE ATAQUES:
-🏠 {casa}: Média {dc['mg']} gols | Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
-✈️ {fora}: Média {df['mg']} gols | Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
+⚽ ÚLTIMOS 5 JOGOS:
+🏠 {casa}: Média {dc['mg']} gols | Resultados: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
+✈️ {fora}: Média {df['mg']} gols | Resultados: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
 ✅ INDICAÇÕES COM ALTA CONFIANÇA:
 {chr(10).join(indicadores) if indicadores else "Nenhuma indicação acima de 70%"}
@@ -372,7 +345,7 @@ def alerta():
 threading.Thread(target=alerta, daemon=True).start()
 
 # ==============================
-# 🖥️ TELA DO APP
+# 🖥️ TELA PRINCIPAL
 # ==============================
 esc = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
 dias = st.number_input("Dias à frente", min_value=1, max_value=14, value=DIAS_BUSCA)
