@@ -49,10 +49,9 @@ MEDIAS_LIGA = {
         "gols":2.7, "cartao":3.0, "esc":9.0, "imped":2.8, "laterais":33.0, "tiro_meta":9.0,
         "fin":10.5, "chute_gol":4.5, "fal":25.0, "defesa_gk":3.8,
         "vit_casa":46, "vit_fora":30, "empate":24,
-        "mais15":80, "menos15":20, "mais25":60, "menos25":40, "mais35":42, "menos35":58,
-        "mais15cartao":92, "mais25cartao":72, "mais35cartao":50, "menos25cartao":65, "menos35cartao":45, "mais65cartao":26,
+        "mais15":80, "mais25":60, "mais35":42,
+        "mais15cartao":92, "mais25cartao":72, "mais35cartao":50, "mais65cartao":26,
         "mais65esc":78, "mais75esc":69, "mais85esc":58, "mais95esc":45, "mais105esc":38, "mais115esc":30,
-        "menos95esc":55, "menos105esc":62, "menos115esc":70, "menos125esc":78,
         "mais25imp":78, "mais35imp":62,
         "mais305lat":68, "mais325lat":55, "mais345lat":42, "mais365lat":28,
         "mais55tm":72, "mais65tm":60, "mais75tm":48, "mais95tm":30,
@@ -69,7 +68,7 @@ MEDIAS_LIGA = {
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
     time.sleep(0.3)
-    hoje = datetime.utcnow().date() - timedelta(hours=4) # Ajuste para Manaus
+    hoje = datetime.now() - timedelta(hours=4)
     lista = []
     try:
         r = requests.get(f"https://api.football-data.org/v4/competitions/{sigla}/matches", headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
@@ -77,7 +76,7 @@ def buscar_jogos(sigla, dias):
             for j in r.json().get("matches", []):
                 try:
                     dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
-                    if dt.date() <= hoje + timedelta(days=dias):
+                    if dt.date() <= hoje.date() + timedelta(days=dias):
                         lista.append(j)
                 except: pass
     except: pass
@@ -96,7 +95,7 @@ def calcular_dados(time_id, eh_casa=False):
         jogos = ultimos_5(time_id)
         med = MEDIAS_LIGA["PADRAO"]
         if not jogos:
-            return med
+            return med.copy()
         
         v=e=d=gf=gs=amb=0
         resumo=[]; placares=[]
@@ -132,7 +131,7 @@ def calcular_dados(time_id, eh_casa=False):
             if chave not in res:
                 res[chave] = round(med[chave]*fator,1)
         return res
-    except: return MEDIAS_LIGA["PADRAO"]
+    except: return MEDIAS_LIGA["PADRAO"].copy()
 
 def dupla_chance(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
@@ -145,7 +144,7 @@ def enviar_telegram(texto):
     except Exception as e: return False, f"❌ Erro: {str(e)}"
 
 # ==============================
-# 📨 MENSAGEM PADRONIZADA
+# 📨 MENSAGEM PADRONIZADA (CORRIGIDA)
 # ==============================
 def montar_mensagem(casa, fora, dt, dc, df, dup):
     def m(a,b): return round((a+b)/2,1)
@@ -159,24 +158,24 @@ def montar_mensagem(casa, fora, dt, dc, df, dup):
 ⚽ Média: {m(dc['mg'],df['mg'])}
 🔢 Mais 1.5: {m(dc['mais15'],df['mais15'])}% | Menos 1.5: {round(100 - m(dc['mais15'],df['mais15']),1)}%
 🔢 Mais 2.5: {m(dc['mais25'],df['mais25'])}% | Menos 2.5: {round(100 - m(dc['mais25'],df['mais25']),1)}%
-🔢 Mais 3.5: {m(dc['mais35'],df['mais35'])}% | Menos 3.5: {m(dc['menos35'],df['menos35']))}%
+🔢 Mais 3.5: {m(dc['mais35'],df['mais35'])}% | Menos 3.5: {round(100 - m(dc['mais35'],df['mais35']),1)}%
 🔄 Ambos Marcam: {m(dc['amb'],df['amb'])}%
 
 🟨 CARTÕES:
 🟨 Média: {m(dc['cartao'],df['cartao'])}
 🔢 Mais 1.5: {m(dc['mais15cartao'],df['mais15cartao']))}% | Menos 1.5: {round(100 - m(dc['mais15cartao'],df['mais15cartao']),1)}%
-🔢 Mais 2.5: {m(dc['mais25cartao'],df['mais25cartao']))}% | Menos 2.5: {m(dc['menos25cartao'],df['menos25cartao']))}%
-🔢 Mais 3.5: {m(dc['mais35cartao'],df['mais35cartao']))}% | Menos 3.5: {m(dc['menos35cartao'],df['menos35cartao']))}%
-🔢 Mais 6.5: {m(dc['mais65cartao'],df['mais65cartao']))}%
+🔢 Mais 2.5: {m(dc['mais25cartao'],df['mais25cartao']))}% | Menos 2.5: {round(100 - m(dc['mais25cartao'],df['mais25cartao']),1)}%
+🔢 Mais 3.5: {m(dc['mais35cartao'],df['mais35cartao']))}% | Menos 3.5: {round(100 - m(dc['mais35cartao'],df['mais35cartao']),1)}%
+🔢 Mais 6.5: {m(dc['mais65cartao'],df['mais65cartao']))}% | Menos 6.5: {round(100 - m(dc['mais65cartao'],df['mais65cartao']),1)}%
 
 📐 ESCANTEIOS:
 📐 Média: {m(dc['esc'],df['esc'])}
 🔢 Mais 6.5: {m(dc['mais65esc'],df['mais65esc']))}% | Menos 6.5: {round(100 - m(dc['mais65esc'],df['mais65esc']),1)}%
 🔢 Mais 7.5: {m(dc['mais75esc'],df['mais75esc']))}% | Menos 7.5: {round(100 - m(dc['mais75esc'],df['mais75esc']),1)}%
 🔢 Mais 8.5: {m(dc['mais85esc'],df['mais85esc']))}% | Menos 8.5: {round(100 - m(dc['mais85esc'],df['mais85esc']),1)}%
-🔢 Mais 9.5: {m(dc['mais95esc'],df['mais95esc']))}% | Menos 9.5: {m(dc['menos95esc'],df['menos95esc']))}%
-🔢 Mais 10.5: {m(dc['mais105esc'],df['mais105esc']))}% | Menos 10.5: {m(dc['menos105esc'],df['menos105esc']))}%
-🔢 Mais 11.5: {m(dc['mais115esc'],df['mais115esc']))}% | Menos 11.5: {m(dc['menos115esc'],df['menos115esc']))}%
+🔢 Mais 9.5: {m(dc['mais95esc'],df['mais95esc']))}% | Menos 9.5: {round(100 - m(dc['mais95esc'],df['mais95esc']),1)}%
+🔢 Mais 10.5: {m(dc['mais105esc'],df['mais105esc']))}% | Menos 10.5: {round(100 - m(dc['mais105esc'],df['mais105esc']),1)}%
+🔢 Mais 11.5: {m(dc['mais115esc'],df['mais115esc']))}% | Menos 11.5: {round(100 - m(dc['mais115esc'],df['mais115esc']),1)}%
 
 🚫 IMPEDIMENTOS:
 🚫 Média Total: {m(dc['imped'],df['imped'])}
@@ -245,9 +244,10 @@ def montar_mensagem(casa, fora, dt, dc, df, dup):
 # ⏰ ROTINA AUTOMÁTICA TELEGRAM
 # ==============================
 def rotina_alerta():
-    st.session_state['ultimo_envio'] = None
+    if 'ultimo_envio' not in st.session_state:
+        st.session_state['ultimo_envio'] = None
     while True:
-        agora = datetime.now() - timedelta(hours=4) # Horário Manaus
+        agora = datetime.now() - timedelta(hours=4)
         hora_atual = agora.strftime("%H:%M")
         
         if hora_atual == HORARIO_ALERTA_AUTO and st.session_state.get('ultimo_envio') != agora.date():
@@ -338,3 +338,4 @@ if st.button("🔍 Carregar Jogos e Análises"):
                 st.error(f"❌ Erro no jogo: {str(e)}")
 
 st.caption(f"⚽ Competições solicitadas | Período: até {dias_busca} dias | Alerta automático: {HORARIO_ALERTA_AUTO} Manaus | Limiar: ≥ {LIMIAR_ALERTA}%")
+    
