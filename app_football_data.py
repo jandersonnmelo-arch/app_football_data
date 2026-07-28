@@ -72,6 +72,45 @@ MEDIAS_LIGA = {
            "mais65cg":75,"mais75cg":62,"mais85cg":48,"mais95cg":52,
            "mais195fal":70,"mais225fal":55,"mais255fal":42,"mais295fal":28,
            "mais25def":75,"mais35def":50,"mais45def":35,"mais55def":22},
+    "BSB": {"esc":8.5,"cartao":3.3,"fin":9.0,"chute_gol":3.8,"fal":27.0,"defesa_gk":4.5,"gols":2.4,
+            "tiro_meta":5.0,"laterais":9.0,"imped":3.2,
+            "vit_casa":44,"vit_fora":29,"empate":27,
+            "mais15":72,"mais25":52,"mais35":35,
+            "mais15cartao":90,"mais25cartao":70,"mais35cartao":48,"mais65cartao":28,
+            "mais65esc":75,"mais75esc":65,"mais85esc":55,"mais95esc":42,"mais105esc":35,"mais115esc":28,
+            "mais25imp":75,"mais35imp":60,
+            "mais305lat":65,"mais325lat":52,"mais345lat":38,"mais365lat":25,
+            "mais55tm":70,"mais65tm":58,"mais75tm":45,"mais95tm":28,
+            "mais195fin":65,"mais205fin":58,"mais225fin":42,"mais255fin":22,
+            "mais65cg":68,"mais75cg":54,"mais85cg":40,"mais95cg":45,
+            "mais195fal":80,"mais225fal":65,"mais255fal":50,"mais295fal":35,
+            "mais25def":82,"mais35def":65,"mais45def":48,"mais55def":32},
+    "BRA": {"esc":8.8,"cartao":3.1,"fin":9.2,"chute_gol":3.9,"fal":26.0,"defesa_gk":4.3,"gols":2.5,
+            "tiro_meta":4.8,"laterais":8.8,"imped":3.1,
+            "vit_casa":45,"vit_fora":28,"empate":27,
+            "mais15":74,"mais25":54,"mais35":37,
+            "mais15cartao":91,"mais25cartao":71,"mais35cartao":49,"mais65cartao":27,
+            "mais65esc":76,"mais75esc":67,"mais85esc":57,"mais95esc":44,"mais105esc":37,"mais115esc":29,
+            "mais25imp":76,"mais35imp":61,
+            "mais305lat":67,"mais325lat":54,"mais345lat":40,"mais365lat":27,
+            "mais55tm":71,"mais65tm":59,"mais75tm":47,"mais95tm":29,
+            "mais195fin":67,"mais205fin":59,"mais225fin":44,"mais255fin":24,
+            "mais65cg":69,"mais75cg":55,"mais85cg":41,"mais95cg":47,
+            "mais195fal":79,"mais225fal":64,"mais255fal":49,"mais295fal":34,
+            "mais25def":81,"mais35def":63,"mais45def":46,"mais55def":31},
+    "CS": {"esc":8.7,"cartao":3.2,"fin":9.3,"chute_gol":4.1,"fal":25.5,"defesa_gk":4.1,"gols":2.6,
+           "tiro_meta":4.6,"laterais":8.6,"imped":2.9,
+           "vit_casa":46,"vit_fora":28,"empate":26,
+           "mais15":76,"mais25":56,"mais35":39,
+           "mais15cartao":92,"mais25cartao":72,"mais35cartao":50,"mais65cartao":26,
+           "mais65esc":77,"mais75esc":68,"mais85esc":58,"mais95esc":45,"mais105esc":38,"mais115esc":30,
+           "mais25imp":77,"mais35imp":62,
+           "mais305lat":68,"mais325lat":55,"mais345lat":42,"mais365lat":28,
+           "mais55tm":72,"mais65tm":60,"mais75tm":48,"mais95tm":30,
+           "mais195fin":68,"mais205fin":60,"mais225fin":45,"mais255fin":25,
+           "mais65cg":70,"mais75cg":56,"mais85cg":42,"mais95cg":48,
+           "mais195fal":78,"mais225fal":63,"mais255fal":48,"mais295fal":33,
+           "mais25def":80,"mais35def":60,"mais45def":44,"mais55def":30},
     "EC": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
            "tiro_meta":4.3,"laterais":8.2,"imped":2.7,
            "vit_casa":45,"vit_fora":30,"empate":25,
@@ -180,14 +219,16 @@ MEDIAS_LIGA = {
 
 LIGAS = {
     "⚽ Todas Competições": "TODAS",
-    "🌍 Copa do Mundo FIFA": "WC",
-    "🏆 UEFA Champions League": "CL",
-    "🏆 Eurocopa": "EC",
     "🇧🇷 Brasileirão Série A": "BSA",
+    "🇧🇷 Brasileirão Série B": "BSB",
+    "🇧🇷 Copa do Brasil": "BRA",
+    "🏆 Copa Sul-Americana": "CS",
+    "🏆 UEFA Champions League": "CL",
+    "🏆 Europa League": "EC",
     "🇩🇪 Bundesliga": "BL1",
     "🇪🇸 La Liga": "PD",
     "🇫🇷 Ligue 1": "FL1",
-    "🇬🇧 Championship": "ELC",
+    "🇲🇽 Liga MX": "ELC",
     "🇵🇹 Primeira Liga": "PPL",
     "🇮🇹 Série A": "SA",
     "🇬🇧 Premier League": "PL"
@@ -384,7 +425,8 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 ⚽ FINALIZAÇÕES:
 ⚽ Média: {m(dc['mfin'],df['mfin'])}
 🔢 Mais 19.5: {m0(dc['mais195fin'],df['mais195fin'])}% | Menos 19.5: {round(100-m0(dc['mais195fin'],df['mais195fin']),0)}%
-🔢 Mais 20.5: {m0(dc['mais205fin'],df['mais205fin'])}% | Menos 20.5: {round(100-m0(dc['mais205fin'],df['mais205fin']),0)}%
+🔢 Mais 20.5: {m0(dc['mais205fin'],df['mais205fin'])}% | Menos 20.5: {round(100-m
+(dc['mais205fin'],df['mais205fin']),0)}%
 🔢 Mais 22.5: {m0(dc['mais225fin'],df['mais225fin'])}% | Menos 22.5: {round(100-m0(dc['mais225fin'],df['mais225fin']),0)}%
 🔢 Mais 25.5: {m0(dc['mais255fin'],df['mais255fin'])}% | Menos 25.5: {round(100-m0(dc['mais255fin'],df['mais255fin']),0)}%
 
@@ -439,8 +481,7 @@ else:
         try:
             casa = jogo["homeTeam"]["name"]
             fora = jogo["awayTeam"]["name"]
-            dt = datetime.from
-            isoformat(jogo["utcDate"].replace("Z",""))
+            dt = datetime.fromisoformat(jogo["utcDate"].replace("Z",""))
             sigla_jogo = jogo["competition"]["code"]
             dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, eh_casa=True)
             df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, eh_casa=False)
@@ -494,4 +535,3 @@ if 'rotina_iniciada' not in st.session_state:
     threading.Thread(target=verificar_alerta, daemon=True).start()
 
 st.info(f"⏰ Alerta automático configurado para {HORARIO_ALERTA} (horário Manaus) | Limiar: {LIMIAR_ALERTA}%")
-
