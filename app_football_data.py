@@ -33,88 +33,25 @@ HEADERS = {"X-Auth-Token": API_KEY}
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
             "tiro_meta":4.7,"laterais":8.5,
-            "vit_casa":45,"vit_fora":30,"empate":25,
-            "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,"mais35gols":38,
-            "mais15cartao":92,"mais25cartao":60,"menos65cartao":88,
-            "mais75esc":58,"menos125esc":92,
-            "mais25fin":32,"menos25fin":95,
-            "mais95chute":38,"menos95chute":62,
-            "mais25fal":55,"menos25fal":50,
-            "mais35defesa":65,"menos35defesa":35,
-            "mais4tiro":42,"menos4tiro":58,
-            "mais8laterais":48,"menos8laterais":52},
+            "vit_casa":45,"vit_fora":30,"empate":25},
     "BRB": {"esc":8.5,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
             "tiro_meta":5.0,"laterais":9.0,
-            "vit_casa":44,"vit_fora":27,"empate":29,
-            "mais15":70,"menos15":30,"mais25":50,"menos25":50,"menos35":86,"mais35gols":32,
-            "mais15cartao":88,"mais25cartao":65,"menos65cartao":85,
-            "mais75esc":52,"menos125esc":95,
-            "mais25fin":26,"menos25fin":97,
-            "mais95chute":30,"menos95chute":70,
-            "mais25fal":60,"menos25fal":40,
-            "mais35defesa":72,"menos35defesa":28,
-            "mais4tiro":48,"menos4tiro":52,
-            "mais8laterais":55,"menos8laterais":45},
+            "vit_casa":44,"vit_fora":27,"empate":29},
     "CB": {"esc":8.8,"cartao":3.3,"fin":9.8,"chute_gol":4.1,"fal":27.0,"defesa_gk":4.3,"gols":2.5,
             "tiro_meta":4.8,"laterais":8.8,
-            "vit_casa":46,"vit_fora":28,"empate":26,
-            "mais15":72,"menos15":28,"mais25":52,"menos25":48,"menos35":84,"mais35gols":34,
-            "mais15cartao":90,"mais25cartao":63,"menos65cartao":86,
-            "mais75esc":54,"menos125esc":93,
-            "mais25fin":28,"menos25fin":96,
-            "mais95chute":33,"menos95chute":67,
-            "mais25fal":57,"menos25fal":43,
-            "mais35defesa":70,"menos35defesa":30,
-            "mais4tiro":46,"menos4tiro":54,
-            "mais8laterais":53,"menos8laterais":47},
+            "vit_casa":46,"vit_fora":28,"empate":26},
     "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
            "tiro_meta":4.0,"laterais":7.8,
-           "vit_casa":48,"vit_fora":29,"empate":23,
-           "mais15":80,"menos15":20,"mais25":62,"menos25":38,"menos35":75,"mais35gols":45,
-           "mais15cartao":95,"mais25cartao":52,"menos65cartao":92,
-           "mais75esc":68,"menos125esc":88,
-           "mais25fin":45,"menos25fin":90,
-           "mais95chute":52,"menos95chute":48,
-           "mais25fal":42,"menos25fal":60,
-           "mais35defesa":52,"menos35defesa":48,
-           "mais4tiro":38,"menos4tiro":62,
-           "mais8laterais":42,"menos8laterais":58},
+           "vit_casa":48,"vit_fora":29,"empate":23},
     "SA": {"esc":9.0,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.7,"gols":2.8,
            "tiro_meta":4.1,"laterais":7.9,
-           "vit_casa":48,"vit_fora":28,"empate":24,
-           "mais15":82,"menos15":18,"mais25":61,"menos25":39,"menos35":77,"mais35gols":43,
-           "mais15cartao":92,"mais25cartao":56,"menos65cartao":90,
-           "mais75esc":63,"menos125esc":88,
-           "mais25fin":44,"menos25fin":90,
-           "mais95chute":49,"menos95chute":51,
-           "mais25fal":49,"menos25fal":51,
-           "mais35defesa":56,"menos35defesa":44,
-           "mais4tiro":39,"menos4tiro":61,
-           "mais8laterais":43,"menos8laterais":57},
+           "vit_casa":48,"vit_fora":28,"empate":24},
     "EL": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
            "tiro_meta":4.3,"laterais":8.2,
-           "vit_casa":45,"vit_fora":30,"empate":25,
-           "mais15":78,"menos15":22,"mais25":58,"menos25":42,"menos35":78,"mais35gols":40,
-           "mais15cartao":94,"mais25cartao":55,"menos65cartao":91,
-           "mais75esc":62,"menos125esc":89,
-           "mais25fin":40,"menos25fin":92,
-           "mais95chute":48,"menos95chute":52,
-           "mais25fal":48,"menos25fal":52,
-           "mais35defesa":58,"menos35defesa":42,
-           "mais4tiro":39,"menos4tiro":61,
-           "mais8laterais":44,"menos8laterais":56},
+           "vit_casa":45,"vit_fora":30,"empate":25},
     "LM": {"esc":9.2,"cartao":3.1,"fin":10.5,"chute_gol":4.6,"fal":25.5,"defesa_gk":3.6,"gols":2.8,
            "tiro_meta":4.2,"laterais":8.0,
-           "vit_casa":47,"vit_fora":29,"empate":24,
-           "mais15":80,"menos15":20,"mais25":60,"menos25":40,"menos35":76,"mais35gols":42,
-           "mais15cartao":93,"mais25cartao":58,"menos65cartao":89,
-           "mais75esc":65,"menos125esc":87,
-           "mais25fin":42,"menos25fin":91,
-           "mais95chute":50,"menos95chute":50,
-           "mais25fal":50,"menos25fal":50,
-           "mais35defesa":55,"menos35defesa":45,
-           "mais4tiro":40,"menos4tiro":60,
-           "mais8laterais":45,"menos8laterais":55}
+           "vit_casa":47,"vit_fora":29,"empate":24}
 }
 
 LIGAS = {
@@ -129,12 +66,13 @@ LIGAS = {
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 # ==============================
-# 🔍 BUSCA DE DADOS NA API
+# 🔍 BUSCA DE DADOS COM RESTRIÇÃO DE DATA ✅ CORRIGIDO
 # ==============================
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
     time.sleep(0.5)
     hoje = datetime.utcnow().date()
+    data_limite = hoje + timedelta(days=dias)
     lista = []
     siglas_busca = TODAS_SIGLAS if sigla == "TODAS" else [sigla]
     
@@ -143,14 +81,15 @@ def buscar_jogos(sigla, dias):
             r = requests.get(
                 f"https://api.football-data.org/v4/competitions/{s}/matches",
                 headers=HEADERS, 
-                params={"limit": 100}, 
+                params={"limit": 200}, 
                 timeout=15
             )
             if r.status_code == 200:
                 for j in r.json().get("matches", []):
                     try:
-                        dt = datetime.fromisoformat(j["utcDate"].replace("Z",""))
-                        if dt.date() <= hoje + timedelta(days=dias):
+                        dt_jogo = datetime.fromisoformat(j["utcDate"].replace("Z","")).date()
+                        # ✅ BUSCA SOMENTE DENTRO DO PERÍODO: HOJE ATÉ DATA LIMITE
+                        if hoje <= dt_jogo <= data_limite:
                             lista.append(j)
                     except: 
                         pass
@@ -253,7 +192,7 @@ def calcular_dupla_chance(pv, pe, pd):
     return {"1X": round(pv+pe,1), "X2": round(pe+pd,1), "12": round(pv+pd,1)}
 
 # ==============================
-# 🔍 VERIFICAR RESULTADO E ADICIONAR ÍCONES ✅/❌
+# 🔍 VERIFICAR RESULTADO ✅/❌
 # ==============================
 def verificar_resultado(jogo, indicacoes, dupla, dados_casa, dados_fora):
     if jogo.get("status") != "FINISHED":
@@ -281,7 +220,7 @@ def verificar_resultado(jogo, indicacoes, dupla, dados_casa, dados_fora):
     info_final = f"📌 RESULTADO FINAL: {placar_casa} x {placar_fora}"
     return indicacoes_ok, info_final
 # ==============================
-# 📝 RELATÓRIO COMPLETO COM VERIFICAÇÃO
+# 📝 RELATÓRIO COMPLETO
 # ==============================
 def gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dados_casa, dados_fora, dupla, jogo):
     tg = round((dados_casa['mg'] + dados_fora['mg']),1)
@@ -361,12 +300,16 @@ def gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dados_casa, dados_
 escolha_liga = st.selectbox("🏆 Selecione a Competicao", list(LIGAS.keys()))
 sigla_escolhida = LIGAS[escolha_liga]
 
+# Mostra o período configurado
+st.info(f"📅 Buscando jogos de HOJE até {DIAS_BUSCA} dias à frente")
+
 if st.button("🔍 Carregar Jogos e Analises"):
-    with st.spinner("Buscando dados..."):
+    with st.spinner(f"Buscando jogos dos proximos {DIAS_BUSCA} dias..."):
         jogos = buscar_jogos(sigla_escolhida, DIAS_BUSCA)
         if not jogos:
-            st.warning("⚠️ Nenhum jogo encontrado no periodo.")
+            st.warning(f"⚠️ Nenhum jogo encontrado nos proximos {DIAS_BUSCA} dias.")
         else:
+            st.success(f"✅ Encontrados {len(jogos)} jogos no período selecionado")
             for jogo in jogos:
                 try:
                     nome_casa = jogo["homeTeam"]["name"]
