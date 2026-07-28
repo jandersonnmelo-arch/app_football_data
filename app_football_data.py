@@ -337,7 +337,7 @@ def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 #
-==============================
+  ==============================
 # 📝 MENSAGEM COM TODAS AS MÉTRICAS
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
