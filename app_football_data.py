@@ -7,8 +7,8 @@ import threading
 # ==============================
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
-st.set_page_config(page_title="⚽ Análise Completa + Confronto Direto", page_icon="⚽", layout="wide")
-st.title("⚽ Análise de Jogos + Confronto Direto + Telegram")
+st.set_page_config(page_title="⚽ Análise Corrigida + Confronto Direto", page_icon="⚽", layout="wide")
+st.title("⚽ Análise Completa - Corrigido")
 
 # 🔒 CHAVES OCULTAS
 API_KEY = st.secrets["CHAVE_FD"]
@@ -74,7 +74,7 @@ LIGAS = {
 TODAS_SIGLAS = ["BSA","BRB","WC","CL","BL1","ED","PD","FL1","ELC","PPL","EC","SA","PL"]
 
 # ==============================
-# 🔍 BUSCA JOGOS + CONFRONTO DIRETO
+# 🔍 BUSCA CORRIGIDA
 # ==============================
 @st.cache_data(ttl=3600)
 def buscar_jogos(sigla, dias):
@@ -99,7 +99,8 @@ def buscar_jogos(sigla, dias):
 @st.cache_data(ttl=3600)
 def buscar_confronto_direto(id_time1, id_time2):
     try:
-        r = requests.get(f"https://api.football-data.org/v4/matches?team1={id_time1}&team2={id_time2}&status=FINISHED&limit=5",
+        # ✅ CORRIGIDO: Busca SEM filtrar competição, pega todos os confrontos
+        r = requests.get(f"https://api.football-data.org/v4/matches?team1={id_time1}&team2={id_time2}&status=FINISHED&limit=10",
                         headers=HEADERS, timeout=15)
         dados = r.json().get("matches", [])
         v1 = v2 = e = 0
@@ -137,21 +138,22 @@ def buscar_confronto_direto(id_time1, id_time2):
             "p1": round(v1/q*100,1), "pe": round(e/q*100,1), "p2": round(v2/q*100,1),
             "media_gols": round((g1_total+g2_total)/q,2),
             "ambos": round(ambos/q*100,0),
-            "placares": placares or ["Sem histórico"]
+            "placares": placares or ["Sem histórico registrado"]
         }
     except:
         return {"qtd":0,"v1":0,"e":0,"v2":0,"p1":0,"pe":0,"p2":0,"media_gols":0,"ambos":0,"placares":["Sem dados"]}
 
 @st.cache_data(ttl=3600)
-def ultimos_5_jogos(time_id, sigla):
+def ultimos_5_jogos(time_id):
     try:
+        # ✅ CORRIGIDO: Busca últimos jogos SEM filtrar competição
         r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
-                        headers=HEADERS, params={"competitions":sigla,"status":"FINISHED","limit":5}, timeout=15)
+                        headers=HEADERS, params={"status":"FINISHED","limit":5}, timeout=15)
         return r.json().get("matches", [])
     except:return []
 
 def calcular_base(time_id, sigla):
-    jogos = ultimos_5_jogos(time_id, sigla)
+    jogos = ultimos_5_jogos(time_id)
     medias = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     if not jogos:
         return {"pV":33.3,"pE":33.3,"pD":33.4,"mg":2.5,"ma25":50,"amb":50,
@@ -190,7 +192,7 @@ def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
 # ==============================
-# 📝 MENSAGEM COM CONFRONTO DIRETO
+# 📝 MENSAGEM
 # ==============================
 def gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, total_fin, total_chute_gol, confronto, conf):
     return f"""
@@ -297,7 +299,6 @@ if st.button("🔍 Atualizar e Enviar Agora"):
                 st.markdown("---")
                 st.subheader(f"⚽ {casa['name']} 🆚 {fora['name']} | {dt.strftime('%d/%m %H:%M')}")
 
-                # CONFRONTO DIRETO EM DESTAQUE
                 st.subheader("🔥 CONFRONTO DIRETO")
                 if confronto["qtd"]>0:
                     c1,c2,c3 = st.columns(3)
@@ -307,7 +308,7 @@ if st.button("🔍 Atualizar e Enviar Agora"):
                     st.write(f"Média total gols: {confronto['media_gols']} | Ambos marcam: {confronto['ambos']}%")
                     st.write(f"Placares: {' | '.join(confronto['placares'])}")
                 else:
-                    st.info("Sem histórico de confronto direto registrado")
+                    st.info("Sem histórico de confronto direto registrado na API")
 
                 col1, col2 = st.columns(2)
                 with col1:
