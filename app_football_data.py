@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
 st.set_page_config(page_title="⚽ Análise Completa", page_icon="⚽", layout="wide")
-st.title("⚽ Análise de Jogos | Soma 100% | Cartões | Telegram")
+st.title("⚽ Análise | Soma 100% | Cartões + Estatísticas | Telegram")
 
 # 🔒 CHAVES OCULTAS
 try:
@@ -23,6 +23,8 @@ try:
 except:
     DIAS_BUSCA = 7
 
+# Limite de confiança padrão
+LIMITE_CONFIANCA = 70
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
@@ -124,7 +126,7 @@ def enviar_mensagem_telegram(texto):
         return False
 
 # ==============================
-# 🧮 CÁLCULO COM SOMA EXATA DE 100% ✅
+# 🧮 CÁLCULO COM SOMA EXATA DE 100%
 # ==============================
 def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
     try:
@@ -168,18 +170,15 @@ def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
         fator_casa = 1.12 if joga_em_casa else 0.93
         mg = round((gf+gs)/tj,1)
         
-        # Cálculo base
         pv_base = round((v/tj)*100*fator_casa,1)
         pe_base = round((e/tj)*100,1)
         pd_base = round((d/tj)*100*(1.08 if not joga_em_casa else 0.9),1)
         total_base = pv_base + pe_base + pd_base
         
-        # ✅ AJUSTE PARA SOMAR EXATAMENTE 100%
         if total_base > 0:
             pv = round((pv_base / total_base) * 100,1)
             pe = round((pe_base / total_base) * 100,1)
             pd = round((pd_base / total_base) * 100,1)
-            # Corrige diferença mínima de arredondamento
             soma_final = pv + pe + pd
             if soma_final != 100:
                 pv = round(pv + (100 - soma_final),1)
@@ -208,6 +207,14 @@ def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
 def calcular_dupla_chance(pv, pe, pd):
     return {"1X": round(pv+pe,1), "X2": round(pe+pd,1), "12": round(pv+pd,1)}
 
+def calcular_confianca(valor_medio, limite):
+    """Calcula % de confiança se passar do limite"""
+    if valor_medio <= 0:
+        return 0
+    razao = valor_medio / limite
+    conf = min(round(razao * 100, 1), 95)
+    return conf
+
 def verificar_resultado(jogo, indicacoes, dupla, dc, df):
     if jogo.get("status") != "FINISHED":
         return indicacoes, "⏳ Aguardando o jogo"
@@ -220,23 +227,21 @@ def verificar_resultado(jogo, indicacoes, dupla, dc, df):
         stt = "❌"
         if "X2" in ind and res in ["FORA","EMPATE"]: stt="✅"
         elif "1X" in ind and res in ["CASA","EMPATE"]: stt="✅"
-        elif "multi-gols 1-3" in ind:
-            g = pc if "casa" in ind.lower() else pf
-            if 1<=g<=3: stt="✅"
+        elif "Mais de 6.5 chutes ao gol" in ind and (pc+pf)>=7: stt="✅"
+        elif "Mais de 19.5 finalizações" in ind and (pc+pf)>=20: stt="✅"
         elif "Mais de 1.5 gols" in ind and (pc+pf)>=2: stt="✅"
         elif "Mais de 7.5 escanteios" in ind and round((dc['mesc']+df['mesc']),1)>=7.5: stt="✅"
-        ok.append(f"{stt} {ind.replace('🟢 ','')}")
+        ok.append(f"{stt} {ind}")
     info = f"📌 RESULTADO FINAL: {pc} x {pf}"
     return ok, info
 
 # ==============================
-# 📊 ANÁLISE COMPLETA COM CARTÕES ✅
+# 📊 ANÁLISE COMPLETA COM CARTÕES
 # ==============================
 def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     analise = []
     analise.append("📊 ANÁLISE DO CONFRONTO:")
     
-    # Desempenho e gols
     if dc['mg'] > df['mg']:
         analise.append(f"- ⚽ {nome_casa} tem ataque melhor: {dc['mg']} gols contra {df['mg']} do {nome_fora}")
     elif df['mg'] > dc['mg']:
@@ -244,7 +249,6 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     else:
         analise.append(f"- ⚽ Ataques iguais: ambos com {dc['mg']} gols por jogo")
     
-    # Cartões 🟨
     media_cartoes = round((dc['mcartao'] + df['mcartao']),1)
     analise.append(f"- 🟨 Média total de cartões esperada: {media_cartoes} por jogo")
     if dc['mcartao'] > df['mcartao']:
@@ -252,13 +256,11 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     elif df['mcartao'] > dc['mcartao']:
         analise.append(f"- 🟨 {nome_fora} tem mais cartões: {df['mcartao']} contra {dc['mcartao']}")
     
-    # Fator casa/fora
     if dupla['1X'] > 55:
         analise.append(f"- 🏠 Fator casa favorece {nome_casa}: {dupla['1X']}% de não perder")
     if dupla['X2'] > 55:
         analise.append(f"- ✈️ {nome_fora} segura bem fora: {dupla['X2']}% de não perder")
     
-    # Tendência de gols
     media_total = round((dc['mg'] + df['mg']),1)
     if media_total >= 2.5:
         analise.append(f"- 📈 Tendência de jogo com muitos gols ({media_total} no total)")
@@ -267,7 +269,6 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     else:
         analise.append(f"- 📉 Tendência de poucos gols ({media_total} no total)")
     
-    # Outros indicadores
     if round((dc['mesc'] + df['mesc']),1) >= 8:
         analise.append("- 📐 Muitos escanteios esperados")
     if round((dc['mfal'] + df['mfal']),1) >= 28:
@@ -275,7 +276,7 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     
     return "\n".join(analise)
 # ==============================
-# 📝 RELATÓRIO FINAL
+# 📝 RELATÓRIO COM NOVAS INDICAÇÕES ✅
 # ==============================
 def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tg = round((dc['mg']+df['mg']),1)
@@ -286,16 +287,27 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tfa = round((dc['mfal']+df['mfal']),1)
 
     ind = []
-    if dupla['X2']>=70: ind.append(f"Dupla Chance X2 ({nf} ou Empate) - {dupla['X2']}%")
-    if dupla['1X']>=70: ind.append(f"Dupla Chance 1X ({nc} ou Empate) - {dupla['1X']}%")
-    if tg>=1.5: ind.append("Mais de 1.5 gols no jogo")
-    if tc>=3.5: ind.append(f"Mais de 3.5 cartões (média {tc})")
-    if te>=7.5: ind.append("Mais de 7.5 escanteios")
+    # Resultado
+    if dupla['X2']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance X2 ({nf} ou Empate) - {dupla['X2']}%")
+    if dupla['1X']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance 1X ({nc} ou Empate) - {dupla['1X']}%")
+    # Gols e cartões
+    conf_gols = calcular_confianca(tg, 1.5)
+    if conf_gols>=LIMITE_CONFIANCA: ind.append(f"Mais de 1.5 gols no jogo - {conf_gols}%")
+    conf_cartoes = calcular_confianca(tc, 3.5)
+    if conf_cartoes>=LIMITE_CONFIANCA: ind.append(f"Mais de 3.5 cartões - {conf_cartoes}%")
+    conf_escanteios = calcular_confianca(te, 7.5)
+    if conf_escanteios>=LIMITE_CONFIANCA: ind.append(f"Mais de 7.5 escanteios - {conf_escanteios}%")
+    # ✅ NOVAS INDICAÇÕES
+    conf_chutes_gol = calcular_confianca(tcg, 6.5)
+    if conf_chutes_gol>=LIMITE_CONFIANCA: ind.append(f"Mais de 6.5 chutes ao gol - {conf_chutes_gol}%")
+    conf_finalizacoes = calcular_confianca(tf, 19.5)
+    if conf_finalizacoes>=LIMITE_CONFIANCA: ind.append(f"Mais de 19.5 finalizações - {conf_finalizacoes}%")
+    # Multi gols
     if 1<=dc['mg']<=3: ind.append(f"{nc} marca entre 1 e 3 gols")
     if 1<=df['mg']<=3: ind.append(f"{nf} marca entre 1 e 3 gols")
 
     ind_final, info_res = verificar_resultado(jogo, ind, dupla, dc, df)
-    lista_ind = "\n".join(ind_final) if ind_final else "Nenhuma indicação acima de 70%"
+    lista_ind = "\n".join(ind_final) if ind_final else f"Nenhuma indicação acima de {LIMITE_CONFIANCA}%"
     analise_jogo = gerar_analise_jogo(nc, nf, dc, df, dupla)
 
     return f"""⚽ {nc} VS {nf} | {dt.strftime('%d/%m %H:%M')}
@@ -313,13 +325,15 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
 
 🏠 {nc} (Joga em Casa):
 • Gols: {dc['mg']} | Cartões: {dc['mcartao']} | Escanteios: {dc['mesc']}
+• Finalizações: {dc['mfin']} | Chutes ao gol: {dc['mchute']}
 • Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
 
 ✈️ {nf} (Joga Fora):
 • Gols: {df['mg']} | Cartões: {df['mcartao']} | Escanteios: {df['mesc']}
+• Finalizações: {df['mfin']} | Chutes ao gol: {df['mchute']}
 • Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
-💡 INDICAÇÕES COM CONFIANÇA:
+💡 INDICAÇÕES COM CONFIANÇA ACIMA DE {LIMITE_CONFIANCA}%:
 {lista_ind}
 """
 
@@ -328,7 +342,7 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
 # ==============================
 escolha = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
 sigla = LIGAS[escolha]
-st.info(f"📅 Buscando jogos de HOJE até {DIAS_BUSCA} dias à frente")
+st.info(f"📅 Período: Hoje até {DIAS_BUSCA} dias à frente | Confiança mínima: {LIMITE_CONFIANCA}%")
 
 if st.button("🔍 Carregar Jogos e Análises"):
     with st.spinner("Processando dados..."):
@@ -353,7 +367,7 @@ if st.button("🔍 Carregar Jogos e Análises"):
                     st.markdown("---")
                     st.markdown(rel)
                     
-                    if dupla['X2']>=70 or dupla['1X']>=70:
+                    if dupla['X2']>=LIMITE_CONFIANCA or dupla['1X']>=LIMITE_CONFIANCA:
                         with st.spinner("Enviando ao Telegram..."):
                             ok_envio = enviar_mensagem_telegram(rel)
                             if ok_envio:
