@@ -261,7 +261,7 @@ def dupla(v,e,d):
 # ==============================
 # 🧠 ANÁLISE DO EXPERT
 # ==============================
-def analise_expert(casa, fora, dc, df, dup):
+def analise_expert(casa, fora, dc, df, dup, mesc_total, mfin_total, mchute_total):
     pontos = []
     confianca = 0
     
@@ -297,8 +297,14 @@ def analise_expert(casa, fora, dc, df, dup):
     if round((dc['mcartao'] + df['mcartao']),1) >=6:
         pontos.append(f"🟨 Jogo com tendência a muitos cartões, média de {round((dc['mcartao']+df['mcartao']),1)} por partida")
         confianca +=8
-    if round((dc['mesc'] + df['mesc']),1) >=9:
-        pontos.append(f"📐 Muitos escanteios esperados: média de {round((dc['mesc']+df['mesc']),1)} no total")
+    if mesc_total >=9:
+        pontos.append(f"📐 Muitos escanteios esperados: média de {mesc_total} no total")
+        confianca +=7
+    if mfin_total >=20:
+        pontos.append(f"🎯 Jogo movimentado, média de {mfin_total} finalizações no total")
+        confianca +=7
+    if mchute_total >=8:
+        pontos.append(f"🚀 Muitos chutes ao gol: média de {mchute_total} no total")
         confianca +=7
     
     confianca = min(confianca, 95)
@@ -328,19 +334,25 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
     mdefesa_total = round((dc['mdefesa']+df['mdefesa']),1)
     mimp_total = round((mcartao_total / 1.3),1)
 
-    # INDICAÇÕES PRINCIPAIS ACIMA DE 70%
+    # ✅ INDICAÇÕES PRINCIPAIS (ACIMA DE 70%)
     indicadores = []
-    if dup['X2'] >=70: indicadores.append(f"🟢 Dupla Chance X2 ({dup['X2']}%)")
+    # Resultado
     if dup['1X'] >=70: indicadores.append(f"🟢 Dupla Chance 1X ({dup['1X']}%)")
+    if dup['X2'] >=70: indicadores.append(f"🟢 Dupla Chance X2 ({dup['X2']}%)")
     if dup['12'] >=70: indicadores.append(f"🟢 Um dos times vence ao menos um tempo ({dup['12']}%)")
+    # Gols
     if (dc['mais15']+df['mais15'])/2 >=70: indicadores.append(f"🟢 Mais de 1.5 gols ({round((dc['mais15']+df['mais15'])/2,0)}%)")
     if 1<=dc['mg']<=3: indicadores.append(f"🟢 {casa} marca entre 1 e 3 gols")
     if 1<=df['mg']<=3: indicadores.append(f"🟢 {fora} marca entre 1 e 3 gols")
+    # Cartões
     if mcartao_total >=6: indicadores.append("🟢 Mais de 6 cartões no total")
-    if mesc_total >=9: indicadores.append("🟢 Mais de 9 escanteios no total")
+    # 🆕 NOVAS INDICAÇÕES
+    if mesc_total >=9: indicadores.append(f"🟢 Mais de 9 escanteios ({mesc_total} média)")
+    if mfin_total >=20: indicadores.append(f"🟢 Mais de 20 finalizações ({mfin_total} média)")
+    if mchute_total >=8: indicadores.append(f"🟢 Mais de 8 chutes ao gol ({mchute_total} média)")
 
     # ANÁLISE DO EXPERT
-    pontos_expert, conf_expert = analise_expert(casa, fora, dc, df, dup)
+    pontos_expert, conf_expert = analise_expert(casa, fora, dc, df, dup, mesc_total, mfin_total, mchute_total)
 
     return f"""⚽ {casa} 🆚 {fora} | {dt.strftime('%d/%m %H:%M')}
 
