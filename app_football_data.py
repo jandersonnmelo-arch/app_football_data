@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
 st.set_page_config(page_title="⚽ Análise Completa", page_icon="⚽", layout="wide")
-st.title("⚽ Análise | Soma 100% | Cartões + Estatísticas | Telegram")
+st.title("⚽ Análise | Ligas Disponíveis | Soma 100% | Telegram")
 
 # 🔒 CHAVES OCULTAS
 try:
@@ -23,39 +23,53 @@ try:
 except:
     DIAS_BUSCA = 7
 
-# Limite de confiança padrão
 LIMITE_CONFIANCA = 70
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 🏆 MÉDIAS E LIGAS
+# 🏆 LIGAS DISPONÍVEIS + CÓDIGOS OFICIAIS DA API
 # ==============================
 MEDIAS_LIGA = {
-    "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
-            "tiro_meta":4.7,"laterais":8.5,"vit_casa":45,"vit_fora":30,"empate":25},
-    "BRB": {"esc":8.5,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
-            "tiro_meta":5.0,"laterais":9.0,"vit_casa":44,"vit_fora":27,"empate":29},
-    "CB": {"esc":8.8,"cartao":3.3,"fin":9.8,"chute_gol":4.1,"fal":27.0,"defesa_gk":4.3,"gols":2.5,
-            "tiro_meta":4.8,"laterais":8.8,"vit_casa":46,"vit_fora":28,"empate":26},
+    "WC": {"esc":9.2,"cartao":3.0,"fin":10.8,"chute_gol":4.5,"fal":25.0,"defesa_gk":3.8,"gols":2.7,
+           "tiro_meta":4.2,"laterais":8.0,"vit_casa":47,"vit_fora":28,"empate":25},
     "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
            "tiro_meta":4.0,"laterais":7.8,"vit_casa":48,"vit_fora":29,"empate":23},
-    "SA": {"esc":9.0,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.7,"gols":2.8,
-           "tiro_meta":4.1,"laterais":7.9,"vit_casa":48,"vit_fora":28,"empate":24},
-    "EL": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
-           "tiro_meta":4.3,"laterais":8.2,"vit_casa":45,"vit_fora":30,"empate":25},
-    "LM": {"esc":9.2,"cartao":3.1,"fin":10.5,"chute_gol":4.6,"fal":25.5,"defesa_gk":3.6,"gols":2.8,
-           "tiro_meta":4.2,"laterais":8.0,"vit_casa":47,"vit_fora":29,"empate":24}
+    "BL1": {"esc":9.8,"cartao":2.8,"fin":11.5,"chute_gol":5.0,"fal":24.0,"defesa_gk":3.4,"gols":3.1,
+            "tiro_meta":3.9,"laterais":7.7,"vit_casa":50,"vit_fora":27,"empate":23},
+    "ERD": {"esc":9.3,"cartao":2.9,"fin":11.2,"chute_gol":4.9,"fal":24.5,"defesa_gk":3.6,"gols":3.0,
+            "tiro_meta":4.1,"laterais":7.9,"vit_casa":49,"vit_fora":28,"empate":23},
+    "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
+            "tiro_meta":4.7,"laterais":8.5,"vit_casa":45,"vit_fora":30,"empate":25},
+    "PD": {"esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,
+           "tiro_meta":4.2,"laterais":8.0,"vit_casa":47,"vit_fora":28,"empate":25},
+    "FL1": {"esc":9.1,"cartao":3.0,"fin":10.3,"chute_gol":4.6,"fal":25.0,"defesa_gk":3.8,"gols":2.7,
+            "tiro_meta":4.3,"laterais":8.1,"vit_casa":46,"vit_fora":29,"empate":25},
+    "ELC": {"esc":8.7,"cartao":3.4,"fin":9.8,"chute_gol":4.2,"fal":27.5,"defesa_gk":4.1,"gols":2.5,
+            "tiro_meta":4.6,"laterais":8.4,"vit_casa":44,"vit_fora":28,"empate":28},
+    "PPL": {"esc":8.8,"cartao":3.3,"fin":9.7,"chute_gol":4.1,"fal":27.0,"defesa_gk":4.0,"gols":2.6,
+            "tiro_meta":4.5,"laterais":8.3,"vit_casa":45,"vit_fora":27,"empate":28},
+    "EC": {"esc":9.2,"cartao":3.0,"fin":10.7,"chute_gol":4.6,"fal":25.0,"defesa_gk":3.7,"gols":2.8,
+           "tiro_meta":4.1,"laterais":7.9,"vit_casa":47,"vit_fora":28,"empate":25},
+    "SA": {"esc":9.3,"cartao":3.1,"fin":10.6,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.6,"gols":2.9,
+           "tiro_meta":4.0,"laterais":7.8,"vit_casa":48,"vit_fora":27,"empate":25},
+    "PL": {"esc":9.6,"cartao":2.9,"fin":11.3,"chute_gol":4.9,"fal":24.0,"defesa_gk":3.5,"gols":3.0,
+           "tiro_meta":3.8,"laterais":7.6,"vit_casa":49,"vit_fora":28,"empate":23}
 }
 
 LIGAS = {
-    "⚽ Todas Competições": "TODAS",
-    "🇧🇷 Brasileirão Série A": "BSA",
-    "🇧🇷 Brasileirão Série B": "BRB",
-    "🏆 Copa do Brasil": "CB",
-    "🏆 Champions League": "CL",
-    "🏆 Sul-Americana": "SA",
-    "🏆 Liga Europa": "EL",
-    "🇲🇽 Liga MX": "LM"
+    "🌍 Copa do Mundo FIFA": "WC",
+    "🏆 Liga dos Campeões UEFA": "CL",
+    "🇩🇪 Bundesliga": "BL1",
+    "🇳🇱 Eredivisie": "ERD",
+    "🇧🇷 Campeonato Brasileiro Série A": "BSA",
+    "🇪🇸 La Liga (Primera División)": "PD",
+    "🇫🇷 Ligue 1": "FL1",
+    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 EFL Championship": "ELC",
+    "🇵🇹 Primeira Liga": "PPL",
+    "🏆 Campeonato Europeu (Eurocopa)": "EC",
+    "🇮🇹 Série A": "SA",
+    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
+    "📋 Todas as Ligas": "TODAS"
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 # ==============================
@@ -208,7 +222,6 @@ def calcular_dupla_chance(pv, pe, pd):
     return {"1X": round(pv+pe,1), "X2": round(pe+pd,1), "12": round(pv+pd,1)}
 
 def calcular_confianca(valor_medio, limite):
-    """Calcula % de confiança se passar do limite"""
     if valor_medio <= 0:
         return 0
     razao = valor_medio / limite
@@ -276,7 +289,7 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     
     return "\n".join(analise)
 # ==============================
-# 📝 RELATÓRIO COM NOVAS INDICAÇÕES ✅
+# 📝 RELATÓRIO COM INDICAÇÕES
 # ==============================
 def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tg = round((dc['mg']+df['mg']),1)
@@ -287,22 +300,21 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tfa = round((dc['mfal']+df['mfal']),1)
 
     ind = []
-    # Resultado
     if dupla['X2']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance X2 ({nf} ou Empate) - {dupla['X2']}%")
     if dupla['1X']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance 1X ({nc} ou Empate) - {dupla['1X']}%")
-    # Gols e cartões
+    
     conf_gols = calcular_confianca(tg, 1.5)
     if conf_gols>=LIMITE_CONFIANCA: ind.append(f"Mais de 1.5 gols no jogo - {conf_gols}%")
     conf_cartoes = calcular_confianca(tc, 3.5)
     if conf_cartoes>=LIMITE_CONFIANCA: ind.append(f"Mais de 3.5 cartões - {conf_cartoes}%")
     conf_escanteios = calcular_confianca(te, 7.5)
     if conf_escanteios>=LIMITE_CONFIANCA: ind.append(f"Mais de 7.5 escanteios - {conf_escanteios}%")
-    # ✅ NOVAS INDICAÇÕES
+    
     conf_chutes_gol = calcular_confianca(tcg, 6.5)
     if conf_chutes_gol>=LIMITE_CONFIANCA: ind.append(f"Mais de 6.5 chutes ao gol - {conf_chutes_gol}%")
     conf_finalizacoes = calcular_confianca(tf, 19.5)
     if conf_finalizacoes>=LIMITE_CONFIANCA: ind.append(f"Mais de 19.5 finalizações - {conf_finalizacoes}%")
-    # Multi gols
+    
     if 1<=dc['mg']<=3: ind.append(f"{nc} marca entre 1 e 3 gols")
     if 1<=df['mg']<=3: ind.append(f"{nf} marca entre 1 e 3 gols")
 
