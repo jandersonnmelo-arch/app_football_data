@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
 st.set_page_config(page_title="⚽ Análise Completa", page_icon="⚽", layout="wide")
-st.title("⚽ Análise | Fator Juiz + Confrontos | Telegram")
+st.title("⚽ Análise | Métricas Individuais + Confrontos | Telegram")
 
 # 🔒 CHAVES OCULTAS
 try:
@@ -263,7 +263,7 @@ def conf_menor(v,l):
     return min(round((1-(v/l))*100,1),95)
 
 # ==============================
-# 📊 ANÁLISES COMPLEMENTARES CORRIGIDAS
+# 📊 ANÁLISES COMPLEMENTARES
 # ==============================
 def analise_juiz(sigla_liga, dc, df):
     m = MEDIAS_LIGA.get(sigla_liga, MEDIAS_LIGA["BSA"])
@@ -305,9 +305,10 @@ def analise_confrontos(id_casa, id_fora, nome_casa, nome_fora):
     resumo += f"📌 Resumo: {nome_casa} {v_casa} vitórias | {emp} empates | {nome_fora} {v_fora} vitórias"
     return resumo
 # ==============================
-# 📝 RELATÓRIO COMPLETO
+# 📝 RELATÓRIO COM MÉTRICAS INDIVIDUAIS
 # ==============================
 def gerar_relatorio(nc,nf,dt,dc,df,dupla,juiz_info,confronto_info):
+    # Totais do jogo
     tg=round(dc['mg']+df['mg'],1)
     tc=round(dc['mcartao']+df['mcartao'],1)
     te=round(dc['mesc']+df['mesc'],1)
@@ -347,13 +348,18 @@ def gerar_relatorio(nc,nf,dt,dc,df,dupla,juiz_info,confronto_info):
 ⚽ Gols: {tg} | 🟨 Cartões: {tc} | 📐 Escanteios: {te}
 🎯 Finalizações: {tf} | Chutes ao gol: {tcg} | 🤜 Faltas: {tfa} | 🚫 Impedimentos: {timped}
 
-🏠 {nc} (Joga em Casa):
-• Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
-• Médias: {dc['mg']} gols | {dc['mchute']} chutes ao gol | {dc['mimped']} impedimentos
+📊 MÉTRICAS INDIVIDUAIS DOS TIMES:
+🏠 {nc} (Joga em Casa - últimos 5 jogos):
+• Resultados: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
+• ⚽ Gols: {dc['mg']} | 🟨 Cartões: {dc['mcartao']} | 📐 Escanteios: {dc['mesc']}
+• 🎯 Finalizações: {dc['mfin']} | Chutes ao gol: {dc['mchute']} | 🤜 Faltas: {dc['mfal']}
+• 🚫 Impedimentos: {dc['mimped']} | 🛡️ Defesas: {dc['mdefesa']} | ⚾ Tiros de meta: {dc['mtiro']} | ↔️ Laterais: {dc['mlateral']}
 
-✈️ {nf} (Joga Fora):
-• Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
-• Médias: {df['mg']} gols | {df['mchute']} chutes ao gol | {df['mimped']} impedimentos
+✈️ {nf} (Joga Fora - últimos 5 jogos):
+• Resultados: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
+• ⚽ Gols: {df['mg']} | 🟨 Cartões: {df['mcartao']} | 📐 Escanteios: {df['mesc']}
+• 🎯 Finalizações: {df['mfin']} | Chutes ao gol: {df['mchute']} | 🤜 Faltas: {df['mfal']}
+• 🚫 Impedimentos: {df['mimped']} | 🛡️ Defesas: {df['mdefesa']} | ⚾ Tiros de meta: {df['mtiro']} | ↔️ Laterais: {df['mlateral']}
 
 💡 INDICAÇÕES COM ≥ {LIMITE_CONFIANCA}% DE CONFIANÇA:
 {lista_ind}
