@@ -29,26 +29,10 @@ HORARIO_ALERTA = "07:00"
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 📤 FUNÇÃO ENVIO TELEGRAM
-# ==============================
-def enviar_telegram(msg):
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": str(CHAT_ID),
-            "text": msg,
-            "parse_mode": "Markdown",
-            "disable_web_page_preview": True
-        }
-        r = requests.post(url, data=payload, timeout=20)
-        return (True, "✅ Enviado") if r.status_code == 200 else (False, f"❌ Erro {r.status_code}")
-    except Exception as e:
-        return False, f"❌ Falha: {str(e)}"
-
-# ==============================
-# 🏆 MÉDIAS DAS LIGAS
+# 🏆 MÉDIAS DAS LIGAS - TODAS ADICIONADAS
 # ==============================
 MEDIAS_LIGA = {
+    # 🇧🇷 BRASIL
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
             "vit_casa":45,"vit_fora":30,"empate":25,
             "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,"mais35gols":38,
@@ -58,15 +42,16 @@ MEDIAS_LIGA = {
             "mais95chute":38,"menos95chute":62,
             "mais25fal":55,"menos25fal":50,
             "mais35defesa":65,"menos35defesa":35},
-    "BRB": {"esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.5,"fal":27.5,"defesa_gk":4.5,"gols":2.4,
-            "vit_casa":42,"vit_fora":28,"empate":30,
-            "mais15":72,"menos15":28,"mais25":52,"menos25":48,"menos35":85,"mais35gols":35,
-            "mais15cartao":90,"mais25cartao":65,"menos65cartao":85,
-            "mais75esc":54,"menos125esc":94,
-            "mais25fin":28,"menos25fin":96,
-            "mais95chute":32,"menos95chute":68,
-            "mais25fal":58,"menos25fal":48,
-            "mais35defesa":70,"menos35defesa":30},
+    # 🌍 COMPETIÇÕES INTERNACIONAIS
+    "WC": {"esc":8.2,"cartao":3.0,"fin":10.0,"chute_gol":4.2,"fal":25.0,"defesa_gk":4.0,"gols":2.5,
+           "vit_casa":42,"vit_fora":32,"empate":26,
+           "mais15":74,"menos15":26,"mais25":53,"menos25":47,"menos35":80,"mais35gols":36,
+           "mais15cartao":93,"mais25cartao":58,"menos65cartao":90,
+           "mais75esc":55,"menos125esc":91,
+           "mais25fin":35,"menos25fin":94,
+           "mais95chute":40,"menos95chute":60,
+           "mais25fal":52,"menos25fal":48,
+           "mais35defesa":62,"menos35defesa":38},
     "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
            "vit_casa":48,"vit_fora":29,"empate":23,
            "mais15":80,"menos15":20,"mais25":62,"menos25":38,"menos35":75,"mais35gols":45,
@@ -76,6 +61,79 @@ MEDIAS_LIGA = {
            "mais95chute":52,"menos95chute":48,
            "mais25fal":42,"menos25fal":60,
            "mais35defesa":52,"menos35defesa":48},
+    "EC": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
+           "vit_casa":45,"vit_fora":30,"empate":25,
+           "mais15":78,"menos15":22,"mais25":58,"menos25":42,"menos35":78,"mais35gols":40,
+           "mais15cartao":94,"mais25cartao":55,"menos65cartao":91,
+           "mais75esc":62,"menos125esc":89,
+           "mais25fin":40,"menos25fin":92,
+           "mais95chute":48,"menos95chute":52,
+           "mais25fal":48,"menos25fal":52,
+           "mais35defesa":58,"menos35defesa":42},
+    # 🇪🇺 LIGAS EUROPEIAS
+    "BL1": {"esc":9.8,"cartao":2.8,"fin":12.0,"chute_gol":5.5,"fal":24.5,"defesa_gk":3.2,"gols":3.1,
+            "vit_casa":50,"vit_fora":28,"empate":22,
+            "mais15":85,"menos15":15,"mais25":68,"menos25":32,"menos35":70,"mais35gols":50,
+            "mais15cartao":94,"mais25cartao":55,"menos65cartao":91,
+            "mais75esc":72,"menos125esc":85,
+            "mais25fin":55,"menos25fin":85,
+            "mais95chute":60,"menos95chute":40,
+            "mais25fal":45,"menos25fal":55,
+            "mais35defesa":48,"menos35defesa":52},
+    "DED": {"esc":10.5,"cartao":2.5,"fin":12.5,"chute_gol":5.8,"fal":22.5,"defesa_gk":3.0,"gols":3.2,
+            "vit_casa":52,"vit_fora":27,"empate":21,
+            "mais15":88,"menos15":12,"mais25":70,"menos25":30,"menos35":68,"mais35gols":52,
+            "mais15cartao":96,"mais25cartao":48,"menos65cartao":94,
+            "mais75esc":75,"menos125esc":82,
+            "mais25fin":58,"menos25fin":82,
+            "mais95chute":62,"menos95chute":38,
+            "mais25fal":38,"menos25fal":62,
+            "mais35defesa":45,"menos35defesa":55},
+    "PD": {"esc":9.2,"cartao":3.0,"fin":10.5,"chute_gol":4.6,"fal":25.5,"defesa_gk":3.6,"gols":2.8,
+           "vit_casa":47,"vit_fora":29,"empate":24,
+           "mais15":80,"menos15":20,"mais25":60,"menos25":40,"menos35":76,"mais35gols":42,
+           "mais15cartao":93,"mais25cartao":58,"menos65cartao":89,
+           "mais75esc":65,"menos125esc":87,
+           "mais25fin":42,"menos25fin":91,
+           "mais95chute":50,"menos95chute":50,
+           "mais25fal":50,"menos25fal":50,
+           "mais35defesa":55,"menos35defesa":45},
+    "FL1": {"esc":8.5,"cartao":2.8,"fin":10.0,"chute_gol":4.3,"fal":24.0,"defesa_gk":3.9,"gols":2.7,
+            "vit_casa":46,"vit_fora":29,"empate":25,
+            "mais15":78,"menos15":22,"mais25":57,"menos25":43,"menos35":79,"mais35gols":39,
+            "mais15cartao":94,"mais25cartao":54,"menos65cartao":92,
+            "mais75esc":60,"menos125esc":90,
+            "mais25fin":38,"menos25fin":93,
+            "mais95chute":45,"menos95chute":55,
+            "mais25fal":47,"menos25fal":53,
+            "mais35defesa":60,"menos35defesa":40},
+    "ELC": {"esc":8.0,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
+            "vit_casa":44,"vit_fora":27,"empate":29,
+            "mais15":70,"menos15":30,"mais25":50,"menos25":50,"menos35":86,"mais35gols":32,
+            "mais15cartao":88,"mais25cartao":65,"menos65cartao":85,
+            "mais75esc":52,"menos125esc":95,
+            "mais25fin":26,"menos25fin":97,
+            "mais95chute":30,"menos95chute":70,
+            "mais25fal":60,"menos25fal":40,
+            "mais35defesa":72,"menos35defesa":28},
+    "PPL": {"esc":8.8,"cartao":3.1,"fin":9.8,"chute_gol":4.1,"fal":26.0,"defesa_gk":4.1,"gols":2.5,
+            "vit_casa":43,"vit_fora":28,"empate":29,
+            "mais15":73,"menos15":27,"mais25":54,"menos25":46,"menos35":83,"mais35gols":35,
+            "mais15cartao":91,"mais25cartao":62,"menos65cartao":87,
+            "mais75esc":56,"menos125esc":93,
+            "mais25fin":30,"menos25fin":96,
+            "mais95chute":35,"menos95chute":65,
+            "mais25fal":54,"menos25fal":46,
+            "mais35defesa":68,"menos35defesa":32},
+    "SA": {"esc":9.0,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.7,"gols":2.8,
+           "vit_casa":48,"vit_fora":28,"empate":24,
+           "mais15":82,"menos15":18,"mais25":61,"menos25":39,"menos35":77,"mais35gols":43,
+           "mais15cartao":92,"mais25cartao":56,"menos65cartao":90,
+           "mais75esc":63,"menos125esc":88,
+           "mais25fin":44,"menos25fin":90,
+           "mais95chute":49,"menos95chute":51,
+           "mais25fal":49,"menos25fal":51,
+           "mais35defesa":56,"menos35defesa":44},
     "PL": {"esc":10.2,"cartao":2.6,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa_gk":3.4,"gols":2.8,
            "vit_casa":48,"vit_fora":30,"empate":22,
            "mais15":82,"menos15":18,"mais25":64,"menos25":36,"menos35":76,"mais35gols":42,
@@ -87,7 +145,21 @@ MEDIAS_LIGA = {
            "mais35defesa":50,"menos35defesa":50}
 }
 
-LIGAS = {"⚽ Todas":"TODAS","🇧🇷 Série A":"BSA","🇧🇷 Série B":"BRB","🏆 Champions":"CL","🏴 Premier League":"PL"}
+LIGAS = {
+    "⚽ Todas Competições": "TODAS",
+    "🌍 Copa do Mundo FIFA": "WC",
+    "🏆 UEFA Champions League": "CL",
+    "🏆 Eurocopa": "EC",
+    "🇧🇷 Brasileirão Série A": "BSA",
+    "🇩🇪 Bundesliga": "BL1",
+    "🇳🇱 Eredivisie": "DED",
+    "🇪🇸 La Liga": "PD",
+    "🇫🇷 Ligue 1": "FL1",
+    "🇬🇧 Championship": "ELC",
+    "🇵🇹 Primeira Liga": "PPL",
+    "🇮🇹 Série A": "SA",
+    "🇬🇧 Premier League": "PL"
+}
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 
 # ==============================
@@ -221,7 +293,7 @@ def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM NO FORMATO PADRONIZADO
+# 📝 MENSAGEM PADRONIZADA
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
     # MÉDIAS GERAIS DO CONFRONTO
@@ -320,26 +392,19 @@ threading.Thread(target=alerta, daemon=True).start()
 # ==============================
 # 🖥️ TELA DO APP
 # ==============================
-esc = st.selectbox("Liga", list(LIGAS.keys()))
+esc = st.selectbox("Escolha a Competição", list(LIGAS.keys()))
 dias = st.number_input("Dias à frente", min_value=1, max_value=14, value=DIAS_BUSCA)
 
-if st.button("🔍 Gerar e Enviar"):
+if st.button("🔍 Gerar e Enviar Análises"):
     st.cache_data.clear()
     jogos = buscar_jogos(LIGAS[esc], dias)
-    if not jogos: st.info("Nenhum jogo encontrado.")
+    if not jogos: st.info("Nenhum jogo encontrado para essa competição.")
     else:
-        st.success(f"✅ {len(jogos)} jogos encontrados:")
+        st.success(f"✅ {len(jogos)} jogos encontrados!")
         enviados=0
         for j in jogos:
             try:
                 dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
                 dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], True)
                 df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], False)
-                dup = dupla(dc['pV'],dc['pE'],dc['pD'])
-                st.markdown(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
-                st.divider()
-                ok,_ = enviar_telegram(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
-                if ok: enviados+=1
-            except: pass
-        st.success(f"✅ Enviados {enviados}/{len(jogos)} para o Telegram!")
-                        
+                dup = dupla(dc['
