@@ -170,7 +170,7 @@ def ultimos_5(time_id):
     except:return []
 
 # ==============================
-# 🧮 CÁLCULO COM PROTEÇÃO TOTAL
+# 🧮 CÁLCULO - TUDO IGUAL, EXCETO A EXIBIÇÃO DAS MÉTRICAS
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -309,7 +309,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
 def dupla(v,e,d): return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM PADRÃO
+# 📝 MENSAGEM - AGORA COM SOMA DAS MÉDIAS
 # ==============================
 def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, 
              mais15, menos15, mais25, menos25, menos35,
@@ -336,9 +336,12 @@ def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg,
 Média total: {total_esc}
 🔢 Mais de 7.5 Escanteios: {esc_mais75}% | Menos de 12.5 Escanteios: {esc_menos125}%
 
-🎯 *MÉTRICAS DE CHUTES AO GOL:*
-Média total: {total_chute}
-🔢 Mais de 9.5 Chutes ao Gol: {chute_mais95}% | Menos de 9.5 Chutes ao Gol: {chute_menos95}%
+🎯 *MÉTRICAS DO CONFRONTO - SOMA DAS MÉDIAS:*
+🎯 Chutes ao Gol: **{round(dc['chute_gol'] + df['chute_gol'],1)}**
+⚽ Finalizações: **{round(dc['fin'] + df['fin'],1)}**
+🤕 Faltas: **{round(dc['fal'] + df['fal'],1)}**
+📐 Laterais/Escanteios: {total_esc}
+🚩 Tiro de Meta: **{round((dc['defesa_gk'] + df['defesa_gk'])*1.2,1)}**
 
 🧤 *MÉTRICAS DE DEFESA:*
 Média total defesas: {total_defesa}
@@ -387,9 +390,9 @@ def alerta():
                         cartao_mais = round((dc['cartao_mais3']+df['cartao_mais3'])/2,0)
                         cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3'])/2,0)
                         total_esc = round((dc['esc']+df['esc'])/2,1)
-                        total_fal = round((dc['fal']+df['fal'])/2,1)
-                        total_fin = round((dc['fin']+df['fin'])/2,1)
-                        total_chute = round((dc['chute_gol']+df['chute_gol'])/2,1)
+                        total_fal = round(dc['fal'] + df['fal'],1)
+                        total_fin = round(dc['fin'] + df['fin'],1)
+                        total_chute = round(dc['chute_gol'] + df['chute_gol'],1)
                         total_defesa = round((dc['defesa_gk']+df['defesa_gk'])/2,1)
                         msg += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg,
                                        mais15, menos15, mais25, menos25, menos35,
@@ -405,7 +408,7 @@ def alerta():
 threading.Thread(target=alerta, daemon=True).start()
 
 # ==============================
-# 🖥️ INTERFACE FINAL
+# 🖥️ INTERFACE - SOMA APLICADA
 # ==============================
 esc = st.selectbox("Liga", list(LIGAS.keys()))
 dias = st.number_input("Dias à frente",1,14,DIAS_BUSCA)
@@ -439,10 +442,12 @@ if st.button("🔍 Atualizar e Enviar"):
                 amb = round((dc['amb']+df['amb'])/2,0)
                 cartao_mais = round((dc['cartao_mais3']+df['cartao_mais3'])/2,0)
                 cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3'])/2,0)
+                
+                # ✅ AQUI: SOMA DIRETA DAS MÉDIAS DOS DOIS TIMES
                 total_esc = round((dc['esc']+df['esc'])/2,1)
-                total_fal = round((dc['fal']+df['fal'])/2,1)
-                total_fin = round((dc['fin']+df['fin'])/2,1)
-                total_chute = round((dc['chute_gol']+df['chute_gol'])/2,1)
+                total_fal = round(dc['fal'] + df['fal'],1)
+                total_fin = round(dc['fin'] + df['fin'],1)
+                total_chute = round(dc['chute_gol'] + df['chute_gol'],1)
                 total_defesa = round((dc['defesa_gk']+df['defesa_gk'])/2,1)
                 
                 rel += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg,
@@ -468,9 +473,12 @@ if st.button("🔍 Atualizar e Enviar"):
                 st.write(f"🔢 Mais 7.5: {esc_mais75}% | Menos 12.5: {esc_menos125}%")
                 st.divider()
                 
-                st.subheader("🎯 CHUTES AO GOL")
-                st.write(f"Média total: {total_chute}")
-                st.write(f"🔢 Mais 9.5: {chute_mais95}% | Menos 9.5: {chute_menos95}%")
+                st.subheader("🎯 MÉTRICAS DO CONFRONTO - SOMA DAS MÉDIAS")
+                st.write(f"🎯 Chutes ao Gol: **{total_chute}**")
+                st.write(f"⚽ Finalizações: **{total_fin}**")
+                st.write(f"🤕 Faltas: **{total_fal}**")
+                st.write(f"📐 Laterais/Escanteios: {total_esc}")
+                st.write(f"🚩 Tiro de Meta: **{round((dc['defesa_gk'] + df['defesa_gk'])*1.2,1)}**")
                 st.divider()
                 
                 st.subheader("🧤 DEFESAS GOLEIROS")
@@ -487,12 +495,16 @@ if st.button("🔍 Atualizar e Enviar"):
                 with c1:
                     st.subheader("🏠 Time Casa")
                     st.write(f"✅ Vitória: {dc['pV']}% | ⚖️ Empate: {dc['pE']}% | ❌ Derrota: {dc['pD']}%")
-                    st.write(f"🟨 Cartões: {dc['cartao']} por jogo")
+                    st.write(f"🎯 Chutes ao Gol: {dc['chute_gol']}")
+                    st.write(f"⚽ Finalizações: {dc['fin']}")
+                    st.write(f"🤕 Faltas: {dc['fal']}")
                     st.write(f"Últimos: {' '.join(dc['resumo'])}")
                 with c2:
                     st.subheader("🔴 Time Fora")
                     st.write(f"✅ Vitória: {df['pV']}% | ⚖️ Empate: {df['pE']}% | ❌ Derrota: {df['pD']}%")
-                    st.write(f"🟨 Cartões: {df['cartao']} por jogo")
+                    st.write(f"🎯 Chutes ao Gol: {df['chute_gol']}")
+                    st.write(f"⚽ Finalizações: {df['fin']}")
+                    st.write(f"🤕 Faltas: {df['fal']}")
                     st.write(f"Últimos: {' '.join(df['resumo'])}")
                 st.markdown("---")
             except Exception as e:
