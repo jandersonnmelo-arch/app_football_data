@@ -10,13 +10,13 @@ import threading
 st.set_page_config(page_title="⚽ Análise Completa | Todas as Métricas", page_icon="⚽", layout="wide")
 st.title("⚽ Análise Completa | Probabilidades + Todas as Métricas")
 
-# 🔒 CHAVES OCULTAS - VERIFIQUE SE ESTÃO CERTAS AQUI!
+# 🔒 CHAVES OCULTAS
 try:
     API_KEY = st.secrets["CHAVE_FD"]
     BOT_TOKEN = st.secrets["BOT_TOKEN"]
     CHAT_ID = st.secrets["CHAT_ID"]
 except Exception as e:
-    st.error(f"⚠️ Configure as chaves corretamente em .streamlit/secrets.toml! Erro: {e}")
+    st.error(f"⚠️ Configure as chaves corretamente! Erro: {e}")
     st.stop()
 
 try:
@@ -28,7 +28,7 @@ HORARIO_ALERTA = "08:30"
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 📤 FUNÇÃO ENVIO TELEGRAM (MELHORADA)
+# 📤 FUNÇÃO ENVIO TELEGRAM (UMA MENSAGEM POR JOGO)
 # ==============================
 def enviar_telegram(msg):
     try:
@@ -48,7 +48,7 @@ def enviar_telegram(msg):
         return False, f"❌ Falha na conexão: {str(e)}"
 
 # ==============================
-# 🏆 MÉDIAS DAS LIGAS (COMPLETO)
+# 🏆 MÉDIAS DAS LIGAS
 # ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
@@ -191,7 +191,7 @@ def ultimos_5(time_id):
         return []
 
 # ==============================
-# 🧮 CÁLCULO 100% SEGURO (SEM VALORES ZERADOS)
+# 🧮 CÁLCULO COMPLETO
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -199,7 +199,6 @@ def calcular_base(time_id, sigla, eh_casa=False):
         med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
         
         if not jogos:
-            # SEM DADOS: USA MÉDIA DA LIGA, NÃO ZERA NADA
             if eh_casa:
                 return {"pV":med["vit_casa"],"pE":med["empate"],"pD":med["vit_fora"],"mg":med["gols"],
                         "mais15":med["mais15"],"menos15":med["menos15"],
@@ -355,7 +354,7 @@ def dupla(v, e, d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM PARA TELEGRAM
+# 📝 MENSAGEM COM DADOS INDIVIDUAIS COMPLETOS
 # ==============================
 def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, 
              mais15, menos15, mais25, menos25, menos35,
@@ -382,12 +381,16 @@ def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg,
 Total: {total_esc}
 🔢 Mais 7.5: {esc_mais75}% | Menos 12.5: {esc_menos125}%
 
-🎯 *CONFRONTO - SOMA DAS MÉDIAS:*
-🎯 Chutes ao Gol: {total_chute}
-⚽ Finalizações: {total_fin}
-🤕 Faltas: {total_fal}
-📐 Laterais: {total_esc}
-🚩 Tiro de Meta: {round((dc['defesa_gk'] + df['defesa_gk'])*1.2,1)}
+🎯 *DADOS INDIVIDUAIS:*
+🏠 {casa_nome}:
+  • Chutes ao Gol: {dc['chute_gol']} | Finalizações: {dc['fin']} | Faltas: {dc['fal']}
+  • Escanteios: {dc['esc']} | Defesas: {dc['defesa_gk']} | Cartões: {dc['cartao']}
+  • Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
+
+✈️ {fora_nome}:
+  • Chutes ao Gol: {df['chute_gol']} | Finalizações: {df['fin']} | Faltas: {df['fal']}
+  • Escanteios: {df['esc']} | Defesas: {df['defesa_gk']} | Cartões: {df['cartao']}
+  • Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
 🧤 *DEFESAS:*
 Total: {total_defesa}
@@ -397,15 +400,12 @@ Total: {total_defesa}
 Média: {round((dc['cartao']+df['cartao'])/2,1)}
 🔢 Mais 3: {cartao_mais}% | Menos 3: {cartao_menos}%
 
-📋 Últimos 5:
-🟢 {casa_nome}: {' '.join(dc['resumo'])}
-🔴 {fora_nome}: {' '.join(df['resumo'])}
 {'🚨 ALTA CONFIANÇA!' if max(dc['pV'],df['pD'])>=55 else ''}
 ---
 """
 
 # ==============================
-# 🤖 ROTINA AUTOMÁTICA
+# 🤖 ROTINA AUTOMÁTICA (ENVIA 1 POR 1)
 # ==============================
 def alerta():
     while True:
@@ -413,7 +413,6 @@ def alerta():
             agora = datetime.now()
             if agora.strftime("%H:%M") == HORARIO_ALERTA:
                 jogos = buscar_jogos("TODAS", DIAS_BUSCA)
-                msg = f"🔔 *RELATÓRIO AUTOMÁTICO*\n🕒 {agora.strftime('%d/%m %H:%M')}\n\n"
                 for j in jogos:
                     try:
                         dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
@@ -428,92 +427,4 @@ def alerta():
                         menos35 = round((dc['menos35']+df['menos35'])/2,0)
                         esc_mais75 = round((dc['esc_mais75']+df['esc_mais75'])/2,0)
                         esc_menos125 = round((dc['esc_menos125']+df['esc_menos125'])/2,0)
-                        chute_mais95 = round((dc['chute_mais95']+df['chute_mais95'])/2,0)
-                        chute_menos95 = round((dc['chute_menos95']+df['chute_menos95'])/2,0)
-                        defesa_mais35 = round((dc['defesa_mais35']+df['defesa_mais35'])/2,0)
-                        defesa_menos35 = round((dc['defesa_menos35']+df['defesa_menos35'])/2,0)
-                        amb = round((dc['amb']+df['amb'])/2,0)
-                        cartao_mais = round((dc['cartao_mais3']+df['cartao_mais3'])/2,0)
-                        cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3'])/2,0)
-                        total_esc = round((dc['esc']+df['esc'])/2,1)
-                        total_fal = round(dc['fal'] + df['fal'],1)
-                        total_fin = round(dc['fin'] + df['fin'],1)
-                        total_chute = round(dc['chute_gol'] + df['chute_gol'],1)
-                        total_defesa = round((dc['defesa_gk']+df['defesa_gk'])/2,1)
-                        msg += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg,
-                                       mais15, menos15, mais25, menos25, menos35,
-                                       esc_mais75, esc_menos125,
-                                       chute_mais95, chute_menos95,
-                                       defesa_mais35, defesa_menos35,
-                                       amb, cartao_mais, cartao_menos,
-                                       total_esc, total_fal, total_fin, total_chute, total_defesa)
-                    except:
-                        pass
-                enviar_telegram(msg)
-        except:
-            pass
-        time.sleep(30)
-threading.Thread(target=alerta, daemon=True).start()
-
-# ==============================
-# 🖥️ INTERFACE PRINCIPAL
-# ==============================
-esc = st.selectbox("Liga", list(LIGAS.keys()))
-dias = st.number_input("Dias à frente", min_value=1, max_value=14, value=DIAS_BUSCA)
-
-if st.button("🔍 Atualizar e Enviar"):
-    st.cache_data.clear()
-    jogos = buscar_jogos(LIGAS[esc], dias)
-    if not jogos:
-        st.info("Nenhum jogo encontrado para o período selecionado.")
-    else:
-        st.success(f"✅ {len(jogos)} jogos carregados com sucesso!")
-        rel = f"🔔 *RELATÓRIO SOLICITADO*\n🕒 {datetime.now().strftime('%d/%m %H:%M')}\n\n"
-        for j in jogos:
-            try:
-                dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
-                dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], eh_casa=True)
-                df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], eh_casa=False)
-                dup = dupla(dc['pV'],dc['pE'],dc['pD'])
-                mg = round((dc['mg']+df['mg'])/2,2)
-                mais15 = round((dc['mais15']+df['mais15'])/2,0)
-                menos15 = round((dc['menos15']+df['menos15'])/2,0)
-                mais25 = round((dc['mais25']+df['mais25'])/2,0)
-                menos25 = round((dc['menos25']+df['menos25'])/2,0)
-                menos35 = round((dc['menos35']+df['menos35'])/2,0)
-                esc_mais75 = round((dc['esc_mais75']+df['esc_mais75'])/2,0)
-                esc_menos125 = round((dc['esc_menos125']+df['esc_menos125'])/2,0)
-                chute_mais95 = round((dc['chute_mais95']+df['chute_mais95'])/2,0)
-                chute_menos95 = round((dc['chute_menos95']+df['chute_menos95'])/2,0)
-                defesa_mais35 = round((dc['defesa_mais35']+df['defesa_mais35'])/2,0)
-                defesa_menos35 = round((dc['defesa_menos35']+df['defesa_menos35'])/2,0)
-                amb = round((dc['amb']+df['amb'])/2,0)
-                cartao_mais = round((dc['cartao_mais3']+df['cartao_mais3'])/2,0)
-                cartao_menos = round((dc['cartao_menos3']+df['cartao_menos3'])/2,0)
-                total_esc = round((dc['esc']+df['esc'])/2,1)
-                total_fal = round(dc['fal'] + df['fal'],1)
-                total_fin = round(dc['fin'] + df['fin'],1)
-                total_chute = round(dc['chute_gol'] + df['chute_gol'],1)
-                total_defesa = round((dc['defesa_gk']+df['defesa_gk'])/2,1)
-                
-                rel += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg,
-                               mais15, menos15, mais25, menos25, menos35,
-                               esc_mais75, esc_menos125,
-                               chute_mais95, chute_menos95,
-                               defesa_mais35, defesa_menos35,
-                               amb, cartao_mais, cartao_menos,
-                               total_esc, total_fal, total_fin, total_chute, total_defesa)
-                
-                st.subheader(f"⚽ {j['homeTeam']['name']} 🆚 {j['awayTeam']['name']}")
-                st.write(f"📊 Probabilidades: Casa {dc['pV']}% | Empate {round((dc['pE']+df['pE'])/2,1)}% | Fora {df['pD']}%")
-                st.write(f"🎯 Chutes ao Gol: {total_chute} | Finalizações: {total_fin} | Faltas: {total_fal}")
-                st.divider()
-            except Exception as e:
-                st.warning(f"⚠️ Não foi possível processar este jogo: {str(e)}")
-                continue
-        
-        ok, aviso = enviar_telegram(rel)
-        if ok:
-            st.success(aviso)
-        else:
-            st.error(aviso)
+                        chute_mais95 = rou
