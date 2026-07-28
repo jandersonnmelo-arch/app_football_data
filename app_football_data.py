@@ -2,13 +2,12 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, timedelta
-import threading
 
 # ==============================
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
-st.set_page_config(page_title="⚽ Análise Completa + Telegram", page_icon="⚽", layout="wide")
-st.title("⚽ Análise de Jogos + Envio Automático Telegram")
+st.set_page_config(page_title="⚽ Análise de Jogos", page_icon="⚽", layout="wide")
+st.title("⚽ Análise Completa de Jogos")
 
 # 🔒 CHAVES OCULTAS
 try:
@@ -24,13 +23,11 @@ try:
 except:
     DIAS_BUSCA = 7
 
-# ⏰ ALERTA DIÁRIO - HORÁRIO DE MANAUS
-HORARIO_ALERTA = "07:00"
 LIMIAR_ALERTA = 70
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 🏆 MÉDIAS E LIGAS COM SIGLAS CORRETAS
+# 🏆 LIGAS COM SIGLAS OFICIAIS
 # ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
@@ -224,7 +221,7 @@ TODAS_SIGLAS = list(LIGAS.values())
 TODAS_SIGLAS.remove("TODAS")
 
 # ==============================
-# 🔍 BUSCA E CÁLCULOS CORRIGIDOS
+# 🔍 BUSCA CORRIGIDA (SEM AUTOMAÇÃO)
 # ==============================
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
@@ -250,13 +247,13 @@ def buscar_jogos(sigla, dias):
                             lista.append(j)
                     except:
                         continue
-        except:
+        except Exception as erro:
+            st.warning(f"Erro na liga {s}: {str(erro)}")
             continue
     return lista
 
 @st.cache_data(ttl=3600)
 def ultimos_5(time_id):
-    time.sleep(0.3)
     try:
         r = requests.get(
             f"https://api.football-data.org/v4/teams/{time_id}/matches",
@@ -271,8 +268,8 @@ def ultimos_5(time_id):
 def enviar_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        requests.post(url, data={"chat_id":CHAT_ID,"text":texto,"parse_mode":"Markdown"}, timeout=10)
-        return True
+        resp = requests.post(url, data={"chat_id":CHAT_ID,"text":texto,"parse_mode":"Markdown"}, timeout=10)
+        return resp.status_code == 200
     except:
         return False
 
@@ -316,8 +313,8 @@ def calcular_base(time_id, sigla, eh_casa=False):
         for j in jogos:
             try:
                 cid = j["homeTeam"]["id"]
-                gc = j["score"]["fullTime"]["home"] or 0
-                ga = j["score"]["fullTime"]["away"] or 0
+                gc = j["score"]["fullTime"].get("home",0) or 0
+                ga = j["score"]["fullTime"].get("away",0) or 0
                 if cid == time_id:
                     gf+=gc; gs+=ga
                     if gc>ga: v+=1; resumo.append("✅")
@@ -399,7 +396,7 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 ✈️ {fora}: {' '.join(df['resumo'])} | Placares: {', '.join(df['placares'])}
 """
 # ==============================
-# 🖥️ INTERFACE E ALERTA AUTOMÁTICO
+# 🖥️ INTERFACE MANUAL APENAS
 # ==============================
 col1, col2 = st.columns([2,1])
 with col1:
@@ -428,39 +425,14 @@ else:
             with st.expander(f"⚽ {casa} vs {fora} | {dt.strftime('%d/%m %H:%M')}"):
                 st.markdown(texto)
                 if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
-                    st.info(f"🔔 Probabilidade ≥ {LIMIAR_ALERTA}% — alerta ativado!")
+                    st.info(f"🔔 Probabilidade ≥ {LIMIAR_ALERTA}% — pode enviar manualmente!")
                     if st.button(f"📤 Enviar ao Telegram", key=f"btn_{casa}_{fora}"):
-                        enviar_telegram(texto)
-                        st.success("✅ Enviado!")
-        except:
+                        if enviar_telegram(texto):
+                            st.success("✅ Mensagem enviada ao Telegram!")
+                        else:
+                            st.error("❌ Erro ao enviar, verifique o Token/Chat ID")
+        except Exception as e:
+            st.error(f"Erro no jogo: {str(e)}")
             continue
 
-# ⏰ ROTINA AUTOMÁTICA
-if 'ultimo_envio' not in st.session_state:
-    st.session_state.ultimo_envio = None
-
-def rotina_alerta():
-    while True:
-        agora = datetime.now() - timedelta(hours=4)
-        horario = agora.strftime("%H:%M")
-        if horario == HORARIO_ALERTA and st.session_state.ultimo_envio != agora.date():
-            st.session_state.ultimo_envio = agora.date()
-            enviar_telegram(f"📢 ALERTA DIÁRIO {agora.strftime('%d/%m/%Y')}\n🔍 Jogos com chance ≥ {LIMIAR_ALERTA}%:")
-            for s in TODAS_SIGLAS:
-                for j in buscar_jogos(s, DIAS_BUSCA):
-                    try:
-                        dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], True)
-                        df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], False)
-                        if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
-                            enviar_telegram(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"],
-                                datetime.fromisoformat(j["utcDate"].replace("Z","")), dc, df, dupla(dc["pV"],dc["pE"],dc["pD"])))
-                            time.sleep(2)
-                    except:
-                        pass
-        time.sleep(60)
-
-if 'iniciou' not in st.session_state:
-    st.session_state.iniciou = True
-    threading.Thread(target=rotina_alerta, daemon=True).start()
-
-st.info(f"⏰ Alerta automático: {HORARIO_ALERTA} (Manaus) | Limiar: {LIMIAR_ALERTA}%")
+st.info("ℹ️ Apenas busca manual ativada. Sem rotina automática.")
