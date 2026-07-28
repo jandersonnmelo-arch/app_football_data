@@ -82,7 +82,7 @@ MEDIAS_LIGA = {
            "mais35defesa":58,"menos35defesa":42,
            "mais4tiro":39,"menos4tiro":61,
            "mais8laterais":44,"menos8laterais":56},
-# 🇪🇺 LIGAS EUROPEIAS
+    # 🇪🇺 LIGAS EUROPEIAS
     "BL1": {"esc":9.8,"cartao":2.8,"fin":12.0,"chute_gol":5.5,"fal":24.5,"defesa_gk":3.2,"gols":3.1,
             "tiro_meta":3.8,"laterais":7.5,
             "vit_casa":50,"vit_fora":28,"empate":22,
@@ -230,6 +230,13 @@ def ultimos_5(time_id):
         return dados if dados else []
     except: return []
 
+def enviar_telegram(texto):
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        resp = requests.post(url, data={"chat_id":CHAT_ID,"text":texto,"parse_mode":"Markdown"}, timeout=10)
+        return resp.status_code == 200, resp.text
+    except: return False, ""
+
 # ==============================
 # 🧮 CÁLCULO COMPLETO
 # ==============================
@@ -336,8 +343,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
 def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
-#
-  ==============================
+# ==============================
 # 📝 MENSAGEM COM TODAS AS MÉTRICAS
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
@@ -430,8 +436,7 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
   • Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 """
 
-#
-==============================
+# ==============================
 # 🤖 ROTINA AUTOMÁTICA
 # ==============================
 def alerta():
@@ -449,6 +454,7 @@ def alerta():
                     except: pass
         except: pass
         time.sleep(30)
+
 threading.Thread(target=alerta, daemon=True).start()
 
 # ==============================
@@ -460,7 +466,8 @@ dias = st.number_input("Dias à frente", min_value=1, max_value=14, value=DIAS_B
 if st.button("🔍 Gerar e Enviar Análises"):
     st.cache_data.clear()
     jogos = buscar_jogos(LIGAS[esc], dias)
-    if not jogos: st.info("Nenhum jogo encontrado para essa competição.")
+    if not jogos:
+        st.info("Nenhum jogo encontrado para essa competição.")
     else:
         st.success(f"✅ {len(jogos)} jogos encontrados!")
         enviados=0
@@ -473,6 +480,8 @@ if st.button("🔍 Gerar e Enviar Análises"):
                 st.markdown(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
                 st.divider()
                 ok,_ = enviar_telegram(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
-                if ok: enviados+=1
-            except: pass
+                if ok:
+                    enviados+=1
+            except:
+                pass
         st.success(f"✅ Concluído! {enviados}/{len(jogos)} análises enviadas ao Telegram!")
