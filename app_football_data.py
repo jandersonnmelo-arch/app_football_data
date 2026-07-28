@@ -338,4 +338,3 @@ if st.button("🔍 Carregar Jogos e Análises"):
                 st.error(f"❌ Erro no jogo: {str(e)}")
 
 st.caption(f"⚽ Competições solicitadas | Período: até {dias_busca} dias | Alerta automático: {HORARIO_ALERTA_AUTO} Manaus | Limiar: ≥ {LIMIAR_ALERTA}%")
-    
