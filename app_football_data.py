@@ -407,4 +407,10 @@ if st.button("🔍 Gerar e Enviar Análises"):
                 dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
                 dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], True)
                 df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], False)
-                dup = dupla(dc['
+                dup = dupla(dc['pV'],dc['pE'],dc['pD'])
+                st.markdown(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
+                st.divider()
+                ok,_ = enviar_telegram(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup))
+                if ok: enviados+=1
+            except: pass
+        st.success(f"✅ Concluído! {enviados}/{len(jogos)} análises enviadas ao Telegram!")
