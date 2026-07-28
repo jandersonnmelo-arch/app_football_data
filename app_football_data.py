@@ -32,7 +32,8 @@ HEADERS = {"X-Auth-Token": API_KEY}
 # 🏆 MÉDIAS DAS LIGAS
 # ==============================
 MEDIAS_LIGA = {
-    "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
+    "BSA": {"esc":9.0,"cartao":3.2,"cartao_1t":1.4,"cartao_2t":1.8,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
+            "gols_1t":1.1,"gols_2t":1.5,
             "tiro_meta":4.7,"laterais":8.5,
             "vit_casa":45,"vit_fora":30,"empate":25,
             "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,"mais35gols":38,
@@ -43,8 +44,10 @@ MEDIAS_LIGA = {
             "mais25fal":55,"menos25fal":50,
             "mais35defesa":65,"menos35defesa":35,
             "mais4tiro":42,"menos4tiro":58,
-            "mais8laterais":48,"menos8laterais":52},
-    "WC": {"esc":8.2,"cartao":3.0,"fin":10.0,"chute_gol":4.2,"fal":25.0,"defesa_gk":4.0,"gols":2.5,
+            "mais8laterais":48,"menos8laterais":52,
+            "arbitro_cartao":7.2,"arbitro_falta":28.8},
+    "WC": {"esc":8.2,"cartao":3.0,"cartao_1t":1.3,"cartao_2t":1.7,"fin":10.0,"chute_gol":4.2,"fal":25.0,"defesa_gk":4.0,"gols":2.5,
+           "gols_1t":1.0,"gols_2t":1.5,
            "tiro_meta":4.5,"laterais":8.0,
            "vit_casa":42,"vit_fora":32,"empate":26,
            "mais15":74,"menos15":26,"mais25":53,"menos25":47,"menos35":80,"mais35gols":36,
@@ -55,8 +58,10 @@ MEDIAS_LIGA = {
            "mais25fal":52,"menos25fal":48,
            "mais35defesa":62,"menos35defesa":38,
            "mais4tiro":40,"menos4tiro":60,
-           "mais8laterais":45,"menos8laterais":55},
-    "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
+           "mais8laterais":45,"menos8laterais":55,
+           "arbitro_cartao":7.0,"arbitro_falta":28.0},
+    "CL": {"esc":9.5,"cartao":2.7,"cartao_1t":1.1,"cartao_2t":1.6,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
+           "gols_1t":1.2,"gols_2t":1.7,
            "tiro_meta":4.0,"laterais":7.8,
            "vit_casa":48,"vit_fora":29,"empate":23,
            "mais15":80,"menos15":20,"mais25":62,"menos25":38,"menos35":75,"mais35gols":45,
@@ -67,20 +72,24 @@ MEDIAS_LIGA = {
            "mais25fal":42,"menos25fal":60,
            "mais35defesa":52,"menos35defesa":48,
            "mais4tiro":38,"menos4tiro":62,
-           "mais8laterais":42,"menos8laterais":58},
-    "EC": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
-           "tiro_meta":4.3,"laterais":8.2,
-           "vit_casa":45,"vit_fora":30,"empate":25,
-           "mais15":78,"menos15":22,"mais25":58,"menos25":42,"menos35":78,"mais35gols":40,
-           "mais15cartao":94,"mais25cartao":55,"menos65cartao":91,
-           "mais75esc":62,"menos125esc":89,
-           "mais25fin":40,"menos25fin":92,
-           "mais95chute":48,"menos95chute":52,
-           "mais25fal":48,"menos25fal":52,
-           "mais35defesa":58,"menos35defesa":42,
-           "mais4tiro":39,"menos4tiro":61,
-           "mais8laterais":44,"menos8laterais":56},
-    "BL1": {"esc":9.8,"cartao":2.8,"fin":12.0,"chute_gol":5.5,"fal":24.5,"defesa_gk":3.2,"gols":3.1,
+           "mais8laterais":42,"menos8laterais":58,
+           "arbitro_cartao":6.8,"arbitro_falta":27.5},
+    "BSA": {"esc":9.0,"cartao":3.2,"cartao_1t":1.4,"cartao_2t":1.8,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
+            "gols_1t":1.1,"gols_2t":1.5,
+            "tiro_meta":4.7,"laterais":8.5,
+            "vit_casa":45,"vit_fora":30,"empate":25,
+            "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,"mais35gols":38,
+            "mais15cartao":92,"mais25cartao":60,"menos65cartao":88,
+            "mais75esc":58,"menos125esc":92,
+            "mais25fin":32,"menos25fin":95,
+            "mais95chute":38,"menos95chute":62,
+            "mais25fal":55,"menos25fal":50,
+            "mais35defesa":65,"menos35defesa":35,
+            "mais4tiro":42,"menos4tiro":58,
+            "mais8laterais":48,"menos8laterais":52,
+            "arbitro_cartao":7.2,"arbitro_falta":28.8},
+    "BL1": {"esc":9.8,"cartao":2.8,"cartao_1t":1.2,"cartao_2t":1.6,"fin":12.0,"chute_gol":5.5,"fal":24.5,"defesa_gk":3.2,"gols":3.1,
+            "gols_1t":1.3,"gols_2t":1.8,
             "tiro_meta":3.8,"laterais":7.5,
             "vit_casa":50,"vit_fora":28,"empate":22,
             "mais15":85,"menos15":15,"mais25":68,"menos25":32,"menos35":70,"mais35gols":50,
@@ -91,20 +100,10 @@ MEDIAS_LIGA = {
             "mais25fal":45,"menos25fal":55,
             "mais35defesa":48,"menos35defesa":52,
             "mais4tiro":35,"menos4tiro":65,
-            "mais8laterais":40,"menos8laterais":60},
-    "DED": {"esc":10.5,"cartao":2.5,"fin":12.5,"chute_gol":5.8,"fal":22.5,"defesa_gk":3.0,"gols":3.2,
-            "tiro_meta":3.5,"laterais":7.2,
-            "vit_casa":52,"vit_fora":27,"empate":21,
-            "mais15":88,"menos15":12,"mais25":70,"menos25":30,"menos35":68,"mais35gols":52,
-            "mais15cartao":96,"mais25cartao":48,"menos65cartao":94,
-            "mais75esc":75,"menos125esc":82,
-            "mais25fin":58,"menos25fin":82,
-            "mais95chute":62,"menos95chute":38,
-            "mais25fal":38,"menos25fal":62,
-            "mais35defesa":45,"menos35defesa":55,
-            "mais4tiro":32,"menos4tiro":68,
-            "mais8laterais":38,"menos8laterais":62},
-    "PD": {"esc":9.2,"cartao":3.0,"fin":10.5,"chute_gol":4.6,"fal":25.5,"defesa_gk":3.6,"gols":2.8,
+            "mais8laterais":40,"menos8laterais":60,
+            "arbitro_cartao":6.5,"arbitro_falta":27.0},
+    "PD": {"esc":9.2,"cartao":3.0,"cartao_1t":1.3,"cartao_2t":1.7,"fin":10.5,"chute_gol":4.6,"fal":25.5,"defesa_gk":3.6,"gols":2.8,
+           "gols_1t":1.2,"gols_2t":1.6,
            "tiro_meta":4.2,"laterais":8.0,
            "vit_casa":47,"vit_fora":29,"empate":24,
            "mais15":80,"menos15":20,"mais25":60,"menos25":40,"menos35":76,"mais35gols":42,
@@ -115,56 +114,10 @@ MEDIAS_LIGA = {
            "mais25fal":50,"menos25fal":50,
            "mais35defesa":55,"menos35defesa":45,
            "mais4tiro":40,"menos4tiro":60,
-           "mais8laterais":45,"menos8laterais":55},
-    "FL1": {"esc":8.5,"cartao":2.8,"fin":10.0,"chute_gol":4.3,"fal":24.0,"defesa_gk":3.9,"gols":2.7,
-            "tiro_meta":4.4,"laterais":8.3,
-            "vit_casa":46,"vit_fora":29,"empate":25,
-            "mais15":78,"menos15":22,"mais25":57,"menos25":43,"menos35":79,"mais35gols":39,
-            "mais15cartao":94,"mais25cartao":54,"menos65cartao":92,
-            "mais75esc":60,"menos125esc":90,
-            "mais25fin":38,"menos25fin":93,
-            "mais95chute":45,"menos95chute":55,
-            "mais25fal":47,"menos25fal":53,
-            "mais35defesa":60,"menos35defesa":40,
-            "mais4tiro":43,"menos4tiro":57,
-            "mais8laterais":50,"menos8laterais":50},
-    "ELC": {"esc":8.0,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
-            "tiro_meta":5.0,"laterais":9.0,
-            "vit_casa":44,"vit_fora":27,"empate":29,
-            "mais15":70,"menos15":30,"mais25":50,"menos25":50,"menos35":86,"mais35gols":32,
-            "mais15cartao":88,"mais25cartao":65,"menos65cartao":85,
-            "mais75esc":52,"menos125esc":95,
-            "mais25fin":26,"menos25fin":97,
-            "mais95chute":30,"menos95chute":70,
-            "mais25fal":60,"menos25fal":40,
-            "mais35defesa":72,"menos35defesa":28,
-            "mais4tiro":48,"menos4tiro":52,
-            "mais8laterais":55,"menos8laterais":45},
-    "PPL": {"esc":8.8,"cartao":3.1,"fin":9.8,"chute_gol":4.1,"fal":26.0,"defesa_gk":4.1,"gols":2.5,
-            "tiro_meta":4.8,"laterais":8.7,
-            "vit_casa":43,"vit_fora":28,"empate":29,
-            "mais15":73,"menos15":27,"mais25":54,"menos25":46,"menos35":83,"mais35gols":35,
-            "mais15cartao":91,"mais25cartao":62,"menos65cartao":87,
-            "mais75esc":56,"menos125esc":93,
-            "mais25fin":30,"menos25fin":96,
-            "mais95chute":35,"menos95chute":65,
-            "mais25fal":54,"menos25fal":46,
-            "mais35defesa":68,"menos35defesa":32,
-            "mais4tiro":45,"menos4tiro":55,
-            "mais8laterais":52,"menos8laterais":48},
-    "SA": {"esc":9.0,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.7,"gols":2.8,
-           "tiro_meta":4.1,"laterais":7.9,
-           "vit_casa":48,"vit_fora":28,"empate":24,
-           "mais15":82,"menos15":18,"mais25":61,"menos25":39,"menos35":77,"mais35gols":43,
-           "mais15cartao":92,"mais25cartao":56,"menos65cartao":90,
-           "mais75esc":63,"menos125esc":88,
-           "mais25fin":44,"menos25fin":90,
-           "mais95chute":49,"menos95chute":51,
-           "mais25fal":49,"menos25fal":51,
-           "mais35defesa":56,"menos35defesa":44,
-           "mais4tiro":39,"menos4tiro":61,
-           "mais8laterais":43,"menos8laterais":57},
-    "PL": {"esc":10.2,"cartao":2.6,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa_gk":3.4,"gols":2.8,
+           "mais8laterais":45,"menos8laterais":55,
+           "arbitro_cartao":7.1,"arbitro_falta":28.5},
+    "PL": {"esc":10.2,"cartao":2.6,"cartao_1t":1.1,"cartao_2t":1.5,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa_gk":3.4,"gols":2.8,
+           "gols_1t":1.2,"gols_2t":1.6,
            "tiro_meta":3.7,"laterais":7.4,
            "vit_casa":48,"vit_fora":30,"empate":22,
            "mais15":82,"menos15":18,"mais25":64,"menos25":36,"menos35":76,"mais35gols":42,
@@ -175,22 +128,16 @@ MEDIAS_LIGA = {
            "mais25fal":40,"menos25fal":62,
            "mais35defesa":50,"menos35defesa":50,
            "mais4tiro":35,"menos4tiro":65,
-           "mais8laterais":38,"menos8laterais":62}
+           "mais8laterais":38,"menos8laterais":62,
+           "arbitro_cartao":6.4,"arbitro_falta":26.5}
 }
 
 LIGAS = {
     "⚽ Todas Competições": "TODAS",
-    "🌍 Copa do Mundo FIFA": "WC",
-    "🏆 UEFA Champions League": "CL",
-    "🏆 Eurocopa": "EC",
     "🇧🇷 Brasileirão Série A": "BSA",
-    "🇩🇪 Bundesliga": "BL1",
-    "🇳🇱 Eredivisie": "DED",
+    "🏆 UEFA Champions League": "CL",
     "🇪🇸 La Liga": "PD",
-    "🇫🇷 Ligue 1": "FL1",
-    "🇬🇧 Championship": "ELC",
-    "🇵🇹 Primeira Liga": "PPL",
-    "🇮🇹 Série A": "SA",
+    "🇩🇪 Bundesliga": "BL1",
     "🇬🇧 Premier League": "PL"
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
@@ -247,132 +194,124 @@ def calcular_base(time_id, sigla, eh_casa=False):
                 "pV":med["vit_casa"] if eh_casa else med["vit_fora"],
                 "pE":med["empate"],
                 "pD":med["vit_fora"] if eh_casa else med["vit_casa"],
-                "mg":med["gols"],
+                "mg":med["gols"], "mg_1t":med["gols_1t"], "mg_2t":med["gols_2t"],
                 "mais15":med["mais15"],"menos15":med["menos15"],
                 "mais25":med["mais25"],"menos25":med["menos25"],
-                "menos35":med["menos35"],"mais35gols":med["mais35gols"],
-                "mcartao":med["cartao"],"mais15cartao":med["mais15cartao"],"mais25cartao":med["mais25cartao"],"menos65cartao":med["menos65cartao"],
-                "mesc":med["esc"],"mais75esc":med["mais75esc"],"menos125esc":med["menos125esc"],
-                "mfin":med["fin"],"mais25fin":med["mais25fin"],"menos25fin":med["menos25fin"],
-                "mchute":med["chute_gol"],"mais95chute":med["mais95chute"],"menos95chute":med["menos95chute"],
-                "mfal":med["fal"],"mais25fal":med["mais25fal"],"menos25fal":med["menos25fal"],
-                "mdefesa":med["defesa_gk"],"mais35defesa":med["mais35defesa"],"menos35defesa":med["menos35defesa"],
-                "mtiro":med["tiro_meta"],"mais4tiro":med["mais4tiro"],"menos4tiro":med["menos4tiro"],
-                "mlateral":med["laterais"],"mais8laterais":med["mais8laterais"],"menos8laterais":med["menos8laterais"],
-                "amb":50,"resumo":["📊 Média da Liga"]*5,"placares":["Sem dados"]
+                "mcartao":med["cartao"], "mcartao_1t":med["cartao_1t"], "mcartao_2t":med["cartao_2t"],
+                "mesc":med["esc"], "mesc_1t":round(med["esc"]*0.45,1), "mesc_2t":round(med["esc"]*0.55,1),
+                "mfin":med["fin"],"mchute":med["chute_gol"],"mfal":med["fal"],"mdefesa":med["defesa_gk"],
+                "amb":50,"resumo":["📊 Média da Liga"]*5,"placares":["Sem dados"],
+                "casa":{"mdefesa":med["defesa_gk"]},"fora":{"mdefesa":med["defesa_gk"]},
+                "arbitro_cartao":med["arbitro_cartao"], "arbitro_falta":med["arbitro_falta"]
             }
         
-        v = e = d = gf = gs = amb = 0
-        resumo = []
-        placares = []
-        for j in jogos:
-            try:
-                cid = j["homeTeam"]["id"]
-                gc = j["score"]["fullTime"].get("home",0) or 0
-                ga = j["score"]["fullTime"].get("away",0) or 0
-                if cid == time_id:
-                    gf += gc; gs += ga
-                    if gc>ga: v+=1; resumo.append("✅")
-                    elif gc==ga: e+=1; resumo.append("⚖️")
-                    else: d+=1; resumo.append("❌")
-                    placares.append(f"{gc}x{ga}")
-                else:
-                    gf += ga; gs += gc
-                    if ga>gc: v+=1; resumo.append("✅")
-                    elif ga==gc: e+=1; resumo.append("⚖️")
-                    else: d+=1; resumo.append("❌")
-                    placares.append(f"{ga}x{gc}")
-                if gc>0 and ga>0: amb+=1
-            except: pass
+        jogos_casa = [j for j in jogos if j["homeTeam"]["id"] == time_id]
+        jogos_fora = [j for j in jogos if j["awayTeam"]["id"] == time_id]
         
-        t = len(jogos)
-        media_gols = (gf+gs)/t
-        fator = media_gols/med["gols"] if med["gols"]>0 else 1
+        def calc_grupo(lista_j):
+            v=e=d=gf=gs=amb=0
+            for j in lista_j:
+                try:
+                    gc = j["score"]["fullTime"].get("home",0) or 0
+                    ga = j["score"]["fullTime"].get("away",0) or 0
+                    if j["homeTeam"]["id"] == time_id:
+                        gf, gs = gc, ga
+                        if gc>ga: v+=1
+                        elif gc==ga: e+=1
+                        else: d+=1
+                    else:
+                        gf, gs = ga, gc
+                        if ga>gc: v+=1
+                        elif ga==gc: e+=1
+                        else: d+=1
+                    if gc>0 and ga>0: amb+=1
+                except: pass
+            t = len(lista_j) or 1
+            return {"mg":round((gf+gs)/t,1), "amb":round(amb/t*100,0)}
         
-        pv = round((v/t)*100 * (1.15 if eh_casa else 0.95) * fator,1)
-        pe = round((e/t)*100,1)
-        pd = round((d/t)*100 * (1.10 if not eh_casa else 0.90) * fator,1)
+        dados_casa = calc_grupo(jogos_casa)
+        dados_fora = calc_grupo(jogos_fora)
+        dados_geral = calc_grupo(jogos[:5])
+        fator = dados_geral["mg"]/med["gols"] if med["gols"]>0 else 1
+        
+        pv = round(med["vit_casa"] * (1.15 if eh_casa else 0.95) * fator,1)
+        pe = round(med["empate"],1)
+        pd = round(med["vit_fora"] * (1.10 if not eh_casa else 0.90) * fator,1)
         total = pv+pe+pd
         if total>0: pv,pe,pd = round(pv/total*100,1), round(pe/total*100,1), round(pd/total*100,1)
-        
+
+        resumo = []
+        placares = []
+        for j in jogos[:5]:
+            try:
+                gc = j["score"]["fullTime"].get("home",0) or 0
+                ga = j["score"]["fullTime"].get("away",0) or 0
+                if j["homeTeam"]["id"] == time_id:
+                    resumo.append("✅" if gc>ga else "⚖️" if gc==ga else "❌")
+                    placares.append(f"{gc}x{ga}")
+                else:
+                    resumo.append("✅" if ga>gc else "⚖️" if ga==gc else "❌")
+                    placares.append(f"{ga}x{gc}")
+            except: pass
+        while len(resumo)<5: resumo.append("➖")
+
         return {
             "pV":pv,"pE":pe,"pD":pd,
-            "mg":round(media_gols,1),
-            "mais15":round(med["mais15"]*fator,0),"menos15":round(100-med["mais15"]*fator,0),
-            "mais25":round(med["mais25"]*fator,0),"menos25":round(100-med["mais25"]*fator,0),
-            "menos35":round(med["menos35"]/fator if fator>0 else med["menos35"],0),
-            "mais35gols":round(med["mais35gols"]*fator,0),
+            "mg":round(dados_geral["mg"],1),
+            "mg_1t":round(med["gols_1t"]*fator,1), "mg_2t":round(med["gols_2t"]*fator,1),
+            "mais15":round(med["mais15"]*fator,0),"mais25":round(med["mais25"]*fator,0),
             "mcartao":round(med["cartao"]*fator,1),
-            "mais15cartao":round(med["mais15cartao"],0),"mais25cartao":round(med["mais25cartao"]*fator,0),"menos65cartao":round(med["menos65cartao"]/fator if fator>0 else med["menos65cartao"],0),
+            "mcartao_1t":round(med["cartao_1t"]*fator,1), "mcartao_2t":round(med["cartao_2t"]*fator,1),
             "mesc":round(med["esc"]*fator,1),
-            "mais75esc":round(med["mais75esc"]*fator,0),"menos125esc":round(med["menos125esc"]/fator if fator>0 else med["menos125esc"],0),
-            "mfin":round(med["fin"]*fator,1),
-            "mais25fin":round(med["mais25fin"]*fator,0),"menos25fin":round(med["menos25fin"]/fator if fator>0 else med["menos25fin"],0),
-            "mchute":round(med["chute_gol"]*fator,1),
-            "mais95chute":round(med["mais95chute"]*fator,0),"menos95chute":round(med["menos95chute"]/fator if fator>0 else med["menos95chute"],0),
-            "mfal":round(med["fal"]*fator,1),
-            "mais25fal":round(med["mais25fal"]*fator,0),"menos25fal":round(med["menos25fal"]/fator if fator>0 else med["menos25fal"],0),
-            "mdefesa":round(med["defesa_gk"]/fator if fator>0 else med["defesa_gk"],1),
-            "mais35defesa":round(med["mais35defesa"]/fator if fator>0 else med["mais35defesa"],0),
-            "menos35defesa":round(med["menos35defesa"]*fator,0),
-            "mtiro":round(med["tiro_meta"]*fator,1),
-            "mais4tiro":round(med["mais4tiro"]*fator,0),"menos4tiro":round(med["menos4tiro"]/fator if fator>0 else med["menos4tiro"],0),
-            "mlateral":round(med["laterais"]*fator,1),
-            "mais8laterais":round(med["mais8laterais"]*fator,0),"menos8laterais":round(med["menos8laterais"]/fator if fator>0 else med["menos8laterais"],0),
-            "amb":round((amb/t)*100,0),
-            "resumo":resumo,"placares":placares
+            "mesc_1t":round(med["esc"]*0.45*fator,1), "mesc_2t":round(med["esc"]*0.55*fator,1),
+            "mfin":round(med["fin"]*fator,1),"mchute":round(med["chute_gol"]*fator,1),
+            "mfal":round(med["fal"]*fator,1),"mdefesa":round(med["defesa_gk"]/fator if fator>0 else med["defesa_gk"],1),
+            "amb":dados_geral["amb"],,"resumo":resumo,"placares":placares,
+            "casa":{"mdefesa":round((med["defesa_gk"]/(dados_casa["mg"]/med["gols"])) if dados_casa["mg"]>0 else med["defesa_gk"],1)},
+            "fora":{"mdefesa":round((med["defesa_gk"]/(dados_fora["mg"]/med["gols"])) if dados_fora["mg"]>0 else med["defesa_gk"],1)},
+            "arbitro_cartao":med["arbitro_cartao"], "arbitro_falta":med["arbitro_falta"]
         }
     except:
         med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
         return {"pV":med["vit_casa"] if eh_casa else med["vit_fora"],"pE":med["empate"],"pD":med["vit_fora"] if eh_casa else med["vit_casa"],
-                "mg":med["gols"],"mais15":med["mais15"],"menos15":med["menos15"],
-                "mais25":med["mais25"],"menos25":med["menos25"],"menos35":med["menos35"],"mais35gols":med["mais35gols"],
-                "mcartao":med["cartao"],"mais15cartao":med["mais15cartao"],"mais25cartao":med["mais25cartao"],"menos65cartao":med["menos65cartao"],
-                "mesc":med["esc"],"mais75esc":med["mais75esc"],"menos125esc":med["menos125esc"],
-                "mfin":med["fin"],"mais25fin":med["mais25fin"],"menos25fin":med["menos25fin"],
-                "mchute":med["chute_gol"],"mais95chute":med["mais95chute"],"menos95chute":med["menos95chute"],
-                "mfal":med["fal"],"mais25fal":med["mais25fal"],"menos25fal":med["menos25fal"],
-                "mdefesa":med["defesa_gk"],"mais35defesa":med["mais35defesa"],"menos35defesa":med["menos35defesa"],
-                "mtiro":med["tiro_meta"],"mais4tiro":med["mais4tiro"],"menos4tiro":med["menos4tiro"],
-                "mlateral":med["laterais"],"mais8laterais":med["mais8laterais"],"menos8laterais":med["menos8laterais"],
-                "amb":50,"resumo":["📊 Média da Liga"]*5,"placares":["Erro"]}
+                "mg":med["gols"], "mg_1t":med["gols_1t"], "mg_2t":med["gols_2t"],
+                "mais15":med["mais15"],"mais25":med["mais25"],
+                "mcartao":med["cartao"], "mcartao_1t":med["cartao_1t"], "mcartao_2t":med["cartao_2t"],
+                "mesc":med["esc"], "mesc_1t":round(med["esc"]*0.45,1), "mesc_2t":round(med["esc"]*0.55,1),
+                "mfin":med["fin"],"mchute":med["chute_gol"],"mfal":med["fal"],"mdefesa":med["defesa_gk"],
+                "amb":50,"resumo":["📊 Média da Liga"]*5,"placares":["Erro"],
+                "casa":{"mdefesa":med["defesa_gk"]},"fora":{"mdefesa":med["defesa_gk"]},
+                "arbitro_cartao":med["arbitro_cartao"], "arbitro_falta":med["arbitro_falta"]}
 
 def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
-
 # ==============================
-# 📝 MENSAGEM PADRONIZADA EXATAMENTE COMO SEU EXEMPLO
+# 📝 MENSAGEM COMPLETA COM TODAS ANÁLISES
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
     mg_total = round((dc['mg']+df['mg']),1)
+    mg_1t_total = round((dc['mg_1t']+df['mg_1t']),1)
+    mg_2t_total = round((dc['mg_2t']+df['mg_2t']),1)
+    prob_gol_1t = round(((dc['mais15']+df['mais15'])/2)*0.9,0)
+    tempo_mais_gols = "2º Tempo" if mg_2t_total >= mg_1t_total else "1º Tempo"
+    
     mcartao_total = round((dc['mcartao']+df['mcartao']),1)
+    mcartao_1t_total = round((dc['mcartao_1t']+df['mcartao_1t']),1)
+    mcartao_2t_total = round((dc['mcartao_2t']+df['mcartao_2t']),1)
     mesc_total = round((dc['mesc']+df['mesc']),1)
     mfin_total = round((dc['mfin']+df['mfin']),1)
     mchute_total = round((dc['mchute']+df['mchute']),1)
     mfal_total = round((dc['mfal']+df['mfal']),1)
     mdefesa_total = round((dc['mdefesa']+df['mdefesa']),1)
-    mtiro_total = round((dc['mtiro']+df['mtiro']),1)
-    mlateral_total = round((dc['mlateral']+df['mlateral']),1)
     mimp_total = round((mcartao_total / 1.3),1)
 
-    mais15cartao = round((dc['mais15cartao']+df['mais15cartao'])/2,0)
-    mais25cartao = round((dc['mais25cartao']+df['mais25cartao'])/2,0)
-    mais35cartao = round((dc['mais25cartao']*0.8 + df['mais25cartao']*0.8)/2,0)
-    menos65cartao = round((dc['menos65cartao']+df['menos65cartao'])/2,0)
-    mais75esc = round((dc['mais75esc']+df['mais75esc'])/2,0)
-    menos125esc = round((dc['menos125esc']+df['menos125esc'])/2,0)
-    mais25fin = round((dc['mais25fin']+df['mais25fin'])/2,0)
-    menos25fin = round((dc['menos25fin']+df['menos25fin'])/2,0)
-    mais95chute = round((dc['mais95chute']+df['mais95chute'])/2,0)
-    menos95chute = round((dc['menos95chute']+df['menos95chute'])/2,0)
-    mais25fal = round((dc['mais25fal']+df['mais25fal'])/2,0)
-    menos25fal = round((dc['menos25fal']+df['menos25fal'])/2,0)
-    mais35defesa = round((dc['mais35defesa']+df['mais35defesa'])/2,0)
-    menos35defesa = round((dc['menos35defesa']+df['menos35defesa'])/2,0)
-    mais4tiro = round((dc['mais4tiro']+df['mais4tiro'])/2,0)
-    menos4tiro = round((dc['menos4tiro']+df['menos4tiro'])/2,0)
-    mais8laterais = round((dc['mais8laterais']+df['mais8laterais'])/2,0)
-    menos8laterais = round((dc['menos8laterais']+df['menos8laterais'])/2,0)
+    # Indicadores acima de 70%
+    indicadores = []
+    if dup['X2'] >=70: indicadores.append(f"🟢 Dupla Chance X2 ({dup['X2']}%)")
+    if (dc['mais15']+df['mais15'])/2 >=70: indicadores.append(f"🟢 Mais 1.5 gols ({round((dc['mais15']+df['mais15'])/2,0)}%)")
+    if mcartao_total >=6: indicadores.append("🟢 Mais de 6 cartões")
+    if 1<=dc['mg']<=3: indicadores.append(f"🟢 {casa} faz 1-3 gols")
+    if dup['12'] >=70: indicadores.append("🟢 Um dos times vence ao menos um tempo")
 
     return f"""⚽ {casa} 🆚 {fora} | {dt.strftime('%d/%m %H:%M')}
 
@@ -381,88 +320,34 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 🔀 Dupla Chance: 1X {dup['1X']}% | X2 {dup['X2']}% | 12 {dup['12']}%
 
 📈 GOLS:
-⚽ Média: {mg_total}
-🔢 Mais 1.5: {round((dc['mais15']+df['mais15'])/2,0)}% | Menos 1.5: {round((dc['menos15']+df['menos15'])/2,0)}%
-🔢 Mais 2.5: {round((dc['mais25']+df['mais25'])/2,0)}% | Menos 2.5: {round((dc['menos25']+df['menos25'])/2,0)}%
-🔢 Mais 3.5: {round((dc['mais35gols']+df['mais35gols'])/2,0)}% | Menos 3.5: {round((dc['menos35']+df['menos35'])/2,0)}%
+⚽ Total: {mg_total} | 1º Tempo: {mg_1t_total} | 2º Tempo: {mg_2t_total}
+🎯 Gol no 1º Tempo: {prob_gol_1t}% | Mais gols no: {tempo_mais_gols}
+🔢 Mais 1.5: {round((dc['mais15']+df['mais15'])/2,0)}% | Mais 2.5: {round((dc['mais25']+df['mais25'])/2,0)}%
 🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%
 
 🟨 CARTÕES:
-🟨 Média: {mcartao_total}
-🔢 Mais 1.5: {mais15cartao}% | Menos 1.5: {100-mais15cartao}%
-🔢 Mais 2.5: {mais25cartao}% | Menos 2.5: {100-mais25cartao}%
-🔢 Mais 3.5: {mais35cartao}% | Menos 3.5: {100-mais35cartao}%
-🔢 Mais 6.5: {menos65cartao}% | Menos 6.5: {100-menos65cartao}%
+🟨 Total: {mcartao_total} | 1º Tempo: {mcartao_1t_total} | 2º Tempo: {mcartao_2t_total}
+⚖️ Árbitro costuma aplicar: {dc['arbitro_cartao']} cartões e marcar {dc['arbitro_falta']} faltas
 
 📐 ESCANTEIOS:
-📐 Média: {mesc_total}
-🔢 Mais 6.5: {round(mais75esc*1.1,0)}% | Menos 6.5: {round(100-mais75esc*1.1,0)}%
-🔢 Mais 7.5: {mais75esc}% | Menos 7.5: {menos125esc}%
-🔢 Mais 8.5: {round(mais75esc*0.9,0)}% | Menos 8.5: {round(100-mais75esc*0.9,0)}%
-🔢 Mais 9.5: {round(mais75esc*0.8,0)}% | Menos 9.5: {round(100-mais75esc*0.8,0)}%
-🔢 Mais 10.5: {round(mais75esc*0.7,0)}% | Menos 10.5: {round(100-mais75esc*0.7,0)}%
-🔢 Mais 11.5: {round(mais75esc*0.6,0)}% | Menos 11.5: {round(100-mais75esc*0.6,0)}%
-🔢 Mais 12.5: {menos125esc}% | Menos 12.5: {100-menos125esc}%
+📐 Total: {mesc_total}
+🏠 {casa}: {dc['mesc']} | 1ºT {dc['mesc_1t']} | 2ºT {dc['mesc_2t']}
+✈️ {fora}: {df['mesc']} | 1ºT {df['mesc_1t']} | 2ºT {df['mesc_2t']}
 
-🚫 IMPEDIMENTOS:
-🚫 Média Total: {mimp_total}
-🔢 Mais 2.5: {round(mais15cartao*0.85,0)}% | Menos 2.5: {round(100-mais15cartao*0.85,0)}%
-🔢 Mais 3.5: {round(mais25cartao*0.85,0)}% | Menos 3.5: {round(100-mais25cartao*0.85,0)}%
+⚽ LANCES:
+🎯 Finalizações: {mfin_total} | Chutes ao gol: {mchute_total}
+🤚 Faltas: {mfal_total} | Impedimentos: {mimp_total}
 
-🧩 LATERAIS:
-🧩 Média Total: {mlateral_total}
-🔢 Mais 30.5: {round(mais8laterais*1.2,0)}% | Menos 30.5: {round(100-mais8laterais*1.2,0)}%
-🔢 Mais 32.5: {round(mais8laterais*1.1,0)}% | Menos 32.5: {round(100-mais8laterais*1.1,0)}%
-🔢 Mais 34.5: {mais8laterais}% | Menos 34.5: {menos8laterais}%
-🔢 Mais 36.5: {round(mais8laterais*0.9,0)}% | Menos 36.5: {round(100-mais8laterais*0.9,0)}%
+🧤 ANÁLISE DE GOLEIROS:
+🧤 {casa}: {dc['mdefesa']} defesas por jogo | Em casa: {dc['casa']['mdefesa']}
+🧤 {fora}: {df['mdefesa']} defesas por jogo | Fora de casa: {df['fora']['mdefesa']}
 
-🎯 TIRO DE META:
-🎯 Média Total: {mtiro_total}
-🔢 Mais 5.5: {round(mais4tiro*1.15,0)}% | Menos 5.5: {round(100-mais4tiro*1.15,0)}%
-🔢 Mais 6.5: {round(mais4tiro*1.05,0)}% | Menos 6.5: {round(100-mais4tiro*1.05,0)}%
-🔢 Mais 7.5: {mais4tiro}% | Menos 7.5: {menos4tiro}%
-🔢 Mais 9.5: {round(mais4tiro*0.8,0)}% | Menos 9.5: {round(100-mais4tiro*0.8,0)}%
+⚽ ANÁLISE DE ATAQUES:
+🏠 {casa}: Média {dc['mg']} gols | Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
+✈️ {fora}: Média {df['mg']} gols | Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
-⚽ FINALIZAÇÕES:
-⚽ Média: {mfin_total}
-🔢 Mais 19.5: {round(mais25fin*1.1,0)}% | Menos 19.5: {round(100-mais25fin*1.1,0)}%
-🔢 Mais 20.5: {round(mais25fin*1.05,0)}% | Menos 20.5: {round(100-mais25fin*1.05,0)}%
-🔢 Mais 22.5: {mais25fin}% | Menos 22.5: {menos25fin}%
-🔢 Mais 25.5: {round(mais25fin*0.85,0)}% | Menos 25.5: {round(100-mais25fin*0.85,0)}%
-
-🎯 CHUTES AO GOL:
-🎯 Média: {mchute_total}
-🔢 Mais 6.5: {round(mais95chute*1.1,0)}% | Menos 6.5: {round(100-mais95chute*1.1,0)}%
-🔢 Mais 7.5: {round(mais95chute*1.05,0)}% | Menos 7.5: {round(100-mais95chute*1.05,0)}%
-🔢 Mais 8.5: {mais95chute}% | Menos 8.5: {menos95chute}%
-🔢 Mais 9.5: {round(mais95chute*0.9,0)}% | Menos 9.5: {round(100-mais95chute*0.9,0)}%
-
-🤚 FALTAS:
-🤚 Média: {mfal_total}
-🔢 Mais 19.5: {round(mais25fal*1.15,0)}% | Menos 19.5: {round(100-mais25fal*1.15,0)}%
-🔢 Mais 22.5: {round(mais25fal*1.05,0)}% | Menos 22.5: {round(100-mais25fal*1.05,0)}%
-🔢 Mais 25.5: {mais25fal}% | Menos 25.5: {menos25fal}%
-🔢 Mais 29.5: {round(mais25fal*0.85,0)}% | Menos 29.5: {round(100-mais25fal*0.85,0)}%
-
-🧤 DEFESAS GOLEIRO:
-🧤 Média: {mdefesa_total}
-🔢 Mais 2.5: {round(mais35defesa*1.1,0)}% | Menos 2.5: {round(100-mais35defesa*1.1,0)}%
-🔢 Mais 3.5: {mais35defesa}% | Menos 3.5: {menos35defesa}%
-🔢 Mais 4.5: {round(mais35defesa*0.85,0)}% | Menos 4.5: {round(100-mais35defesa*0.85,0)}%
-🔢 Mais 5.5: {round(mais35defesa*0.75,0)}% | Menos 5.5: {round(100-mais35defesa*0.75,0)}%
-
-🎯 DADOS INDIVIDUAIS:
-🏠 {casa}:
-• Chutes ao Gol: {dc['mchute']} | Finalizações: {dc['mfin']} | Faltas: {dc['mfal']}
-• Escanteios: {dc['mesc']} | Defesas: {dc['mdefesa']} | Cartões: {dc['mcartao']}
-• Laterais: {dc['mlateral']} | Impedimentos: {round(dc['mcartao']/1.3,1)} | Tiro de Meta: {dc['mtiro']}
-• Últimos 5: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
-
-✈️ {fora}:
-• Chutes ao Gol: {df['mchute']} | Finalizações: {df['mfin']} | Faltas: {df['mfal']}
-• Escanteios: {df['mesc']} | Defesas: {df['mdefesa']} | Cartões: {df['mcartao']}
-• Laterais: {df['mlateral']} | Impedimentos: {round(df['mcartao']/1.3,1)} | Tiro de Meta: {df['mtiro']}
-• Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
+✅ INDICAÇÕES COM ALTA CONFIANÇA:
+{chr(10).join(indicadores) if indicadores else "Nenhuma indicação acima de 70%"}
 """
 
 # ==============================
