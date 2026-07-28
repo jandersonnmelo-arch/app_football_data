@@ -7,7 +7,7 @@ import threading
 # ==============================
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
-st.set_page_config(page_title="⚽ Análise Completa", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="⚽ Análise Completa + Telegram", page_icon="⚽", layout="wide")
 st.title("⚽ Análise de Jogos + Envio Automático Telegram")
 
 # 🔒 CHAVES OCULTAS
@@ -30,7 +30,7 @@ LIMIAR_ALERTA = 70
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 🏆 MÉDIAS DAS LIGAS
+# 🏆 MÉDIAS E LIGAS COM SIGLAS CORRETAS
 # ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
@@ -46,33 +46,7 @@ MEDIAS_LIGA = {
             "mais65cg":70,"mais75cg":55,"mais85cg":40,"mais95cg":46,
             "mais195fal":78,"mais225fal":62,"mais255fal":48,"mais295fal":32,
             "mais25def":80,"mais35def":54,"mais45def":38,"mais55def":30},
-    "WC": {"esc":8.2,"cartao":3.0,"fin":10.0,"chute_gol":4.2,"fal":25.0,"defesa_gk":4.0,"gols":2.5,
-           "tiro_meta":4.5,"laterais":8.0,"imped":2.8,
-           "vit_casa":42,"vit_fora":32,"empate":26,
-           "mais15":74,"mais25":53,"mais35":36,
-           "mais15cartao":93,"mais25cartao":70,"mais35cartao":48,"mais65cartao":24,
-           "mais65esc":76,"mais75esc":67,"mais85esc":56,"mais95esc":42,"mais105esc":35,"mais115esc":28,
-           "mais25imp":76,"mais35imp":60,
-           "mais305lat":66,"mais325lat":53,"mais345lat":40,"mais365lat":26,
-           "mais55tm":70,"mais65tm":58,"mais75tm":46,"mais95tm":28,
-           "mais195fin":66,"mais205fin":58,"mais225fin":43,"mais255fin":23,
-           "mais65cg":68,"mais75cg":53,"mais85cg":38,"mais95cg":44,
-           "mais195fal":76,"mais225fal":60,"mais255fal":46,"mais295fal":30,
-           "mais25def":78,"mais35def":52,"mais45def":36,"mais55def":28},
-    "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
-           "tiro_meta":4.0,"laterais":7.8,"imped":2.5,
-           "vit_casa":48,"vit_fora":29,"empate":23,
-           "mais15":80,"mais25":62,"mais35":45,
-           "mais15cartao":95,"mais25cartao":78,"mais35cartao":55,"mais65cartao":30,
-           "mais65esc":80,"mais75esc":72,"mais85esc":62,"mais95esc":50,"mais105esc":42,"mais115esc":34,
-           "mais25imp":80,"mais35imp":65,
-           "mais305lat":70,"mais325lat":58,"mais345lat":45,"mais365lat":32,
-           "mais55tm":74,"mais65tm":62,"mais75tm":50,"mais95tm":32,
-           "mais195fin":75,"mais205fin":68,"mais225fin":52,"mais255fin":32,
-           "mais65cg":75,"mais75cg":62,"mais85cg":48,"mais95cg":52,
-           "mais195fal":70,"mais225fal":55,"mais255fal":42,"mais295fal":28,
-           "mais25def":75,"mais35def":50,"mais45def":35,"mais55def":22},
-    "BSB": {"esc":8.5,"cartao":3.3,"fin":9.0,"chute_gol":3.8,"fal":27.0,"defesa_gk":4.5,"gols":2.4,
+    "BRB": {"esc":8.5,"cartao":3.3,"fin":9.0,"chute_gol":3.8,"fal":27.0,"defesa_gk":4.5,"gols":2.4,
             "tiro_meta":5.0,"laterais":9.0,"imped":3.2,
             "vit_casa":44,"vit_fora":29,"empate":27,
             "mais15":72,"mais25":52,"mais35":35,
@@ -98,7 +72,7 @@ MEDIAS_LIGA = {
             "mais65cg":69,"mais75cg":55,"mais85cg":41,"mais95cg":47,
             "mais195fal":79,"mais225fal":64,"mais255fal":49,"mais295fal":34,
             "mais25def":81,"mais35def":63,"mais45def":46,"mais55def":31},
-    "CS": {"esc":8.7,"cartao":3.2,"fin":9.3,"chute_gol":4.1,"fal":25.5,"defesa_gk":4.1,"gols":2.6,
+    "CSA": {"esc":8.7,"cartao":3.2,"fin":9.3,"chute_gol":4.1,"fal":25.5,"defesa_gk":4.1,"gols":2.6,
            "tiro_meta":4.6,"laterais":8.6,"imped":2.9,
            "vit_casa":46,"vit_fora":28,"empate":26,
            "mais15":76,"mais25":56,"mais35":39,
@@ -111,7 +85,20 @@ MEDIAS_LIGA = {
            "mais65cg":70,"mais75cg":56,"mais85cg":42,"mais95cg":48,
            "mais195fal":78,"mais225fal":63,"mais255fal":48,"mais295fal":33,
            "mais25def":80,"mais35def":60,"mais45def":44,"mais55def":30},
-    "EC": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
+    "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
+           "tiro_meta":4.0,"laterais":7.8,"imped":2.5,
+           "vit_casa":48,"vit_fora":29,"empate":23,
+           "mais15":80,"mais25":62,"mais35":45,
+           "mais15cartao":95,"mais25cartao":78,"mais35cartao":55,"mais65cartao":30,
+           "mais65esc":80,"mais75esc":72,"mais85esc":62,"mais95esc":50,"mais105esc":42,"mais115esc":34,
+           "mais25imp":80,"mais35imp":65,
+           "mais305lat":70,"mais325lat":58,"mais345lat":45,"mais365lat":32,
+           "mais55tm":74,"mais65tm":62,"mais75tm":50,"mais95tm":32,
+           "mais195fin":75,"mais205fin":68,"mais225fin":52,"mais255fin":32,
+           "mais65cg":75,"mais75cg":62,"mais85cg":48,"mais95cg":52,
+           "mais195fal":70,"mais225fal":55,"mais255fal":42,"mais295fal":28,
+           "mais25def":75,"mais35def":50,"mais45def":35,"mais55def":22},
+    "EL": {"esc":8.8,"cartao":2.9,"fin":10.5,"chute_gol":4.5,"fal":24.0,"defesa_gk":3.8,"gols":2.7,
            "tiro_meta":4.3,"laterais":8.2,"imped":2.7,
            "vit_casa":45,"vit_fora":30,"empate":25,
            "mais15":78,"mais25":58,"mais35":40,
@@ -163,7 +150,7 @@ MEDIAS_LIGA = {
             "mais65cg":70,"mais75cg":58,"mais85cg":42,"mais95cg":48,
             "mais195fal":72,"mais225fal":58,"mais255fal":42,"mais295fal":28,
             "mais25def":80,"mais35def":62,"mais45def":45,"mais55def":28},
-    "ELC": {"esc":8.0,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
+    "MX1": {"esc":8.0,"cartao":3.5,"fin":9.2,"chute_gol":3.8,"fal":28.0,"defesa_gk":4.5,"gols":2.4,
             "tiro_meta":5.0,"laterais":9.0,"imped":3.2,
             "vit_casa":44,"vit_fora":27,"empate":29,
             "mais15":70,"mais25":50,"mais35":32,
@@ -220,58 +207,74 @@ MEDIAS_LIGA = {
 LIGAS = {
     "⚽ Todas Competições": "TODAS",
     "🇧🇷 Brasileirão Série A": "BSA",
-    "🇧🇷 Brasileirão Série B": "BSB",
+    "🇧🇷 Brasileirão Série B": "BRB",
     "🇧🇷 Copa do Brasil": "BRA",
-    "🏆 Copa Sul-Americana": "CS",
+    "🏆 Copa Sul-Americana": "CSA",
     "🏆 UEFA Champions League": "CL",
-    "🏆 Europa League": "EC",
+    "🏆 Europa League": "EL",
     "🇩🇪 Bundesliga": "BL1",
     "🇪🇸 La Liga": "PD",
     "🇫🇷 Ligue 1": "FL1",
-    "🇲🇽 Liga MX": "ELC",
+    "🇲🇽 Liga MX": "MX1",
     "🇵🇹 Primeira Liga": "PPL",
     "🇮🇹 Série A": "SA",
     "🇬🇧 Premier League": "PL"
 }
-TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
+TODAS_SIGLAS = list(LIGAS.values())
+TODAS_SIGLAS.remove("TODAS")
 
 # ==============================
-# 🔍 BUSCA E CÁLCULOS
+# 🔍 BUSCA E CÁLCULOS CORRIGIDOS
 # ==============================
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
-    time.sleep(0.5)
+    time.sleep(0.2)
     hoje = datetime.utcnow().date()
     lista = []
-    for s in (TODAS_SIGLAS if sigla == "TODAS" else [sigla]):
+    siglas_buscar = TODAS_SIGLAS if sigla == "TODAS" else [sigla]
+    
+    for s in siglas_buscar:
         try:
-            r = requests.get(f"https://api.football-data.org/v4/competitions/{s}/matches",
-                            headers=HEADERS, params={"status":"SCHEDULED"}, timeout=15)
+            r = requests.get(
+                f"https://api.football-data.org/v4/competitions/{s}/matches",
+                headers=HEADERS,
+                params={"status":"SCHEDULED"},
+                timeout=20
+            )
             if r.status_code == 200:
-                for j in r.json().get("matches", []):
+                dados = r.json().get("matches", [])
+                for j in dados:
                     try:
                         dt = datetime.fromisoformat(j["utcDate"].replace("Z",""))
                         if dt.date() <= hoje + timedelta(days=dias):
                             lista.append(j)
-                    except: pass
-        except: pass
+                    except:
+                        continue
+        except:
+            continue
     return lista
 
 @st.cache_data(ttl=3600)
 def ultimos_5(time_id):
     time.sleep(0.3)
     try:
-        r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
-                        headers=HEADERS, params={"status":"FINISHED","limit":5}, timeout=15)
+        r = requests.get(
+            f"https://api.football-data.org/v4/teams/{time_id}/matches",
+            headers=HEADERS,
+            params={"status":"FINISHED","limit":5},
+            timeout=15
+        )
         return r.json().get("matches", [])
-    except: return []
+    except:
+        return []
 
 def enviar_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         requests.post(url, data={"chat_id":CHAT_ID,"text":texto,"parse_mode":"Markdown"}, timeout=10)
         return True
-    except: return False
+    except:
+        return False
 
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -281,37 +284,40 @@ def calcular_base(time_id, sigla, eh_casa=False):
             return {
                 "pV":med["vit_casa"] if eh_casa else med["vit_fora"],
                 "pE":med["empate"], "pD":med["vit_fora"] if eh_casa else med["vit_casa"],
-                "mg":med["gols"],
-                "mais15":med["mais15"],"menos15":100-med["mais15"],
+                "mg":med["gols"], "mais15":med["mais15"],"menos15":100-med["mais15"],
                 "mais25":med["mais25"],"menos25":100-med["mais25"],
                 "mais35":med["mais35"],"menos35":100-med["mais35"],
-                "mcartao":med["cartao"],"mais15cartao":med["mais15cartao"],"mais25cartao":med["mais25cartao"],
-                "mais35cartao":med["mais35cartao"],"mais65cartao":med["mais65cartao"],
-                "mesc":med["esc"],"mais65esc":med["mais65esc"],"mais75esc":med["mais75esc"],
+                "mcartao":med["cartao"],"mais15cartao":med["mais15cartao"],
+                "mais25cartao":med["mais25cartao"],"mais35cartao":med["mais35cartao"],
+                "mais65cartao":med["mais65cartao"],"mesc":med["esc"],
+                "mais65esc":med["mais65esc"],"mais75esc":med["mais75esc"],
                 "mais85esc":med["mais85esc"],"mais95esc":med["mais95esc"],
                 "mais105esc":med["mais105esc"],"mais115esc":med["mais115esc"],
-                "mimped":med["imped"],"mais25imp":med["mais25imp"],"mais35imp":med["mais35imp"],
-                "mlateral":med["laterais"],"mais305lat":med["mais305lat"],"mais325lat":med["mais325lat"],
+                "mimped":med["imped"],"mais25imp":med["mais25imp"],
+                "mais35imp":med["mais35imp"],"mlateral":med["laterais"],
+                "mais305lat":med["mais305lat"],"mais325lat":med["mais325lat"],
                 "mais345lat":med["mais345lat"],"mais365lat":med["mais365lat"],
-                "mtiro":med["tiro_meta"],"mais55tm":med["mais55tm"],"mais65tm":med["mais65tm"],
-                "mais75tm":med["mais75tm"],"mais95tm":med["mais95tm"],
-                "mfin":med["fin"],"mais195fin":med["mais195fin"],"mais205fin":med["mais205fin"],
+                "mtiro":med["tiro_meta"],"mais55tm":med["mais55tm"],
+                "mais65tm":med["mais65tm"],"mais75tm":med["mais75tm"],
+                "mais95tm":med["mais95tm"],"mfin":med["fin"],
+                "mais195fin":med["mais195fin"],"mais205fin":med["mais205fin"],
                 "mais225fin":med["mais225fin"],"mais255fin":med["mais255fin"],
-                "mchute":med["chute_gol"],"mais65cg":med["mais65cg"],"mais75cg":med["mais75cg"],
-                "mais85cg":med["mais85cg"],"mais95cg":med["mais95cg"],
-                "mfal":med["fal"],"mais195fal":med["mais195fal"],"mais225fal":med["mais225fal"],
+                "mchute":med["chute_gol"],"mais65cg":med["mais65cg"],
+                "mais75cg":med["mais75cg"],"mais85cg":med["mais85cg"],
+                "mais95cg":med["mais95cg"],"mfal":med["fal"],
+                "mais195fal":med["mais195fal"],"mais225fal":med["mais225fal"],
                 "mais255fal":med["mais255fal"],"mais295fal":med["mais295fal"],
-                "mdefesa":med["defesa_gk"],"mais25def":med["mais25def"],"mais35def":med["mais35def"],
-                "mais45def":med["mais45def"],"mais55def":med["mais55def"],
-                "amb":50,"resumo":["📊 Média"]*5,"placares":["Sem dados"]
+                "mdefesa":med["defesa_gk"],"mais25def":med["mais25def"],
+                "mais35def":med["mais35def"],"mais45def":med["mais45def"],
+                "mais55def":med["mais55def"],"amb":50,"resumo":["📊 Média"]*5,"placares":["Sem dados"]
             }
         v=e=d=gf=gs=amb=0
         resumo=[]; placares=[]
         for j in jogos:
             try:
                 cid = j["homeTeam"]["id"]
-                gc = j["score"]["fullTime"].get("home",0) or 0
-                ga = j["score"]["fullTime"].get("away",0) or 0
+                gc = j["score"]["fullTime"]["home"] or 0
+                ga = j["score"]["fullTime"]["away"] or 0
                 if cid == time_id:
                     gf+=gc; gs+=ga
                     if gc>ga: v+=1; resumo.append("✅")
@@ -375,94 +381,25 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
     def m(a,b): return round((a+b)/2,1)
     def m0(a,b): return round((a+b)/2,0)
     return f"""⚽ {casa} 🆚 {fora} | {dt.strftime('%d/%m %H:%M')}
-
 📊 Probabilidades:
 ✅ {casa}: {dc['pV']}% | ⚖️ Empate: {m(dc['pE'],df['pE'])}% | ✅ {fora}: {df['pD']}%
 🔀 Dupla Chance: 1X {dup['1X']}% | X2 {dup['X2']}% | 12 {dup['12']}%
 
-📈 GOLS:
-⚽ Média: {m(dc['mg'],df['mg'])}
-🔢 Mais 1.5: {m0(dc['mais15'],df['mais15'])}% | Menos 1.5: {m0(dc['menos15'],df['menos15'])}%
-🔢 Mais 2.5: {m0(dc['mais25'],df['mais25'])}% | Menos 2.5: {m0(dc['menos25'],df['menos25'])}%
-🔢 Mais 3.5: {m0(dc['mais35'],df['mais35'])}% | Menos 3.5: {m0(dc['menos35'],df['menos35'])}%
-🔄 Ambos Marcam: {m0(dc['amb'],df['amb'])}%
+📈 Estimativa Total do Jogo:
+⚽ Gols: Média {m(dc['mg'],df['mg'])} | Mais 1.5: {m0(dc['mais15'],df['mais15'])}% | Mais 2.5: {m0(dc['mais25'],df['mais25'])}%
+🟨 Cartões: Média {m(dc['mcartao'],df['mcartao'])} | Mais 3.5: {m0(dc['mais35cartao'],df['mais35cartao'])}%
+📐 Escanteios: Média {m(dc['mesc'],df['mesc'])} | Mais 9.5: {m0(dc['mais95esc'],df['mais95esc'])}%
+⚽ Finalizações: Média {m(dc['mfin'],df['mfin'])} | Mais 19.5: {m0(dc['mais195fin'],df['mais195fin'])}%
+🎯 Chutes ao Gol: Média {m(dc['mchute'],df['mchute'])} | Mais 6.5: {m0(dc['mais65cg'],df['mais65cg'])}%
+🤚 Faltas: Média {m(dc['mfal'],df['mfal'])} | Mais 25.5: {m0(dc['mais255fal'],df['mais255fal'])}%
+🧤 Defesas: Média {m(dc['mdefesa'],df['mdefesa'])} | Mais 3.5: {m0(dc['mais35def'],df['mais35def'])}%
 
-🟨 CARTÕES:
-🟨 Média: {m(dc['mcartao'],df['mcartao'])}
-🔢 Mais 1.5: {m0(dc['mais15cartao'],df['mais15cartao'])}% | Menos 1.5: {round(100-m0(dc['mais15cartao'],df['mais15cartao']),0)}%
-🔢 Mais 2.5: {m0(dc['mais25cartao'],df['mais25cartao'])}% | Menos 2.5: {round(100-m0(dc['mais25cartao'],df['mais25cartao']),0)}%
-🔢 Mais 3.5: {m0(dc['mais35cartao'],df['mais35cartao'])}% | Menos 3.5: {round(100-m0(dc['mais35cartao'],df['mais35cartao']),0)}%
-🔢 Mais 6.5: {m0(dc['mais65cartao'],df['mais65cartao'])}% | Menos 6.5: {round(100-m0(dc['mais65cartao'],df['mais65cartao']),0)}%
-
-📐 ESCANTEIOS:
-📐 Média: {m(dc['mesc'],df['mesc'])}
-🔢 Mais 6.5: {m0(dc['mais65esc'],df['mais65esc'])}% | Menos 6.5: {round(100-m0(dc['mais65esc'],df['mais65esc']),0)}%
-🔢 Mais 7.5: {m0(dc['mais75esc'],df['mais75esc'])}% | Menos 7.5: {round(100-m0(dc['mais75esc'],df['mais75esc']),0)}%
-🔢 Mais 8.5: {m0(dc['mais85esc'],df['mais85esc'])}% | Menos 8.5: {round(100-m0(dc['mais85esc'],df['mais85esc']),0)}%
-🔢 Mais 9.5: {m0(dc['mais95esc'],df['mais95esc'])}% | Menos 9.5: {round(100-m0(dc['mais95esc'],df['mais95esc']),0)}%
-🔢 Mais 10.5: {m0(dc['mais105esc'],df['mais105esc'])}% | Menos 10.5: {round(100-m0(dc['mais105esc'],df['mais105esc']),0)}%
-🔢 Mais 11.5: {m0(dc['mais115esc'],df['mais115esc'])}% | Menos 11.5: {round(100-m0(dc['mais115esc'],df['mais115esc']),0)}%
-
-🚫 IMPEDIMENTOS:
-🚫 Média Total: {m(dc['mimped'],df['mimped'])}
-🔢 Mais 2.5: {m0(dc['mais25imp'],df['mais25imp'])}% | Menos 2.5: {round(100-m0(dc['mais25imp'],df['mais25imp']),0)}%
-🔢 Mais 3.5: {m0(dc['mais35imp'],df['mais35imp'])}% | Menos 3.5: {round(100-m0(dc['mais35imp'],df['mais35imp']),0)}%
-
-🧩 LANCES LATERAIS:
-🧩 Média Total: {m(dc['mlateral'],df['mlateral'])}
-🔢 Mais 30.5: {m0(dc['mais305lat'],df['mais305lat'])}% | Menos 30.5: {round(100-m0(dc['mais305lat'],df['mais305lat']),0)}%
-🔢 Mais 32.5: {m0(dc['mais325lat'],df['mais325lat'])}% | Menos 32.5: {round(100-m0(dc['mais325lat'],df['mais325lat']),0)}%
-🔢 Mais 34.5: {m0(dc['mais345lat'],df['mais345lat'])}% | Menos 34.5: {round(100-m0(dc['mais345lat'],df['mais345lat']),0)}%
-🔢 Mais 36.5: {m0(dc['mais365lat'],df['mais365lat'])}% | Menos 36.5: {round(100-m0(dc['mais365lat'],df['mais365lat']),0)}%
-
-🎯 TIRO DE META:
-🎯 Média Total: {m(dc['mtiro'],df['mtiro'])}
-🔢 Mais 5.5: {m0(dc['mais55tm'],df['mais55tm'])}% | Menos 5.5: {round(100-m0(dc['mais55tm'],df['mais55tm']),0)}%
-🔢 Mais 6.5: {m0(dc['mais65tm'],df['mais65tm'])}% | Menos 6.5: {round(100-m0(dc['mais65tm'],df['mais65tm']),0)}%
-🔢 Mais 7.5: {m0(dc['mais75tm'],df['mais75tm'])}% | Menos 7.5: {round(100-m0(dc['mais75tm'],df['mais75tm']),0)}%
-🔢 Mais 9.5: {m0(dc['mais95tm'],df['mais95tm'])}% | Menos 9.5: {round(100-m0(dc['mais95tm'],df['mais95tm']),0)}%
-
-⚽ FINALIZAÇÕES:
-⚽ Média: {m(dc['mfin'],df['mfin'])}
-🔢 Mais 19.5: {m0(dc['mais195fin'],df['mais195fin'])}% | Menos 19.5: {round(100-m0(dc['mais195fin'],df['mais195fin']),0)}%
-🔢 Mais 20.5: {m0(dc['mais205fin'],df['mais205fin'])}% | Menos 20.5: {round(100-m
-(dc['mais205fin'],df['mais205fin']),0)}%
-🔢 Mais 22.5: {m0(dc['mais225fin'],df['mais225fin'])}% | Menos 22.5: {round(100-m0(dc['mais225fin'],df['mais225fin']),0)}%
-🔢 Mais 25.5: {m0(dc['mais255fin'],df['mais255fin'])}% | Menos 25.5: {round(100-m0(dc['mais255fin'],df['mais255fin']),0)}%
-
-🎯 CHUTES AO GOL:
-🎯 Média: {m(dc['mchute'],df['mchute'])}
-🔢 Mais 6.5: {m0(dc['mais65cg'],df['mais65cg'])}% | Menos 6.5: {round(100-m0(dc['mais65cg'],df['mais65cg']),0)}%
-🔢 Mais 7.5: {m0(dc['mais75cg'],df['mais75cg'])}% | Menos 7.5: {round(100-m0(dc['mais75cg'],df['mais75cg']),0)}%
-🔢 Mais 8.5: {m0(dc['mais85cg'],df['mais85cg'])}% | Menos 8.5: {round(100-m0(dc['mais85cg'],df['mais85cg']),0)}%
-🔢 Mais 9.5: {m0(dc['mais95cg'],df['mais95cg'])}% | Menos 9.5: {round(100-m0(dc['mais95cg'],df['mais95cg']),0)}%
-
-🤚 FALTAS:
-🤚 Média: {m(dc['mfal'],df['mfal'])}
-🔢 Mais 19.5: {m0(dc['mais195fal'],df['mais195fal'])}% | Menos 19.5: {round(100-m0(dc['mais195fal'],df['mais195fal']),0)}%
-🔢 Mais 22.5: {m0(dc['mais225fal'],df['mais225fal'])}% | Menos 22.5: {round(100-m0(dc['mais225fal'],df['mais225fal']),0)}%
-🔢 Mais 25.5: {m0(dc['mais255fal'],df['mais255fal'])}% | Menos 25.5: {round(100-m0(dc['mais255fal'],df['mais255fal']),0)}%
-🔢 Mais 29.5: {m0(dc['mais295fal'],df['mais295fal'])}% | Menos 29.5: {round(100-m0(dc['mais295fal'],df['mais295fal']),0)}%
-
-🧤 DEFESAS GOLEIRO:
-🧤 Média: {m(dc['mdefesa'],df['mdefesa'])}
-🔢 Mais 2.5: {m0(dc['mais25def'],df['mais25def'])}% | Menos 2.5: {round(100-m0(dc['mais25def'],df['mais25def']),0)}%
-🔢 Mais 3.5: {m0(dc['mais35def'],df['mais35def'])}% | Menos 3.5: {round(100-m0(dc['mais35def'],df['mais35def']),0)}%
-🔢 Mais 4.5: {m0(dc['mais45def'],df['mais45def'])}% | Menos 4.5: {round(100-m0(dc['mais45def'],df['mais45def']),0)}%
-🔢 Mais 5.5: {m0(dc['mais55def'],df['mais55def'])}% | Menos 5.5: {round(100-m0(dc['mais55def'],df['mais55def']),0)}%
-
-📊 DESEMPENHO ÚLTIMOS 5 JOGOS:
-🏠 {casa}:
-  • Vitória: {dc['pV']}% | Empate: {dc['pE']}% | Derrota: {dc['pD']}%
-  • Últimos: {' '.join(dc['resumo'])} | Placares: {', '.join(dc['placares'])}
-
-✈️ {fora}:
-  • Vitória: {df['pD']}% | Empate: {df['pE']}% | Derrota: {df['pV']}%
-  • Últimos: {' '.join(df['resumo'])} | Placares: {', '.join(df['placares'])}
+📊 Últimos 5 Jogos:
+🏠 {casa}: {' '.join(dc['resumo'])} | Placares: {', '.join(dc['placares'])}
+✈️ {fora}: {' '.join(df['resumo'])} | Placares: {', '.join(df['placares'])}
 """
-
 # ==============================
-# 🖥️ INTERFACE PRINCIPAL
+# 🖥️ INTERFACE E ALERTA AUTOMÁTICO
 # ==============================
 col1, col2 = st.columns([2,1])
 with col1:
@@ -483,55 +420,47 @@ else:
             fora = jogo["awayTeam"]["name"]
             dt = datetime.fromisoformat(jogo["utcDate"].replace("Z",""))
             sigla_jogo = jogo["competition"]["code"]
-            dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, eh_casa=True)
-            df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, eh_casa=False)
+            dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, True)
+            df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, False)
             dup = dupla(dc["pV"], dc["pE"], dc["pD"])
-            mensagem = msg_jogo(casa, fora, dt, dc, df, dup)
+            texto = msg_jogo(casa, fora, dt, dc, df, dup)
 
             with st.expander(f"⚽ {casa} vs {fora} | {dt.strftime('%d/%m %H:%M')}"):
-                st.markdown(mensagem)
-
+                st.markdown(texto)
                 if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
-                    st.info(f"🔔 Probabilidade acima de {LIMIAR_ALERTA}% — alerta seria enviado ao Telegram!")
-                    if st.button(f"📤 Enviar Agora: {casa} vs {fora}", key=f"btn_{casa}_{fora}"):
-                        enviar_telegram(mensagem)
-                        st.success("✅ Enviado ao Telegram!")
+                    st.info(f"🔔 Probabilidade ≥ {LIMIAR_ALERTA}% — alerta ativado!")
+                    if st.button(f"📤 Enviar ao Telegram", key=f"btn_{casa}_{fora}"):
+                        enviar_telegram(texto)
+                        st.success("✅ Enviado!")
+        except:
+            continue
 
-        except Exception as e:
-            st.error(f"Erro no jogo: {e}")
-
-# ==============================
-# ⏰ ROTINA AUTOMÁTICA DE ALERTA
-# ==============================
+# ⏰ ROTINA AUTOMÁTICA
 if 'ultimo_envio' not in st.session_state:
     st.session_state.ultimo_envio = None
 
-def verificar_alerta():
+def rotina_alerta():
     while True:
-        agora = datetime.now() - timedelta(hours=4)  # Horário Manaus
-        horario_atual = agora.strftime("%H:%M")
-        if horario_atual == HORARIO_ALERTA and st.session_state.ultimo_envio != agora.date():
+        agora = datetime.now() - timedelta(hours=4)
+        horario = agora.strftime("%H:%M")
+        if horario == HORARIO_ALERTA and st.session_state.ultimo_envio != agora.date():
             st.session_state.ultimo_envio = agora.date()
-            enviar_telegram(f"📢 ALERTA DIÁRIO — {agora.strftime('%d/%m/%Y')}\n🔍 Analisando jogos com ≥ {LIMIAR_ALERTA}% de chance...")
-            for sigla in TODAS_SIGLAS:
-                for jogo in buscar_jogos(sigla, DIAS_BUSCA):
+            enviar_telegram(f"📢 ALERTA DIÁRIO {agora.strftime('%d/%m/%Y')}\n🔍 Jogos com chance ≥ {LIMIAR_ALERTA}%:")
+            for s in TODAS_SIGLAS:
+                for j in buscar_jogos(s, DIAS_BUSCA):
                     try:
-                        casa = jogo["homeTeam"]["name"]
-                        fora = jogo["awayTeam"]["name"]
-                        dt = datetime.fromisoformat(jogo["utcDate"].replace("Z",""))
-                        sigla_jogo = jogo["competition"]["code"]
-                        dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, True)
-                        df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, False)
+                        dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], True)
+                        df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], False)
                         if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
-                            enviar_telegram(msg_jogo(casa, fora, dt, dc, df, dupla(dc["pV"], dc["pE"], dc["pD"])))
+                            enviar_telegram(msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"],
+                                datetime.fromisoformat(j["utcDate"].replace("Z","")), dc, df, dupla(dc["pV"],dc["pE"],dc["pD"])))
                             time.sleep(2)
                     except:
                         pass
         time.sleep(60)
 
-# Inicia rotina em segundo plano
-if 'rotina_iniciada' not in st.session_state:
-    st.session_state.rotina_iniciada = True
-    threading.Thread(target=verificar_alerta, daemon=True).start()
+if 'iniciou' not in st.session_state:
+    st.session_state.iniciou = True
+    threading.Thread(target=rotina_alerta, daemon=True).start()
 
-st.info(f"⏰ Alerta automático configurado para {HORARIO_ALERTA} (horário Manaus) | Limiar: {LIMIAR_ALERTA}%")
+st.info(f"⏰ Alerta automático: {HORARIO_ALERTA} (Manaus) | Limiar: {LIMIAR_ALERTA}%")
