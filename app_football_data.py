@@ -191,7 +191,7 @@ def ultimos_5(time_id):
         return []
 
 # ==============================
-# 🧮 CÁLCULO COMPLETO
+# 🧮 CÁLCULO COMPLETO E CORRETO
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -405,7 +405,7 @@ Média: {round((dc['cartao']+df['cartao'])/2,1)}
 """
 
 # ==============================
-# 🤖 ROTINA AUTOMÁTICA (ENVIA 1 POR 1)
+# 🤖 ROTINA AUTOMÁTICA
 # ==============================
 def alerta():
     while True:
@@ -427,4 +427,4 @@ def alerta():
                         menos35 = round((dc['menos35']+df['menos35'])/2,0)
                         esc_mais75 = round((dc['esc_mais75']+df['esc_mais75'])/2,0)
                         esc_menos125 = round((dc['esc_menos125']+df['esc_menos125'])/2,0)
-                        chute_mais95 = rou
+                        chute_mais95 = round((dc
