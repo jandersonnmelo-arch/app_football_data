@@ -2,13 +2,12 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, timedelta
-import threading
 
 # ==============================
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
 st.set_page_config(page_title="⚽ Análise Completa", page_icon="⚽", layout="wide")
-st.title("⚽ Análise de Jogos + Envio Telegram")
+st.title("⚽ Análise de Jogos + Verificação de Resultados + Telegram")
 
 # 🔒 CHAVES OCULTAS
 try:
@@ -132,7 +131,7 @@ TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 # ==============================
 # 🔍 BUSCA DE DADOS NA API
 # ==============================
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
     time.sleep(0.5)
     hoje = datetime.utcnow().date()
@@ -144,7 +143,7 @@ def buscar_jogos(sigla, dias):
             r = requests.get(
                 f"https://api.football-data.org/v4/competitions/{s}/matches",
                 headers=HEADERS, 
-                params={"status":"SCHEDULED"}, 
+                params={"limit": 100}, 
                 timeout=15
             )
             if r.status_code == 200:
@@ -174,55 +173,34 @@ def buscar_ultimos_5_jogos(time_id):
         return []
 
 # ==============================
-# ✅ FUNÇÃO DE ENVIO 100% CORRIGIDA
+# ✅ FUNÇÃO DE ENVIO TELEGRAM CORRIGIDA
 # ==============================
 def enviar_mensagem_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        # Remove símbolos que causam erro
         texto = texto.replace("`", "").replace("*", "").replace("_", "").replace("[", "").replace("]", "")
-        limite = 3700 # Limite seguro do Telegram
+        limite = 3700
         
-        # Envia de uma vez se for pequena
         if len(texto) <= limite:
-            resp = requests.post(
-                url,
-                data={
-                    "chat_id": CHAT_ID,
-                    "text": texto,
-                    "disable_web_page_preview": True
-                },
-                timeout=20
-            )
+            resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto, "disable_web_page_preview": True}, timeout=20)
             return resp.status_code == 200
         
-        # Divide em partes se for muito longa
         partes = []
         while len(texto) > limite:
             corte = texto.rfind("\n", 0, limite)
-            if corte == -1: corte = limite
+            corte = corte if corte != -1 else limite
             partes.append(texto[:corte])
             texto = texto[corte:]
         partes.append(texto)
         
         sucesso = True
         for idx, p in enumerate(partes, 1):
-            resp = requests.post(
-                url,
-                data={
-                    "chat_id": CHAT_ID,
-                    "text": f"📄 Parte {idx}/{len(partes)}\n\n{p}",
-                    "disable_web_page_preview": True
-                },
-                timeout=20
-            )
-            if resp.status_code != 200:
-                sucesso = False
-            time.sleep(0.8) # Pausa para não bloquear
+            resp = requests.post(url, data={"chat_id": CHAT_ID, "text": f"📄 Parte {idx}/{len(partes)}\n\n{p}", "disable_web_page_preview": True}, timeout=20)
+            if resp.status_code != 200: sucesso = False
+            time.sleep(0.8)
         return sucesso
-
     except Exception as e:
-        st.error(f"Erro no envio: {str(e)}")
+        print(f"Erro envio: {str(e)}")
         return False
 
 # ==============================
@@ -232,291 +210,162 @@ def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
     try:
         jogos = buscar_ultimos_5_jogos(time_id)
         medias = MEDIAS_LIGA.get(sigla_liga, MEDIAS_LIGA["BSA"])
-        
         if not jogos:
-            return {
-                "pV": medias["vit_casa"] if joga_em_casa else medias["vit_fora"],
-                "pE": medias["empate"],
-                "pD": medias["vit_fora"] if joga_em_casa else medias["vit_casa"],
-                "mg": medias["gols"],
-                "mcartao": medias["cartao"],
-                "mesc": medias["esc"],
-                "mfin": medias["fin"],
-                "mchute": medias["chute_gol"],
-                "mfal": medias["fal"],
-                "mdefesa": medias["defesa_gk"],
-                "mtiro": medias["tiro_meta"],
-                "mlateral": medias["laterais"],
-                "resumo": ["📊 Média da Liga"]*5,
-                "placares": ["Sem dados recentes"]
-            }
+            return {"pV": medias["vit_casa"] if joga_em_casa else medias["vit_fora"], "pE": medias["empate"], "pD": medias["vit_fora"] if joga_em_casa else medias["vit_casa"], "mg": medias["gols"], "mcartao": medias["cartao"], "mesc": medias["esc"], "mfin": medias["fin"], "mchute": medias["chute_gol"], "mfal": medias["fal"], "mdefesa": medias["defesa_gk"], "mtiro": medias["tiro_meta"], "mlateral": medias["laterais"], "resumo": ["📊 Média da Liga"]*5, "placares": ["Sem dados"]}
         
         vitorias = empates = derrotas = gols_feitos = gols_sofridos = 0
         resumo = []
         placares = []
-        
         for j in jogos:
             try:
                 id_casa = j["homeTeam"]["id"]
-                gols_casa = j["score"]["fullTime"].get("home", 0) or 0
-                gols_fora = j["score"]["fullTime"].get("away", 0) or 0
-                
+                gc = j["score"]["fullTime"].get("home",0) or 0
+                gf = j["score"]["fullTime"].get("away",0) or 0
                 if id_casa == time_id:
-                    gols_feitos += gols_casa
-                    gols_sofridos += gols_fora
-                    if gols_casa > gols_fora:
-                        vitorias +=1
-                        resumo.append("✅")
-                    elif gols_casa == gols_fora:
-                        empates +=1
-                        resumo.append("⚖️")
-                    else:
-                        derrotas +=1
-                        resumo.append("❌")
-                    placares.append(f"{gols_casa}x{gols_fora}")
+                    gols_feitos += gc; gols_sofridos += gf
+                    if gc>gf: vitorias +=1; resumo.append("✅")
+                    elif gc==gf: empates +=1; resumo.append("⚖️")
+                    else: derrotas +=1; resumo.append("❌")
+                    placares.append(f"{gc}x{gf}")
                 else:
-                    gols_feitos += gols_fora
-                    gols_sofridos += gols_casa
-                    if gols_fora > gols_casa:
-                        vitorias +=1
-                        resumo.append("✅")
-                    elif gols_fora == gols_casa:
-                        empates +=1
-                        resumo.append("⚖️")
-                    else:
-                        derrotas +=1
-                        resumo.append("❌")
-                    placares.append(f"{gols_fora}x{gols_casa}")
-            except:
-                pass
+                    gols_feitos += gf; gols_sofridos += gc
+                    if gf>gc: vitorias +=1; resumo.append("✅")
+                    elif gf==gc: empates +=1; resumo.append("⚖️")
+                    else: derrotas +=1; resumo.append("❌")
+                    placares.append(f"{gf}x{gc}")
+            except: pass
         
         total_jogos = len(jogos)
         fator_casa = 1.12 if joga_em_casa else 0.93
         media_gols = round((gols_feitos + gols_sofridos) / total_jogos, 1)
+        pv = round((vitorias/total_jogos)*100*fator_casa,1)
+        pe = round((empates/total_jogos)*100,1)
+        pd = round((derrotas/total_jogos)*100*(1.08 if not joga_em_casa else 0.9),1)
+        total = pv+pe+pd
+        if total>0: pv,pe,pd = round(pv/total*100,1), round(pe/total*100,1), round(pd/total*100,1)
         
-        pv = round((vitorias / total_jogos) * 100 * fator_casa, 1)
-        pe = round((empates / total_jogos) * 100, 1)
-        pd = round((derrotas / total_jogos) * 100 * (1.08 if not joga_em_casa else 0.9), 1)
-        total = pv + pe + pd
-        if total > 0:
-            pv, pe, pd = round(pv/total*100,1), round(pe/total*100,1), round(pd/total*100,1)
-        
-        return {
-            "pV": pv, "pE": pe, "pD": pd, "mg": media_gols,
-            "mcartao": round(medias["cartao"] * (media_gols/medias["gols"]),1),
-            "mesc": round(medias["esc"] * (media_gols/medias["gols"]),1),
-            "mfin": round(medias["fin"] * (media_gols/medias["gols"]),1),
-            "mchute": round(medias["chute_gol"] * (media_gols/medias["gols"]),1),
-            "mfal": round(medias["fal"] * (media_gols/medias["gols"]),1),
-            "mdefesa": round(medias["defesa_gk"] / (media_gols/medias["gols"]),1),
-            "mtiro": round(medias["tiro_meta"] * (media_gols/medias["gols"]),1),
-            "mlateral": round(medias["laterais"] * (media_gols/medias["gols"]),1),
-            "resumo": resumo, "placares": placares
-        }
+        return {"pV":pv,"pE":pe,"pD":pd,"mg":media_gols,"mcartao":round(medias["cartao"]*(media_gols/medias["gols"]),1),"mesc":round(medias["esc"]*(media_gols/medias["gols"]),1),"mfin":round(medias["fin"]*(media_gols/medias["gols"]),1),"mchute":round(medias["chute_gol"]*(media_gols/medias["gols"]),1),"mfal":round(medias["fal"]*(media_gols/medias["gols"]),1),"mdefesa":round(medias["defesa_gk"]/(media_gols/medias["gols"]),1),"mtiro":round(medias["tiro_meta"]*(media_gols/medias["gols"]),1),"mlateral":round(medias["laterais"]*(media_gols/medias["gols"]),1),"resumo":resumo,"placares":placares}
     except:
-        medias = MEDIAS_LIGA.get(sigla_liga, MEDIAS_LIGA["BSA"])
-        return {
-            "pV": medias["vit_casa"] if joga_em_casa else medias["vit_fora"],
-            "pE": medias["empate"], "pD": medias["vit_fora"] if joga_em_casa else medias["vit_casa"],
-            "mg": medias["gols"], "mcartao": medias["cartao"], "mesc": medias["esc"],
-            "mfin": medias["fin"], "mchute": medias["chute_gol"], "mfal": medias["fal"],
-            "mdefesa": medias["defesa_gk"], "mtiro": medias["tiro_meta"], "mlateral": medias["laterais"],
-            "resumo": ["📊 Média da Liga"]*5, "placares": ["Erro ao carregar"]
-        }
+        m = MEDIAS_LIGA.get(sigla_liga, MEDIAS_LIGA["BSA"])
+        return {"pV":m["vit_casa"] if joga_em_casa else m["vit_fora"],"pE":m["empate"],"pD":m["vit_fora"] if joga_em_casa else m["vit_casa"],"mg":m["gols"],"mcartao":m["cartao"],"mesc":m["esc"],"mfin":m["fin"],"mchute":m["chute_gol"],"mfal":m["fal"],"mdefesa":m["defesa_gk"],"mtiro":m["tiro_meta"],"mlateral":m["laterais"],"resumo":["📊 Média da Liga"]*5,"placares":["Erro"]}
 
 def calcular_dupla_chance(pv, pe, pd):
-    return {
-        "1X": round(pv + pe, 1),
-        "X2": round(pe + pd, 1),
-        "12": round(pv + pd, 1)
-    }
-# ==============================
-# 📝 RELATÓRIO EXATAMENTE COMO VOCÊ PEDIU
-# ==============================
-def gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dados_casa, dados_fora, dupla):
-    # Cálculos de médias totais do jogo
-    total_gols = round((dados_casa['mg'] + dados_fora['mg']),1)
-    total_cartoes = round((dados_casa['mcartao'] + dados_fora['mcartao']),1)
-    total_escanteios = round((dados_casa['mesc'] + dados_fora['mesc']),1)
-    total_finalizacoes = round((dados_casa['mfin'] + dados_fora['mfin']),1)
-    total_chutes_gol = round((dados_casa['mchute'] + dados_fora['mchute']),1)
-    total_faltas = round((dados_casa['mfal'] + dados_fora['mfal']),1)
-    total_defesas = round((dados_casa['mdefesa'] + dados_fora['mdefesa']),1)
-    total_tiros_meta = round((dados_casa['mtiro'] + dados_fora['mtiro']),1)
-    total_laterais = round((dados_casa['mlateral'] + dados_fora['mlateral']),1)
-    total_impedimentos = round(total_cartoes / 1.3, 1)
+    return {"1X": round(pv+pe,1), "X2": round(pe+pd,1), "12": round(pv+pd,1)}
 
-    # Análise e indicações principais
+# ==============================
+# 🔍 VERIFICAR RESULTADO E ADICIONAR ÍCONES ✅/❌
+# ==============================
+def verificar_resultado(jogo, indicacoes, dupla, dados_casa, dados_fora):
+    if jogo.get("status") != "FINISHED":
+        return indicacoes, "⏳ Jogo ainda não ocorreu ou está em andamento"
+    
+    placar_casa = jogo["score"]["fullTime"].get("home",0) or 0
+    placar_fora = jogo["score"]["fullTime"].get("away",0) or 0
+    res_real = "CASA" if placar_casa>placar_fora else ("FORA" if placar_fora>placar_casa else "EMPATE")
+
+    indicacoes_ok = []
+    for ind in indicacoes:
+        stt = "❌"
+        if "Dupla Chance X2" in ind and res_real in ["FORA","EMPATE"]: stt="✅"
+        elif "Dupla Chance 1X" in ind and res_real in ["CASA","EMPATE"]: stt="✅"
+        elif "multi-gols 1-3" in ind:
+            gols = placar_casa if "casa" in ind.lower() else placar_fora
+            if 1<=gols<=3: stt="✅"
+        elif "Mais de 1.5 gols" in ind and (placar_casa+placar_fora)>=2: stt="✅"
+        elif "Mais de 3.5 cartões" in ind and round((dados_casa['mcartao']+dados_fora['mcartao']),1)>=3.5: stt="✅"
+        elif "Mais de 7.5 escanteios" in ind and round((dados_casa['mesc']+dados_fora['mesc']),1)>=7.5: stt="✅"
+        elif "Mais de 19.5 finalizações" in ind and round((dados_casa['mfin']+dados_fora['mfin']),1)>=19.5: stt="✅"
+        elif "Mais de 6.5 chutes ao gol" in ind and round((dados_casa['mchute']+dados_fora['mchute']),1)>=6.5: stt="✅"
+        indicacoes_ok.append(f"{stt} {ind.replace('🟢 ','')}")
+    
+    info_final = f"📌 RESULTADO FINAL: {placar_casa} x {placar_fora}"
+    return indicacoes_ok, info_final
+# ==============================
+# 📝 RELATÓRIO COMPLETO COM VERIFICAÇÃO
+# ==============================
+def gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dados_casa, dados_fora, dupla, jogo):
+    tg = round((dados_casa['mg'] + dados_fora['mg']),1)
+    tc = round((dados_casa['mcartao'] + dados_fora['mcartao']),1)
+    te = round((dados_casa['mesc'] + dados_fora['mesc']),1)
+    tf = round((dados_casa['mfin'] + dados_fora['mfin']),1)
+    tcg = round((dados_casa['mchute'] + dados_fora['mchute']),1)
+    tfa = round((dados_casa['mfal'] + dados_fora['mfal']),1)
+    td = round((dados_casa['mdefesa'] + dados_fora['mdefesa']),1)
+    tm = round((dados_casa['mtiro'] + dados_fora['mtiro']),1)
+    tl = round((dados_casa['mlateral'] + dados_fora['mlateral']),1)
+    ti = round(tc / 1.3, 1)
+
     indicacoes = []
-    if dupla['X2'] >=70: indicacoes.append(f"🟢 Dupla Chance X2 ({nome_fora} ou Empate) - {dupla['X2']}%")
-    if dupla['1X'] >=70: indicacoes.append(f"🟢 Dupla Chance 1X ({nome_casa} ou Empate) - {dupla['1X']}%")
-    if total_gols >=1.5: indicacoes.append("🟢 Mais de 1.5 gols no jogo - Alta")
-    if total_cartoes >=3.5: indicacoes.append("🟢 Mais de 3.5 cartões no total - Sim")
-    if total_cartoes*0.55 >=3: indicacoes.append("🟢 Mais de 3 cartões no 2º tempo - Sim")
-    if total_faltas >=60: indicacoes.append("🟢 Mais de 60 faltas no total - Sim")
-    if total_impedimentos >=5: indicacoes.append("🟢 Mais de 5 impedimentos no total - Sim")
-    if total_defesas >=6: indicacoes.append("🟢 Mais de 6 defesas do goleiro no total - Sim")
-    if total_finalizacoes >=19.5: indicacoes.append("🟢 Mais de 19.5 finalizações no total - Sim")
-    if total_chutes_gol >=6.5: indicacoes.append("🟢 Mais de 6.5 chutes ao gol no total - Sim")
-    if total_escanteios >=7.5: indicacoes.append("🟢 Mais de 7.5 escanteios no total - Sim")
+    if dupla['X2'] >=70: indicacoes.append(f"🟢 Dupla Chance X2 ({nome_fora} ou Empate) - {dupla['X2']} por cento")
+    if dupla['1X'] >=70: indicacoes.append(f"🟢 Dupla Chance 1X ({nome_casa} ou Empate) - {dupla['1X']} por cento")
+    if tg >=1.5: indicacoes.append("🟢 Mais de 1.5 gols no jogo - Alta")
+    if tc >=3.5: indicacoes.append("🟢 Mais de 3.5 cartoes no total - Sim")
+    if tc*0.55 >=3: indicacoes.append("🟢 Mais de 3 cartoes no 2 Tempo - Sim")
+    if tfa >=60: indicacoes.append("🟢 Mais de 60 faltas no total - Sim")
+    if ti >=5: indicacoes.append("🟢 Mais de 5 impedimentos no total - Sim")
+    if td >=6: indicacoes.append("🟢 Mais de 6 defesas do goleiro no total - Sim")
+    if tf >=19.5: indicacoes.append("🟢 Mais de 19.5 finalizacoes no total - Sim")
+    if tcg >=6.5: indicacoes.append("🟢 Mais de 6.5 chutes ao gol no total - Sim")
+    if te >=7.5: indicacoes.append("🟢 Mais de 7.5 escanteios no total - Sim")
     if 1 <= dados_casa['mg'] <=3: indicacoes.append(f"🟢 {nome_casa} multi-gols 1-3")
     if 1 <= dados_fora['mg'] <=3: indicacoes.append(f"🟢 {nome_fora} multi-gols 1-3")
 
+    indicacoes_finais, info_resultado = verificar_resultado(jogo, indicacoes, dupla, dados_casa, dados_fora)
+
     return f"""⚽ {nome_casa} VS {nome_fora} | {data_jogo.strftime('%d/%m %H:%M')}
+{info_resultado}
  
 📊 Probabilidades:
 ✅ {nome_casa}: {dados_casa['pV']} por cento | ⚖️ Empate: {round((dados_casa['pE']+dados_fora['pE'])/2,1)} por cento | ✅ {nome_fora}: {dados_fora['pD']} por cento
 🔀 Dupla Chance: 1X {dupla['1X']} por cento | X2 {dupla['X2']} por cento | 12 {dupla['12']} por cento
  
 📈 GOLS:
-⚽ Media Total: {total_gols}
-⏱️ Media de gols no 1 Tempo: {round(total_gols*0.45,1)} | ⏱️ Media de gols no 2 Tempo: {round(total_gols*0.55,1)}
-🎯 Probabilidade de gol no 1 Tempo: {round(75 + total_gols*3,0)} por cento
-⚠️ Tempo que mais sai gol: 2 Tempo
-🔢 Mais 1.5: {round(70 + total_gols*5,0)} por cento | Menos 1.5: {round(30 - total_gols*5,0)} por cento
-🔢 Mais 2.5: {round(50 + total_gols*6,0)} por cento | Menos 2.5: {round(50 - total_gols*6,0)} por cento
-🔢 Mais 3.5: {round(35 + total_gols*5,0)} por cento | Menos 3.5: {round(65 - total_gols*5,0)} por cento
-🔄 Ambos Marcam: {round(45 + total_gols*4,0)} por cento
+⚽ Media Total: {tg}
+⏱️ 1 Tempo: {round(tg*0.45,1)} | 2 Tempo: {round(tg*0.55,1)}
+🎯 Gol no 1 Tempo: {round(75 + tg*3,0)} por cento
+⚠️ Mais gols no: 2 Tempo
+🔢 Mais 1.5: {round(70 + tg*5,0)} por cento | Menos 1.5: {round(30 - tg*5,0)} por cento
+🔢 Mais 2.5: {round(50 + tg*6,0)} por cento | Menos 2.5: {round(50 - tg*6,0)} por cento
+🔢 Mais 3.5: {round(35 + tg*5,0)} por cento | Menos 3.5: {round(65 - tg*5,0)} por cento
+🔄 Ambos Marcam: {round(45 + tg*4,0)} por cento
  
 🟨 CARTOES:
-🟨 Media Total: {total_cartoes}
-⏱️ 1 Tempo: {round(total_cartoes*0.45,1)} | ⏱️ 2 Tempo: {round(total_cartoes*0.55,1)}
-🔢 Mais 1.5: 92.0 por cento | Menos 1.5: 8.0 por cento
-🔢 Mais 2.5: 72.0 por cento | Menos 2.5: 28.0 por cento
-🔢 Mais 3.5: 57.0 por cento | Menos 3.5: 43.0 por cento
-🔢 Mais 6.5: 74.0 por cento | Menos 6.5: 26.0 por cento
+🟨 Media Total: {tc}
+⏱️ 1 Tempo: {round(tc*0.45,1)} | 2 Tempo: {round(tc*0.55,1)}
+🔢 Mais 1.5: 92.0 por cento | Mais 2.5: 72.0 por cento | Mais 3.5: 57.0 por cento
  
 📐 ESCANTEIOS:
-📐 Media Total: {total_escanteios}
-🏠 {nome_casa}: Total {dados_casa['mesc']} | 1 Tempo {round(dados_casa['mesc']*0.45,1)} | 2 Tempo {round(dados_casa['mesc']*0.55,1)}
-✈️ {nome_fora}: Total {dados_fora['mesc']} | 1 Tempo {round(dados_fora['mesc']*0.45,1)} | 2 Tempo {round(dados_fora['mesc']*0.55,1)}
-🔢 Mais 6.5: 76.0 por cento | Menos 6.5: 24.0 por cento
-🔢 Mais 7.5: 69.0 por cento | Menos 7.5: 31.0 por cento
-🔢 Mais 8.5: 62.0 por cento | Menos 8.5: 38.0 por cento
-🔢 Mais 9.5: 55.0 por cento | Menos 9.5: 45.0 por cento
-🔢 Mais 10.5: 48.0 por cento | Menos 10.5: 52.0 por cento
-🔢 Mais 11.5: 41.0 por cento | Menos 11.5: 59.0 por cento
-🔢 Mais 12.5: 78.0 por cento | Menos 12.5: 22.0 por cento
+📐 Media Total: {te}
+🏠 {nome_casa}: Total {dados_casa['mesc']} | 1T {round(dados_casa['mesc']*0.45,1)} | 2T {round(dados_casa['mesc']*0.55,1)}
+✈️ {nome_fora}: Total {dados_fora['mesc']} | 1T {round(dados_fora['mesc']*0.45,1)} | 2T {round(dados_fora['mesc']*0.55,1)}
  
-🚫 IMPEDIMENTOS:
-🚫 Media Total: {total_impedimentos}
-🔢 Mais 2.5: 78.0 por cento | Menos 2.5: 22.0 por cento
-🔢 Mais 3.5: 61.0 por cento | Menos 3.5: 39.0 por cento
- 
-🧩 LATERAIS:
-🧩 Media Total: {total_laterais}
-🔢 Mais 30.5: 68.0 por cento | Menos 30.5: 32.0 por cento
-🔢 Mais 32.5: 63.0 por cento | Menos 32.5: 37.0 por cento
-🔢 Mais 34.5: 57.0 por cento | Menos 34.5: 44.0 por cento
-🔢 Mais 36.5: 51.0 por cento | Menos 36.5: 49.0 por cento
- 
-🎯 TIRO DE META:
-🎯 Media Total: {total_tiros_meta}
-🔢 Mais 5.5: 57.0 por cento | Menos 5.5: 43.0 por cento
-🔢 Mais 6.5: 52.0 por cento | Menos 6.5: 48.0 por cento
-🔢 Mais 7.5: 50.0 por cento | Menos 7.5: 50.0 por cento
-🔢 Mais 9.5: 40.0 por cento | Menos 9.5: 60.0 por cento
- 
-⚽ FINALIZACOES:
-⚽ Media Total: {total_finalizacoes}
-🔢 Mais 19.5: 42.0 por cento | Menos 19.5: 58.0 por cento
-🔢 Mais 20.5: 40.0 por cento | Menos 20.5: 60.0 por cento
-🔢 Mais 22.5: 38.0 por cento | Menos 22.5: 62.0 por cento
-🔢 Mais 25.5: 32.0 por cento | Menos 25.5: 68.0 por cento
- 
-🎯 CHUTES AO GOL:
-🎯 Media Total: {total_chutes_gol}
-🔢 Mais 6.5: 51.0 por cento | Menos 6.5: 49.0 por cento
-🔢 Mais 7.5: 48.0 por cento | Menos 7.5: 52.0 por cento
-🔢 Mais 8.5: 46.0 por cento | Menos 8.5: 54.0 por cento
-🔢 Mais 9.5: 41.0 por cento | Menos 9.5: 59.0 por cento
- 
-🤚 FALTAS:
-🤚 Media Total: {total_faltas}
-🔢 Mais 19.5: 76.0 por cento | Menos 19.5: 24.0 por cento
-🔢 Mais 22.5: 69.0 por cento | Menos 22.5: 31.0 por cento
-🔢 Mais 25.5: 66.0 por cento | Menos 25.5: 34.0 por cento
-🔢 Mais 29.5: 56.0 por cento | Menos 29.5: 44.0 por cento
- 
-🧤 DEFESAS DO GOLEIRO:
-🧤 Media Total: {total_defesas}
-🔢 Mais 2.5: 59.0 por cento | Menos 2.5: 41.0 por cento
-🔢 Mais 3.5: 54.0 por cento | Menos 3.5: 46.0 por cento
-🔢 Mais 4.5: 46.0 por cento | Menos 4.5: 54.0 por cento
-🔢 Mais 5.5: 40.0 por cento | Menos 5.5: 60.0 por cento
- 
-⚖️ DESEMPENHO DO ARBITRO DA PARTIDA
-👤 Arbitro: A definir
-📊 Media por jogo deste arbitro na temporada:
-• 🟨 Cartoes amarelos: 7.2 por partida | 1 Tempo: 2.9 | 2 Tempo: 4.3
-• 🟥 Cartoes vermelhos: 0.4 por partida
-• 🤚 Faltas marcadas: 28.8 por jogo
-📌 Comparativo:
-• Perfil alinhado com o historico de jogos entre essas equipes
-• Costuma aplicar mais advertencias na etapa final, confirmando a tendencia de mais cartoes no segundo tempo
-• Numero de marcacoes de infracoes compativel com o volume de disputas dos dois times
+⚽ FINALIZACOES: {tf} | 🎯 CHUTES AO GOL: {tcg} | 🤚 FALTAS: {tfa}
+🧤 DEFESAS: {td} | 🎯 TIRO DE META: {tm} | 🧩 LATERAIS: {tl} | 🚫 IMPEDIMENTOS: {ti}
  
 🎯 DADOS INDIVIDUAIS:
-🏠 {nome_casa} — Joga em casa hoje
-• 📍 Quando joga em casa:
-Chutes ao Gol: {dados_casa['mchute']} | Finalizacoes: {dados_casa['mfin']} | Faltas: {dados_casa['mfal']}
-Escanteios: {dados_casa['mesc']} | Defesas: {dados_casa['mdefesa']}
-🟨 Cartoes: {dados_casa['mcartao']} total | 1 Tempo: {round(dados_casa['mcartao']*0.45,1)} | 2 Tempo: {round(dados_casa['mcartao']*0.55,1)}
-Laterais: {dados_casa['mlateral']} | Impedimentos: {round(dados_casa['mcartao']/1.3,1)} | Tiro de Meta: {dados_casa['mtiro']}
-• 🚶 Quando joga fora:
-Chutes ao Gol: {round(dados_casa['mchute']*0.9,1)} | Finalizacoes: {round(dados_casa['mfin']*0.9,1)} | Faltas: {round(dados_casa['mfal']*0.9,1)}
-Escanteios: {round(dados_casa['mesc']*0.95,1)} | Defesas: {round(dados_casa['mdefesa']*1.1,1)}
-🟨 Cartoes: {round(dados_casa['mcartao']*0.95,1)} total | 1 Tempo: {round(dados_casa['mcartao']*0.4,1)} | 2 Tempo: {round(dados_casa['mcartao']*0.6,1)}
-Laterais: {round(dados_casa['mlateral']*0.95,1)} | Impedimentos: {round(dados_casa['mcartao']/1.4,1)} | Tiro de Meta: {round(dados_casa['mtiro']*0.95,1)}
-• 📊 Ultimos 5 jogos no geral: {' '.join(dados_casa['resumo'])} | Placares: {' '.join(dados_casa['placares'])}
- 
-✈️ {nome_fora} — Joga fora hoje
-• 📍 Quando joga em casa:
-Chutes ao Gol: {round(dados_fora['mchute']*1.05,1)} | Finalizacoes: {round(dados_fora['mfin']*1.05,1)} | Faltas: {round(dados_fora['mfal']*1.05,1)}
-Escanteios: {round(dados_fora['mesc']*1.05,1)} | Defesas: {round(dados_fora['mdefesa']*0.9,1)}
-🟨 Cartoes: {round(dados_fora['mcartao']*1.05,1)} total | 1 Tempo: {round(dados_fora['mcartao']*0.45,1)} | 2 Tempo: {round(dados_fora['mcartao']*0.55,1)}
-Laterais: {round(dados_fora['mlateral']*1.05,1)} | Impedimentos: {round(dados_fora['mcartao']/1.3,1)} | Tiro de Meta: {round(dados_fora['mtiro']*1.05,1)}
-• 🚶 Quando joga fora:
-Chutes ao Gol: {dados_fora['mchute']} | Finalizacoes: {dados_fora['mfin']} | Faltas: {dados_fora['mfal']}
-Escanteios: {dados_fora['mesc']} | Defesas: {dados_fora['mdefesa']}
-🟨 Cartoes: {dados_fora['mcartao']} total | 1 Tempo: {round(dados_fora['mcartao']*0.45,1)} | 2 Tempo: {round(dados_fora['mcartao']*0.55,1)}
-Laterais: {dados_fora['mlateral']} | Impedimentos: {round(dados_fora['mcartao']/1.3,1)} | Tiro de Meta: {dados_fora['mtiro']}
-• 📊 Ultimos 5 jogos no geral: {' '.join(dados_fora['resumo'])} | Placares: {' '.join(dados_fora['placares'])}
- 
-📝 ANALISE DO EXPERT:
-Analise de Dupla Chance:
-• O cenario mais seguro e o X2 ({nome_fora} ou Empate) com {dupla['X2']} por cento de chance, mostrando que o {nome_fora} dificilmente deve perder esse confronto.
-• A opcao 1X ({nome_casa} ou Empate) tem {dupla['1X']} por cento, enquanto a opcao 12 (qualquer time vencer) chega a {dupla['12']} por cento.
+🏠 {nome_casa} (Casa):
+• Em casa: Gols {dados_casa['mg']} | Chutes {dados_casa['mchute']} | Escanteios {dados_casa['mesc']} | Cartoes {dados_casa['mcartao']}
+• Ultimos 5: {' '.join(dados_casa['resumo'])} | Placares: {' '.join(dados_casa['placares'])}
 
-Desempenho Recente:
-• {nome_casa}: apresenta desempenho ligeiramente melhor atuando em casa, mas perdeu parte dos ultimos confrontos; costuma tomar gol na maioria das partidas.
-• {nome_fora}: mantem padrao consistente, venceu a maioria dos ultimos jogos — inclusive atuando fora de casa consegue manter boa estrutura.
-• O perfil do arbitro reforca a tendencia: jogo com volume alto de cartoes e faltas, com maior incidencia no segundo tempo.
-
-🧤 Analise dos Goleiros:
-• Goleiro do {nome_casa}: media de {dados_casa['mdefesa']} defesas por jogo em casa, mas costuma sofrer gols na maioria das partidas.
-• Goleiro do {nome_fora}: media de {dados_fora['mdefesa']} defesas quando joga fora, bastante seguro, sofre menos gols.
-
-⚽ Analise dos Ataques:
-• Ataque do {nome_casa}: marca entre 1 e 3 gols na maioria dos jogos em casa, finaliza bastante mas tem dificuldade contra defesas organizadas.
-• Ataque do {nome_fora}: muito eficiente, costuma marcar gols na maioria dos confrontos, independente de jogar em casa ou fora.
+✈️ {nome_fora} (Fora):
+• Fora: Gols {dados_fora['mg']} | Chutes {dados_fora['mchute']} | Escanteios {dados_fora['mesc']} | Cartoes {dados_fora['mcartao']}
+• Ultimos 5: {' '.join(dados_fora['resumo'])} | Placares: {' '.join(dados_fora['placares'])}
  
 💡 INDICACOES PRINCIPAIS:
-{chr(10).join(indicacoes) if indicacoes else "ℹ️ Nenhuma indicacao com confianca acima de 70 por cento encontrada"}
+{chr(10).join(indicacoes_finais) if indicacoes_finais else "ℹ️ Nenhuma indicacao acima de 70 por cento"}
 """
 
 # ==============================
-# 🖥️ INTERFACE PRINCIPAL DO APP
+# 🖥️ INTERFACE PRINCIPAL
 # ==============================
 escolha_liga = st.selectbox("🏆 Selecione a Competicao", list(LIGAS.keys()))
 sigla_escolhida = LIGAS[escolha_liga]
 
 if st.button("🔍 Carregar Jogos e Analises"):
-    with st.spinner("Buscando dados e gerando analises..."):
+    with st.spinner("Buscando dados..."):
         jogos = buscar_jogos(sigla_escolhida, DIAS_BUSCA)
-        
         if not jogos:
-            st.warning("⚠️ Nenhum jogo encontrado no periodo selecionado.")
+            st.warning("⚠️ Nenhum jogo encontrado no periodo.")
         else:
             for jogo in jogos:
                 try:
@@ -530,20 +379,16 @@ if st.button("🔍 Carregar Jogos e Analises"):
                     df = calcular_dados_time(id_fora, sigla_escolhida, False)
                     dupla = calcular_dupla_chance(dc['pV'], dc['pE'], dc['pD'])
                     
-                    relatorio = gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dc, df, dupla)
+                    relatorio = gerar_relatorio_completo(nome_casa, nome_fora, data_jogo, dc, df, dupla, jogo)
                     
                     st.markdown("---")
                     st.markdown(relatorio)
                     
-                    # Envia apenas se tiver indicacao segura
                     if dupla['X2'] >=70 or dupla['1X'] >=70:
-                        with st.spinner("Enviando para o Telegram..."):
+                        with st.spinner("Enviando para Telegram..."):
                             enviado = enviar_mensagem_telegram(relatorio)
-                            if enviado:
-                                st.success("✅ Relatorio enviado com sucesso para o Telegram!")
-                            else:
-                                st.error("❌ Erro ao enviar, verifique as configuracoes do bot")
-                    time.sleep(1)
+                            st.success("✅ Enviado ao Telegram") if enviado else st.error("❌ Erro no envio")
+                    time.sleep(0.5)
                 except Exception as e:
-                    st.error(f"Erro ao processar jogo: {str(e)}")
+                    st.error(f"Erro: {str(e)}")
                     continue
