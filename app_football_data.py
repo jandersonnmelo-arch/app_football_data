@@ -259,6 +259,56 @@ def calcular_base(time_id, sigla, eh_casa=False):
 def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 # ==============================
+# 🧠 ANÁLISE DO EXPERT
+# ==============================
+def analise_expert(casa, fora, dc, df, dup):
+    pontos = []
+    confianca = 0
+    
+    # Análise de vitória/empate
+    if dc['pV'] > 60:
+        pontos.append(f"✅ {casa} tem favoritismo claro com {dc['pV']}% de chance de vitória")
+        confianca += 15
+    if df['pD'] > 60:
+        pontos.append(f"✅ {fora} chega como favorito com {df['pD']}% de chance de vitória")
+        confianca +=15
+    if dup['1X'] >70:
+        pontos.append(f"✅ {casa} não deve perder, com {dup['1X']}% de dupla chance")
+        confianca +=10
+    if dup['X2'] >70:
+        pontos.append(f"✅ {fora} deve ficar invicto, com {dup['X2']}% de dupla chance")
+        confianca +=10
+    
+    # Análise de gols
+    if dc['mg'] >=1 and dc['mg'] <=3:
+        pontos.append(f"⚽ {casa} costuma marcar entre 1 e 3 gols por jogo")
+        confianca +=8
+    if df['mg'] >=1 and df['mg'] <=3:
+        pontos.append(f"⚽ {fora} tem média de 1 a 3 gols por partida")
+        confianca +=8
+    if (dc['mais15'] + df['mais15'])/2 >=70:
+        pontos.append(f"📈 Jogo tende a ter pelo menos 2 gols, confiança de {round((dc['mais15']+df['mais15'])/2,0)}%")
+        confianca +=12
+    if dup['12'] >=70:
+        pontos.append(f"🏁 Grande chance de um dos times vencer ao menos um tempo ({dup['12']}%)")
+        confianca +=10
+    
+    # Análise de estatísticas
+    if round((dc['mcartao'] + df['mcartao']),1) >=6:
+        pontos.append(f"🟨 Jogo com tendência a muitos cartões, média de {round((dc['mcartao']+df['mcartao']),1)} por partida")
+        confianca +=8
+    if round((dc['mesc'] + df['mesc']),1) >=9:
+        pontos.append(f"📐 Muitos escanteios esperados: média de {round((dc['mesc']+df['mesc']),1)} no total")
+        confianca +=7
+    
+    confianca = min(confianca, 95)
+    if not pontos:
+        pontos.append("⚖️ Jogo bem equilibrado, sem tendências muito claras")
+        confianca = 45
+    
+    return pontos, confianca
+
+# ==============================
 # 📝 RELATÓRIO COMPLETO DO JOGO
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup):
@@ -278,13 +328,19 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
     mdefesa_total = round((dc['mdefesa']+df['mdefesa']),1)
     mimp_total = round((mcartao_total / 1.3),1)
 
-    # INDICADORES ACIMA DE 70%
+    # INDICAÇÕES PRINCIPAIS ACIMA DE 70%
     indicadores = []
     if dup['X2'] >=70: indicadores.append(f"🟢 Dupla Chance X2 ({dup['X2']}%)")
-    if (dc['mais15']+df['mais15'])/2 >=70: indicadores.append(f"🟢 Mais 1.5 gols ({round((dc['mais15']+df['mais15'])/2,0)}%)")
-    if mcartao_total >=6: indicadores.append("🟢 Mais de 6 cartões")
-    if 1<=dc['mg']<=3: indicadores.append(f"🟢 {casa} faz 1-3 gols")
-    if dup['12'] >=70: indicadores.append("🟢 Um dos times vence ao menos um tempo")
+    if dup['1X'] >=70: indicadores.append(f"🟢 Dupla Chance 1X ({dup['1X']}%)")
+    if dup['12'] >=70: indicadores.append(f"🟢 Um dos times vence ao menos um tempo ({dup['12']}%)")
+    if (dc['mais15']+df['mais15'])/2 >=70: indicadores.append(f"🟢 Mais de 1.5 gols ({round((dc['mais15']+df['mais15'])/2,0)}%)")
+    if 1<=dc['mg']<=3: indicadores.append(f"🟢 {casa} marca entre 1 e 3 gols")
+    if 1<=df['mg']<=3: indicadores.append(f"🟢 {fora} marca entre 1 e 3 gols")
+    if mcartao_total >=6: indicadores.append("🟢 Mais de 6 cartões no total")
+    if mesc_total >=9: indicadores.append("🟢 Mais de 9 escanteios no total")
+
+    # ANÁLISE DO EXPERT
+    pontos_expert, conf_expert = analise_expert(casa, fora, dc, df, dup)
 
     return f"""⚽ {casa} 🆚 {fora} | {dt.strftime('%d/%m %H:%M')}
 
@@ -319,8 +375,13 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 🏠 {casa}: Média {dc['mg']} gols | Resultados: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
 ✈️ {fora}: Média {df['mg']} gols | Resultados: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
-✅ INDICAÇÕES COM ALTA CONFIANÇA:
-{chr(10).join(indicadores) if indicadores else "Nenhuma indicação acima de 70%"}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 ANÁLISE DO EXPERT | Confiança: {conf_expert}%
+{chr(10).join(f"• {p}" for p in pontos_expert)}
+
+✅ INDICAÇÕES PRINCIPAIS:
+{chr(10).join(indicadores) if indicadores else "Nenhuma indicação acima de 70% de confiança"}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
 # ==============================
