@@ -51,16 +51,28 @@ def enviar_telegram(msg):
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
             "vit_casa":45,"vit_fora":30,"empate":25,
-            "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82},
+            "mais15":75,"menos15":25,"mais25":55,"menos25":45,"menos35":82,
+            "mais35gols":38,"mais15cartao":92,"mais25cartao":60,"menos65cartao":88,
+            "mais75esc":58,"menos125esc":92,"mais25fin":32,"menos25fin":95,
+            "mais95chute":38,"menos95chute":62,"mais25fal":55,"menos25fal":50,"mais35defesa":65},
     "BRB": {"esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.5,"fal":27.5,"defesa_gk":4.5,"gols":2.4,
             "vit_casa":42,"vit_fora":28,"empate":30,
-            "mais15":72,"menos15":28,"mais25":52,"menos25":48,"menos35":85},
+            "mais15":72,"menos15":28,"mais25":52,"menos25":48,"menos35":85,
+            "mais35gols":35,"mais15cartao":90,"mais25cartao":65,"menos65cartao":85,
+            "mais75esc":54,"menos125esc":94,"mais25fin":28,"menos25fin":96,
+            "mais95chute":32,"menos95chute":68,"mais25fal":58,"menos25fal":48,"mais35defesa":70},
     "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,
            "vit_casa":48,"vit_fora":29,"empate":23,
-           "mais15":80,"menos15":20,"mais25":62,"menos25":38,"menos35":75},
+           "mais15":80,"menos15":20,"mais25":62,"menos25":38,"menos35":75,
+           "mais35gols":45,"mais15cartao":95,"mais25cartao":52,"menos65cartao":92,
+           "mais75esc":68,"menos125esc":88,"mais25fin":45,"menos25fin":90,
+           "mais95chute":52,"menos95chute":48,"mais25fal":42,"menos25fal":60,"mais35defesa":52},
     "PL": {"esc":10.2,"cartao":2.6,"fin":11.5,"chute_gol":5.2,"fal":22.0,"defesa_gk":3.4,"gols":2.8,
            "vit_casa":48,"vit_fora":30,"empate":22,
-           "mais15":82,"menos15":18,"mais25":64,"menos25":36,"menos35":76}
+           "mais15":82,"menos15":18,"mais25":64,"menos25":36,"menos35":76,
+           "mais35gols":42,"mais15cartao":96,"mais25cartao":50,"menos65cartao":93,
+           "mais75esc":70,"menos125esc":86,"mais25fin":48,"menos25fin":89,
+           "mais95chute":55,"menos95chute":45,"mais25fal":40,"menos25fal":62,"mais35defesa":50}
 }
 
 LIGAS = {"⚽ Todas":"TODAS","🇧🇷 Série A":"BSA","🇧🇷 Série B":"BRB","🏆 Champions":"CL","🏴 Premier League":"PL"}
@@ -99,7 +111,7 @@ def ultimos_5(time_id):
     except: return []
 
 # ==============================
-# 🧮 CÁLCULO
+# 🧮 CÁLCULO COMPLETO
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -115,6 +127,13 @@ def calcular_base(time_id, sigla, eh_casa=False):
                 "mais15":med["mais15"],"menos15":med["menos15"],
                 "mais25":med["mais25"],"menos25":med["menos25"],
                 "menos35":med["menos35"],
+                "mais35gols":med["mais35gols"],
+                "mais15cartao":med["mais15cartao"],"mais25cartao":med["mais25cartao"],"menos65cartao":med["menos65cartao"],
+                "mais75esc":med["mais75esc"],"menos125esc":med["menos125esc"],
+                "mais25fin":med["mais25fin"],"menos25fin":med["menos25fin"],
+                "mais95chute":med["mais95chute"],"menos95chute":med["menos95chute"],
+                "mais25fal":med["mais25fal"],"menos25fal":med["menos25fal"],
+                "mais35defesa":med["mais35defesa"],
                 "amb":50,"esc":med["esc"],"cartao":med["cartao"],
                 "fin":med["fin"],"chute_gol":med["chute_gol"],"fal":med["fal"],"defesa_gk":med["defesa_gk"],
                 "resumo":["📊 Média da Liga"]*5,"placares":["Sem dados"]
@@ -159,6 +178,13 @@ def calcular_base(time_id, sigla, eh_casa=False):
             "mais15":round(med["mais15"]*fator,0),"menos15":round(100-med["mais15"]*fator,0),
             "mais25":round(med["mais25"]*fator,0),"menos25":round(100-med["mais25"]*fator,0),
             "menos35":round(med["menos35"]/fator if fator>0 else med["menos35"],0),
+            "mais35gols":round(med["mais35gols"]*fator,0),
+            "mais15cartao":round(med["mais15cartao"],0),"mais25cartao":round(med["mais25cartao"]*fator,0),"menos65cartao":round(med["menos65cartao"]/fator if fator>0 else med["menos65cartao"],0),
+            "mais75esc":round(med["mais75esc"]*fator,0),"menos125esc":round(med["menos125esc"]/fator if fator>0 else med["menos125esc"],0),
+            "mais25fin":round(med["mais25fin"]*fator,0),"menos25fin":round(med["menos25fin"]/fator if fator>0 else med["menos25fin"],0),
+            "mais95chute":round(med["mais95chute"]*fator,0),"menos95chute":round(med["menos95chute"]/fator if fator>0 else med["menos95chute"],0),
+            "mais25fal":round(med["mais25fal"]*fator,0),"menos25fal":round(med["menos25fal"]/fator if fator>0 else med["menos25fal"],0),
+            "mais35defesa":round(med["mais35defesa"]/fator if fator>0 else med["mais35defesa"],0),
             "amb":round((amb/t)*100,0),
             "esc":round(med["esc"]*fator,1),
             "cartao":round(med["cartao"],1),
@@ -173,6 +199,13 @@ def calcular_base(time_id, sigla, eh_casa=False):
         return {"pV":med["vit_casa"] if eh_casa else med["vit_fora"],"pE":med["empate"],"pD":med["vit_fora"] if eh_casa else med["vit_casa"],
                 "mg":med["gols"],"mais15":med["mais15"],"menos15":med["menos15"],
                 "mais25":med["mais25"],"menos25":med["menos25"],"menos35":med["menos35"],
+                "mais35gols":med["mais35gols"],
+                "mais15cartao":med["mais15cartao"],"mais25cartao":med["mais25cartao"],"menos65cartao":med["menos65cartao"],
+                "mais75esc":med["mais75esc"],"menos125esc":med["menos125esc"],
+                "mais25fin":med["mais25fin"],"menos25fin":med["menos25fin"],
+                "mais95chute":med["mais95chute"],"menos95chute":med["menos95chute"],
+                "mais25fal":med["mais25fal"],"menos25fal":med["menos25fal"],
+                "mais35defesa":med["mais35defesa"],
                 "amb":50,"esc":med["esc"],"cartao":med["cartao"],
                 "fin":med["fin"],"chute_gol":med["chute_gol"],"fal":med["fal"],"defesa_gk":med["defesa_gk"],
                 "resumo":["📊 Média da Liga"]*5,"placares":["Erro"]}
@@ -181,9 +214,24 @@ def dupla(v,e,d):
     return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM NO FORMATO QUE VOCÊ QUER
+# 📝 MENSAGEM COM TODAS AS PROBABILIDADES
 # ==============================
 def msg_jogo(casa, fora, dt, dc, df, dup, mg_total):
+    # Cálculo das médias gerais do confronto
+    mais15cartao = round((dc['mais15cartao'] + df['mais15cartao']) / 2, 0)
+    mais25cartao = round((dc['mais25cartao'] + df['mais25cartao']) / 2, 0)
+    menos65cartao = round((dc['menos65cartao'] + df['menos65cartao']) / 2, 0)
+    mais35gols = round((dc['mais35gols'] + df['mais35gols']) / 2, 0)
+    mais75esc = round((dc['mais75esc'] + df['mais75esc']) / 2, 0)
+    menos125esc = round((dc['menos125esc'] + df['menos125esc']) / 2, 0)
+    mais25fin = round((dc['mais25fin'] + df['mais25fin']) / 2, 0)
+    menos25fin = round((dc['menos25fin'] + df['menos25fin']) / 2, 0)
+    mais95chute = round((dc['mais95chute'] + df['mais95chute']) / 2, 0)
+    menos95chute = round((dc['menos95chute'] + df['menos95chute']) / 2, 0)
+    mais25fal = round((dc['mais25fal'] + df['mais25fal']) / 2, 0)
+    menos25fal = round((dc['menos25fal'] + df['menos25fal']) / 2, 0)
+    mais35defesa = round((dc['mais35defesa'] + df['mais35defesa']) / 2, 0)
+
     return f"""⚽ {casa} 🆚 {fora} | {dt.strftime('%d/%m %H:%M')}
 
 📊 Probabilidades:
@@ -194,8 +242,16 @@ def msg_jogo(casa, fora, dt, dc, df, dup, mg_total):
 ⚽ Média: {mg_total}
 🔢 Mais 1.5: {round((dc['mais15']+df['mais15'])/2,0)}% | Menos 1.5: {round((dc['menos15']+df['menos15'])/2,0)}%
 🔢 Mais 2.5: {round((dc['mais25']+df['mais25'])/2,0)}% | Menos 2.5: {round((dc['menos25']+df['menos25'])/2,0)}%
-🔢 Menos 3.5: {round((dc['menos35']+df['menos35'])/2,0)}%
+🔢 Mais 3.5: {mais35gols}% | Menos 3.5: {round((dc['menos35']+df['menos35'])/2,0)}%
 🔄 Ambos Marcam: {round((dc['amb']+df['amb'])/2,0)}%
+
+📊 OUTRAS PROBABILIDADES:
+🟨 Cartões: +1,5 {mais15cartao}% | +2,5 {mais25cartao}% | -6,5 {menos65cartao}%
+📐 Escanteios: +7,5 {mais75esc}% | -12,5 {menos125esc}%
+🎯 Finalizações: +25 {mais25fin}% | -25 {menos25fin}%
+⚽ Chutes ao Gol: +9,5 {mais95chute}% | -9,5 {menos95chute}%
+🤚 Faltas: +25 {mais25fal}% | -25 {menos25fal}%
+🧤 Defesas Goleiro: +3,5 {mais35defesa}%
 
 🎯 DADOS INDIVIDUAIS:
 🏠 {casa}:
@@ -256,4 +312,3 @@ if st.button("🔍 Gerar e Enviar"):
                 if ok: enviados+=1
             except: pass
         st.success(f"✅ Enviados {enviados}/{len(jogos)} para o Telegram!")
-        
