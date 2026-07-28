@@ -422,4 +422,31 @@ if st.button("🔍 Atualizar e Enviar"):
                 total_esc = round((dc['esc'] + df['esc']), 1)
                 total_fal = round(dc['fal'] + df['fal'], 1)
                 total_fin = round(dc['fin'] + df['fin'], 1)
-                total
+                total_chute = round(dc['chute_gol'] + df['chute_gol'], 1)
+                total_defesa = round((dc['defesa_gk'] + df['defesa_gk']) / 2, 1)
+                
+                msg = msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg_total,
+                               mais15, menos15, mais25, menos25, menos35,
+                               esc_mais75, esc_menos125,
+                               chute_mais95, chute_menos95,
+                               defesa_mais35, defesa_menos35,
+                               amb, cartao_mais, cartao_menos,
+                               total_esc, total_fal, total_fin, total_chute, total_defesa)
+                
+                st.subheader(f"⚽ {j['homeTeam']['name']} 🆚 {j['awayTeam']['name']}")
+                st.info(f"📊 **TOTAL DO CONFRONTO**: Gols {mg_total} | Escanteios {total_esc} | Chutes {total_chute} | Faltas {total_fal}")
+                st.write(f"🏠 Casa: {dc['pV']}% | Chutes: {dc['chute_gol']} | Últimos: {' '.join(dc['resumo'])}")
+                st.write(f"✈️ Fora: {df['pD']}% | Chutes: {df['chute_gol']} | Últimos: {' '.join(df['resumo'])}")
+                st.divider()
+                
+                ok, aviso = enviar_telegram(msg)
+                if ok:
+                    enviados +=1
+                else:
+                    st.warning(f"⚠️ {j['homeTeam']['name']} x {j['awayTeam']['name']}: {aviso}")
+                time.sleep(1)
+            except Exception as e:
+                st.warning(f"⚠️ Erro no jogo: {str(e)}")
+                continue
+        
+        st.success(f"✅ Concluído! {enviados}/{len(jogos)} enviados com todas as métricas!")
