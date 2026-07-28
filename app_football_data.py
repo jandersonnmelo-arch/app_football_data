@@ -24,7 +24,7 @@ try:
 except:
     DIAS_BUSCA = 7
 
-# ✅ HORÁRIO ALTERADO PARA 07:00 MANAUS
+# ⏰ HORÁRIO DE ALERTA: 07:00 MANAUS
 HORARIO_ALERTA = "07:00"
 HEADERS = {"X-Auth-Token": API_KEY}
 
@@ -422,4 +422,21 @@ if st.button("🔍 Atualizar e Enviar"):
                                chute_mais95, chute_menos95,
                                defesa_mais35, defesa_menos35,
                                amb, cartao_mais, cartao_menos,
-                               tota
+                               total_esc, total_fal, total_fin, total_chute, total_defesa)
+                
+                st.subheader(f"⚽ {j['homeTeam']['name']} 🆚 {j['awayTeam']['name']}")
+                st.write(f"🏠 Casa: {dc['pV']}% | Chutes: {dc['chute_gol']} | Últimos: {' '.join(dc['resumo'])}")
+                st.write(f"✈️ Fora: {df['pD']}% | Chutes: {df['chute_gol']} | Últimos: {' '.join(df['resumo'])}")
+                st.divider()
+                
+                ok, aviso = enviar_telegram(msg)
+                if ok:
+                    enviados +=1
+                else:
+                    st.warning(f"⚠️ {j['homeTeam']['name']} x {j['awayTeam']['name']}: {aviso}")
+                time.sleep(1)
+            except Exception as e:
+                st.warning(f"⚠️ Erro no jogo: {str(e)}")
+                continue
+        
+        st.success(f"✅ Concluído! {enviados}/{len(jogos)} enviados!")
