@@ -92,7 +92,8 @@ TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla):
     time.sleep(0.5)
-    hoje_man = datetime.now(FUSO_MAN).date()
+    agora_man = datetime.now(FUSO_MAN)
+    hoje_man = agora_man.date()
     data_inicio = hoje_man - timedelta(days=1)
     data_fim = hoje_man + timedelta(days=7)
     lista = []
@@ -105,6 +106,7 @@ def buscar_jogos(sigla):
                     try:
                         dt_utc = datetime.fromisoformat(j["utcDate"].replace("Z","")).replace(tzinfo=ZoneInfo("UTC"))
                         dt_man = dt_utc.astimezone(FUSO_MAN)
+                        # Verifica se está realmente no período correto de Manaus
                         if data_inicio <= dt_man.date() <= data_fim:
                             j["dt_manaus"] = dt_man
                             lista.append(j)
