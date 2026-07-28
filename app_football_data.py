@@ -27,6 +27,9 @@ FUSO_MAN = ZoneInfo("America/Manaus")
 if "jogos_validados" not in st.session_state:
     st.session_state.jogos_validados = []
 
+# Status que serão IGNORADOS
+STATUS_INVALIDOS = ["CANCELLED", "POSTPONED", "SUSPENDED", "ABANDONED"]
+
 # ==============================
 # 🏆 LIGAS + MÉDIAS + PERFIL DE JUÍZES
 # ==============================
@@ -44,8 +47,8 @@ MEDIAS_LIGA = {
             "tiro_meta":4.1,"laterais":7.9,"impedimentos":2.3,"vit_casa":49,"vit_fora":28,"empate":23,
             "juiz_tipo":"Equilibrado","juiz_media_cartao":3.0,"juiz_media_falta":25},
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
-           "tiro_meta":4.7,"laterais":8.5,"impedimentos":2.0,"vit_casa":45,"vit_fora":30,"empate":25,
-           "juiz_tipo":"Rigoroso","juiz_media_cartao":3.8,"juiz_media_falta":29},
+            "tiro_meta":4.7,"laterais":8.5,"impedimentos":2.0,"vit_casa":45,"vit_fora":30,"empate":25,
+            "juiz_tipo":"Rigoroso","juiz_media_cartao":3.8,"juiz_media_falta":29},
     "PD": {"esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,
            "tiro_meta":4.2,"laterais":8.0,"impedimentos":2.5,"vit_casa":47,"vit_fora":28,"empate":25,
            "juiz_tipo":"Muito rigoroso","juiz_media_cartao":4.0,"juiz_media_falta":30},
@@ -87,7 +90,7 @@ LIGAS = {
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 
 # ==============================
-# 🔍 BUSCA DE DADOS COM PERÍODO AJUSTADO
+# 🔍 BUSCA DE DADOS COM FILTRO DE STATUS
 # ==============================
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla):
@@ -104,9 +107,13 @@ def buscar_jogos(sigla):
             if r.status_code == 200:
                 for j in r.json().get("matches", []):
                     try:
+                        # IGNORA JOGOS COM STATUS INVÁLIDO
+                        status_jogo = j.get("status", "")
+                        if status_jogo in STATUS_INVALIDOS:
+                            continue
+                            
                         dt_utc = datetime.fromisoformat(j["utcDate"].replace("Z","")).replace(tzinfo=ZoneInfo("UTC"))
                         dt_man = dt_utc.astimezone(FUSO_MAN)
-                        # Verifica se está realmente no período correto de Manaus
                         if data_inicio <= dt_man.date() <= data_fim:
                             j["dt_manaus"] = dt_man
                             lista.append(j)
@@ -435,7 +442,7 @@ def gerar_relatorio(nc,nf,dt_man,dc,df,dupla,juiz_info,confronto_info,jogo):
 # ==============================
 # 🖥️ INTERFACE PRINCIPAL
 # ==============================
-st.info(f"📅 Período exibido: **Dia anterior até 7 dias à frente** | Horário de Manaus | Confiança mínima: {LIMITE_CONFIANCA}%\n🔔 Validação dos resultados é enviada automaticamente ao Telegram assim que detectada!")
+st.info(f"📅 Período: Dia anterior até 7 dias à frente | Horário de Manaus | Confiança mínima: {LIMITE_CONFIANCA}%\n🚫 Jogos cancelados, adiados ou suspensos são ignorados automaticamente!")
 escolha = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
 sigla = LIGAS[escolha]
 
@@ -443,9 +450,9 @@ if st.button("🔍 Carregar Jogos e Análises"):
     with st.spinner("Processando todos os dados..."):
         jogos = buscar_jogos(sigla)
         if not jogos:
-            st.warning("⚠️ Nenhum jogo encontrado no período selecionado.")
+            st.warning("⚠️ Nenhum jogo válido encontrado no período selecionado.")
         else:
-            st.success(f"✅ {len(jogos)} jogos encontrados!")
+            st.success(f"✅ {len(jogos)} jogos válidos encontrados!")
             for jogo in jogos:
                 try:
                     nc = jogo["homeTeam"]["name"]
@@ -469,7 +476,7 @@ if st.button("🔍 Carregar Jogos e Análises"):
                             if enviar_mensagem_telegram(rel):
                                 st.success("✅ Relatório enviado ao Telegram com sucesso!")
                             else:
-                                st.error("❌ Ocorreu um erro ao enviar ao Telegram")
+                                st.error("❌ Erro ao enviar ao Telegram")
                     time.sleep(0.5)
                 except Exception as e:
                     st.error(f"⚠️ Erro ao processar jogo: {str(e)}")
