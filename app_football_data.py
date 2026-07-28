@@ -27,7 +27,7 @@ LIMITE_CONFIANCA = 70
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 🏆 LIGAS DISPONÍVEIS
+# 🏆 LIGAS DISPONÍVEIS (CORRIGIDO)
 # ==============================
 MEDIAS_LIGA = {
     "WC": {"esc":9.2,"cartao":3.0,"fin":10.8,"chute_gol":4.5,"fal":25.0,"defesa_gk":3.8,"gols":2.7,
@@ -41,7 +41,7 @@ MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
             "tiro_meta":4.7,"laterais":8.5,"vit_casa":45,"vit_fora":30,"empate":25},
     "PD": {"esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,
-           "tiro_meta":4.2,"laterais":8.0,"vit_casa":47,"vit_fora":28,"empate":25),
+           "tiro_meta":4.2,"laterais":8.0,"vit_casa":47,"vit_fora":28,"empate":25},
     "FL1": {"esc":9.1,"cartao":3.0,"fin":10.3,"chute_gol":4.6,"fal":25.0,"defesa_gk":3.8,"gols":2.7,
             "tiro_meta":4.3,"laterais":8.1,"vit_casa":46,"vit_fora":29,"empate":25},
     "ELC": {"esc":8.7,"cartao":3.4,"fin":9.8,"chute_gol":4.2,"fal":27.5,"defesa_gk":4.1,"gols":2.5,
@@ -72,8 +72,9 @@ LIGAS = {
     "📋 Todas as Ligas": "TODAS"
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
+
 # ==============================
-# 🔍 BUSCA DE DADOS
+# 🔍 BUSCA DE DADOS DA API
 # ==============================
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
@@ -112,9 +113,8 @@ def buscar_ultimos_5_jogos(time_id):
         return r.json().get("matches", [])
     except:
         return []
-
 # ==============================
-# ✅ ENVIO TELEGRAM
+# ✅ ENVIO DE MENSAGEM TELEGRAM
 # ==============================
 def enviar_mensagem_telegram(texto):
     try:
@@ -140,14 +140,13 @@ def enviar_mensagem_telegram(texto):
         return False
 
 # ==============================
-# 🧮 CÁLCULO AJUSTADO COM FATOR CASA/FORA
+# 🧮 CÁLCULO DE DADOS COM FATOR CASA/FORA
 # ==============================
 def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
     try:
         jogos = buscar_ultimos_5_jogos(time_id)
         m = MEDIAS_LIGA.get(sigla_liga, MEDIAS_LIGA["BSA"])
         
-        # Fatores de ajuste por local do jogo
         fator_casa = 1.15 if joga_em_casa else 0.90
         fator_fora = 0.92 if joga_em_casa else 1.10
 
@@ -174,7 +173,6 @@ def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
                 gc = j["score"]["fullTime"].get("home",0) or 0
                 ga = j["score"]["fullTime"].get("away",0) or 0
 
-                # Pega chutes ao gol do time (se disponível, senão usa média)
                 chutes_jogo = 0
                 if 'statistics' in j:
                     for stat in j['statistics']:
@@ -204,7 +202,6 @@ def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
         media_chutes = total_chutes_gol / tj
         chute_gol_ajustado = round(media_chutes * fator_casa, 1)
 
-        # Cálculo da probabilidade com soma exata 100%
         pv_base = round((v/tj)*100*fator_casa,1)
         pe_base = round((e/tj)*100,1)
         pd_base = round((d/tj)*100*fator_fora,1)
@@ -270,9 +267,6 @@ def verificar_resultado(jogo, indicacoes, dupla, dc, df):
     info = f"📌 RESULTADO FINAL: {pc} x {pf}"
     return ok, info
 
-# ==============================
-# 📊 ANÁLISE DO JOGO
-# ==============================
 def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     analise = []
     analise.append("📊 ANÁLISE DO CONFRONTO:")
@@ -284,7 +278,6 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     else:
         analise.append(f"- ⚽ Ataques iguais: ambos com {dc['mg']} gols por jogo")
     
-    # Análise específica de chutes ao gol
     total_chutes = round(dc['mchute'] + df['mchute'], 1)
     analise.append(f"- 🎯 Chutes ao gol esperados: {dc['mchute']} ({nome_casa}) + {df['mchute']} ({nome_fora}) = {total_chutes} no total")
 
@@ -315,7 +308,7 @@ def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
     
     return "\n".join(analise)
 # ==============================
-# 📝 RELATÓRIO FINAL
+# 📝 GERA RELATÓRIO COMPLETO
 # ==============================
 def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tg = round((dc['mg']+df['mg']),1)
@@ -336,7 +329,6 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     conf_escanteios = calcular_confianca(te, 7.5)
     if conf_escanteios>=LIMITE_CONFIANCA: ind.append(f"Mais de 7.5 escanteios - {conf_escanteios}%")
     
-    # Cálculo com soma dos dois times + fator casa/fora
     conf_chutes_gol = calcular_confianca(tcg, 6.5)
     if conf_chutes_gol>=LIMITE_CONFIANCA: ind.append(f"Mais de 6.5 chutes ao gol - {conf_chutes_gol}%")
     conf_finalizacoes = calcular_confianca(tf, 19.5)
@@ -377,7 +369,7 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
 """
 
 # ==============================
-# 🖥️ INTERFACE FINAL
+# 🖥️ INTERFACE PRINCIPAL DO APP
 # ==============================
 escolha = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
 sigla = LIGAS[escolha]
@@ -412,7 +404,7 @@ if st.button("🔍 Carregar Jogos e Análises"):
                             if ok_envio:
                                 st.success("✅ Enviado ao Telegram")
                             else:
-                                st.error("❌ Erro no envio")
+                                st.error("❌ Erro ao enviar ao Telegram")
                     time.sleep(0.5)
                 except Exception as e:
                     st.error(f"Erro no jogo: {str(e)}")
