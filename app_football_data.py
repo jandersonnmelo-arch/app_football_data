@@ -10,10 +10,14 @@ import threading
 st.set_page_config(page_title="⚽ Análise Completa | Todas as Métricas", page_icon="⚽", layout="wide")
 st.title("⚽ Análise Completa | Probabilidades + Todas as Métricas")
 
-# 🔒 CHAVES OCULTAS
-API_KEY = st.secrets["CHAVE_FD"]
-BOT_TOKEN = st.secrets["BOT_TOKEN"]
-CHAT_ID = st.secrets["CHAT_ID"]
+# 🔒 CHAVES OCULTAS - VERIFIQUE SE ESTÃO CERTAS AQUI!
+try:
+    API_KEY = st.secrets["CHAVE_FD"]
+    BOT_TOKEN = st.secrets["BOT_TOKEN"]
+    CHAT_ID = st.secrets["CHAT_ID"]
+except Exception as e:
+    st.error(f"⚠️ Configure as chaves corretamente em .streamlit/secrets.toml! Erro: {e}")
+    st.stop()
 
 try:
     DIAS_BUSCA = int(st.secrets.get("DIAS_BUSCA", 7))
@@ -24,25 +28,27 @@ HORARIO_ALERTA = "08:30"
 HEADERS = {"X-Auth-Token": API_KEY}
 
 # ==============================
-# 📤 FUNÇÃO ENVIO TELEGRAM
+# 📤 FUNÇÃO ENVIO TELEGRAM (MELHORADA)
 # ==============================
 def enviar_telegram(msg):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {
-            "chat_id": CHAT_ID,
+            "chat_id": str(CHAT_ID),
             "text": msg,
             "parse_mode": "Markdown",
             "disable_web_page_preview": True
         }
-        resposta = requests.post(url, data=payload, timeout=15)
-        return resposta.status_code == 200
+        resposta = requests.post(url, data=payload, timeout=20)
+        if resposta.status_code == 200:
+            return True, "✅ Enviado com sucesso!"
+        else:
+            return False, f"❌ Erro Telegram: Código {resposta.status_code} - {resposta.text}"
     except Exception as e:
-        st.error(f"Erro no envio: {str(e)}")
-        return False
+        return False, f"❌ Falha na conexão: {str(e)}"
 
 # ==============================
-# 🏆 MÉDIAS DAS LIGAS
+# 🏆 MÉDIAS DAS LIGAS (COMPLETO)
 # ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,
@@ -185,7 +191,7 @@ def ultimos_5(time_id):
         return []
 
 # ==============================
-# 🧮 CÁLCULO DAS MÉTRICAS
+# 🧮 CÁLCULO 100% SEGURO (SEM VALORES ZERADOS)
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     try:
@@ -193,6 +199,7 @@ def calcular_base(time_id, sigla, eh_casa=False):
         med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
         
         if not jogos:
+            # SEM DADOS: USA MÉDIA DA LIGA, NÃO ZERA NADA
             if eh_casa:
                 return {"pV":med["vit_casa"],"pE":med["empate"],"pD":med["vit_fora"],"mg":med["gols"],
                         "mais15":med["mais15"],"menos15":med["menos15"],
@@ -260,6 +267,9 @@ def calcular_base(time_id, sigla, eh_casa=False):
                 continue
         
         t = len(jogos)
+        if t == 0:
+            return calcular_base(time_id, sigla, eh_casa)
+            
         media_gols_time = (gf + gs) / t
         fator_gols = media_gols_time / med["gols"] if med["gols"] > 0 else 1
         fator_esc = media_gols_time / med["gols"] if med["gols"] > 0 else 1
@@ -502,7 +512,8 @@ if st.button("🔍 Atualizar e Enviar"):
                 st.warning(f"⚠️ Não foi possível processar este jogo: {str(e)}")
                 continue
         
-        if enviar_telegram(rel):
-            st.success("✅ Relatório gerado e enviado com sucesso ao Telegram!")
+        ok, aviso = enviar_telegram(rel)
+        if ok:
+            st.success(aviso)
         else:
-            st.error("❌ Falha no envio. Confira o Token e o CHAT_ID nas configurações de segredos.")
+            st.error(aviso)
