@@ -119,7 +119,6 @@ def calcular_base(time_id, sigla):
     jogos = ultimos_5_jogos(time_id, sigla)
     medias = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     
-    # ✅ Se não houver dados, usa valores equilibrados
     if not jogos:
         return {"pV":33.3,"pE":33.3,"pD":33.4,"mg":2.5,"ma25":50,"amb":50,
                 "esc":medias["esc"],"laterais":medias["laterais"],"tiro_meta":medias["tiro_meta"],
@@ -164,9 +163,9 @@ def dupla_chance(pV,pE,pD):
     return {"1X":round(pV+pE,1),"X2":round(pE+pD,1),"12":round(pV+pD,1)}
 
 # ==============================
-# 📝 MENSAGEM DO JOGO
+# 📝 MENSAGEM COM CHUTES E FINALIZAÇÕES ADICIONADOS
 # ==============================
-def gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf):
+def gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, total_fin, total_chute_gol, conf):
     return f"""
 ⚽ *{casa['name']} 🆚 {fora['name']}*
 📅 {dt.strftime('%d/%m às %H:%M')}
@@ -187,6 +186,8 @@ X2: {dup['X2']}%
 🔄 Ambos Marcam: {prob_ambos}%
 📐 Escanteios: {total_esc}
 👟 Faltas: {total_fal}
+🎯 Finalizações: {total_fin}
+⚽ Chutes ao Gol: {total_chute_gol}
 
 📋 *Últimos 5 Jogos:*
 🟢 {casa['name']}: {' '.join(dc['resumo'])}
@@ -211,7 +212,6 @@ def servico_automatico():
                         sigla_j = jogo["competition"]["code"]
                         casa = jogo["homeTeam"]
                         fora = jogo["awayTeam"]
-                        # ✅ Horário correto para Manaus
                         dt = datetime.fromisoformat(jogo["utcDate"].replace("Z","")) - timedelta(hours=4)
                         dc = calcular_base(casa["id"], sigla_j)
                         df = calcular_base(fora["id"], sigla_j)
@@ -221,8 +221,10 @@ def servico_automatico():
                         prob_ambos = round((dc['amb']+df['amb'])/2,0)
                         total_esc = round((dc['esc']+df['esc'])/2,1)
                         total_fal = round((dc['fal']+df['fal'])/2,1)
+                        total_fin = round((dc['fin']+df['fin'])/2,1)
+                        total_chute_gol = round((dc['chute_gol']+df['chute_gol'])/2,1)
                         conf = max(dc['pV'], df['pD'])
-                        msg += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf)
+                        msg += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, total_fin, total_chute_gol, conf)
                     except:
                         continue
                 enviar_telegram(msg)
@@ -264,9 +266,11 @@ if st.button("🔍 Atualizar e Enviar Agora"):
                 prob_ambos = round((dc['amb']+df['amb'])/2,0)
                 total_esc = round((dc['esc']+df['esc'])/2,1)
                 total_fal = round((dc['fal']+df['fal'])/2,1)
+                total_fin = round((dc['fin']+df['fin'])/2,1)
+                total_chute_gol = round((dc['chute_gol']+df['chute_gol'])/2,1)
                 conf = max(dc['pV'], df['pD'])
 
-                msg_relatorio += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, conf)
+                msg_relatorio += gerar_mensagem_jogo(casa, fora, dt, dc, df, dup, media_gols, prob_mais25, prob_ambos, total_esc, total_fal, total_fin, total_chute_gol, conf)
 
                 st.markdown("---")
                 st.subheader(f"⚽ {casa['name']} 🆚 {fora['name']} | {dt.strftime('%d/%m %H:%M')}")
@@ -300,6 +304,7 @@ if st.button("🔍 Atualizar e Enviar Agora"):
                 st.subheader("📊 ESTIMATIVA GERAL DO JOGO")
                 st.write(f"⚽ Média Gols: {media_gols} | Mais 2.5: {prob_mais25}% | Ambos Marcam: {prob_ambos}%")
                 st.write(f"📐 Escanteios: {total_esc} | Faltas: {total_fal}")
+                st.write(f"🎯 Finalizações: {total_fin} | ⚽ Chutes ao Gol: {total_chute_gol}")
 
                 if conf >=70:
                     st.error("🚨 ALTA CONFIANÇA ACIMA DE 70%!")
@@ -308,4 +313,4 @@ if st.button("🔍 Atualizar e Enviar Agora"):
         
         enviar_telegram(msg_relatorio)
         st.success("✅ Análise completa enviada ao Telegram!")
-        
+                
