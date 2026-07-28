@@ -420,14 +420,78 @@ def msg_jogo(casa, fora, dt, dc, df, dup):
 """
 
 # ==============================
-# ⏰ ROTINA AUTOMÁTICA
+# 🖥️ INTERFACE PRINCIPAL
 # ==============================
-def rotina_alerta():
-    if 'ultimo_envio' not in st.session_state:
-        st.session_state['ultimo_envio'] = None
+col1, col2 = st.columns([2,1])
+with col1:
+    liga_escolhida = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
+with col2:
+    dias = st.slider("📅 Dias de Busca", 1, 14, DIAS_BUSCA)
+
+sigla = LIGAS[liga_escolhida]
+jogos = buscar_jogos(sigla, dias)
+
+if not jogos:
+    st.warning("⚠️ Nenhum jogo encontrado no período selecionado.")
+else:
+    st.success(f"✅ Encontrados {len(jogos)} jogos!")
+    for jogo in jogos:
+        try:
+            casa = jogo["homeTeam"]["name"]
+            fora = jogo["awayTeam"]["name"]
+            dt = datetime.from
+            isoformat(jogo["utcDate"].replace("Z",""))
+            sigla_jogo = jogo["competition"]["code"]
+            dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, eh_casa=True)
+            df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, eh_casa=False)
+            dup = dupla(dc["pV"], dc["pE"], dc["pD"])
+            mensagem = msg_jogo(casa, fora, dt, dc, df, dup)
+
+            with st.expander(f"⚽ {casa} vs {fora} | {dt.strftime('%d/%m %H:%M')}"):
+                st.markdown(mensagem)
+
+                if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
+                    st.info(f"🔔 Probabilidade acima de {LIMIAR_ALERTA}% — alerta seria enviado ao Telegram!")
+                    if st.button(f"📤 Enviar Agora: {casa} vs {fora}", key=f"btn_{casa}_{fora}"):
+                        enviar_telegram(mensagem)
+                        st.success("✅ Enviado ao Telegram!")
+
+        except Exception as e:
+            st.error(f"Erro no jogo: {e}")
+
+# ==============================
+# ⏰ ROTINA AUTOMÁTICA DE ALERTA
+# ==============================
+if 'ultimo_envio' not in st.session_state:
+    st.session_state.ultimo_envio = None
+
+def verificar_alerta():
     while True:
-        agora = datetime.now() - timedelta(hours=4)
-        if agora.strftime("%H:%M") == HORARIO_ALERTA and st.session_state.get('ultimo_envio') != agora.date():
-            st.session_state['ultimo_envio'] = agora.date()
-            enviar_telegram(f"📢 ALERTA DIÁRIO | {agora.strftime('%d/%m/%Y')}\n🔍 Analisando jogos ≥ {LIMIAR_ALERTA}%...")
-            for sigla in TODAS_SIG
+        agora = datetime.now() - timedelta(hours=4)  # Horário Manaus
+        horario_atual = agora.strftime("%H:%M")
+        if horario_atual == HORARIO_ALERTA and st.session_state.ultimo_envio != agora.date():
+            st.session_state.ultimo_envio = agora.date()
+            enviar_telegram(f"📢 ALERTA DIÁRIO — {agora.strftime('%d/%m/%Y')}\n🔍 Analisando jogos com ≥ {LIMIAR_ALERTA}% de chance...")
+            for sigla in TODAS_SIGLAS:
+                for jogo in buscar_jogos(sigla, DIAS_BUSCA):
+                    try:
+                        casa = jogo["homeTeam"]["name"]
+                        fora = jogo["awayTeam"]["name"]
+                        dt = datetime.fromisoformat(jogo["utcDate"].replace("Z",""))
+                        sigla_jogo = jogo["competition"]["code"]
+                        dc = calcular_base(jogo["homeTeam"]["id"], sigla_jogo, True)
+                        df = calcular_base(jogo["awayTeam"]["id"], sigla_jogo, False)
+                        if max(dc["pV"], df["pD"]) >= LIMIAR_ALERTA:
+                            enviar_telegram(msg_jogo(casa, fora, dt, dc, df, dupla(dc["pV"], dc["pE"], dc["pD"])))
+                            time.sleep(2)
+                    except:
+                        pass
+        time.sleep(60)
+
+# Inicia rotina em segundo plano
+if 'rotina_iniciada' not in st.session_state:
+    st.session_state.rotina_iniciada = True
+    threading.Thread(target=verificar_alerta, daemon=True).start()
+
+st.info(f"⏰ Alerta automático configurado para {HORARIO_ALERTA} (horário Manaus) | Limiar: {LIMIAR_ALERTA}%")
+
