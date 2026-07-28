@@ -7,8 +7,8 @@ import threading
 # ==============================
 # ⚙️ CONFIGURAÇÃO GERAL
 # ==============================
-st.set_page_config(page_title="⚽ Análise Refinada | Probabilidades", page_icon="⚽", layout="wide")
-st.title("⚽ Análise Completa | Probabilidades Refinadas")
+st.set_page_config(page_title="⚽ Análise Completa | Probabilidades Refinadas", page_icon="⚽", layout="wide")
+st.title("⚽ Análise Completa | Probabilidades + Métricas do Jogo")
 
 # 🔒 CHAVES OCULTAS
 API_KEY = st.secrets["CHAVE_FD"]
@@ -32,7 +32,7 @@ def enviar_telegram(msg):
     except: return False
 
 # ==============================
-# 🏆 LIGAS E MÉDIAS
+# 🏆 LIGAS E MÉDIAS COMPLETAS
 # ==============================
 MEDIAS_LIGA = {
     "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"gols":2.6,"vit_casa":45,"vit_fora":30,"empate":25},
@@ -92,14 +92,13 @@ def ultimos_5(time_id):
     except:return []
 
 # ==============================
-# 🧮 CÁLCULO REFINADO DAS %
+# 🧮 CÁLCULO REFINADO + MÉTRICAS COMPLETAS
 # ==============================
 def calcular_base(time_id, sigla, eh_casa=False):
     jogos = ultimos_5(time_id)
     med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     
     if not jogos:
-        # ✅ USA MÉDIA REAL DA LIGA, NÃO VALOR PADRÃO
         if eh_casa:
             return {"pV":med["vit_casa"],"pE":med["empate"],"pD":med["vit_fora"],"mg":med["gols"],
                     "ma25":50,"amb":50,"esc":med["esc"],"cartao":med["cartao"],
@@ -136,24 +135,21 @@ def calcular_base(time_id, sigla, eh_casa=False):
     t=len(jogos)
     fator_gols = (gf+gs)/t / med["gols"]
     
-    # ✅ REFINAMENTO PRINCIPAL
+    # Cálculo refinado das porcentagens
     pv_base = (v/t)*100
     pe_base = (e/t)*100
     pd_base = (d/t)*100
     
-    # Ajuste por fator casa/fora
     if eh_casa:
-        pv_base = pv_base * 1.15  # +15% por jogar em casa
-        pd_base = pd_base * 0.90  # -10% para derrota em casa
+        pv_base *= 1.15
+        pd_base *= 0.90
     else:
-        pd_base = pd_base * 1.10  # +10% para vitória fora
-        pv_base = pv_base * 0.95  # -5% para derrota fora
+        pd_base *= 1.10
+        pv_base *= 0.95
     
-    # Ajuste por quantidade de gols
     pv_base *= fator_gols
     pd_base *= fator_gols
     
-    # Garante que a soma dê 100%
     total = pv_base + pe_base + pd_base
     pv = round(pv_base/total*100,1)
     pe = round(pe_base/total*100,1)
@@ -174,9 +170,9 @@ def calcular_base(time_id, sigla, eh_casa=False):
 def dupla(v,e,d): return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM
+# 📝 MENSAGEM COM TODAS AS MÉTRICAS DO CONFRONTO
 # ==============================
-def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb):
+def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb, total_esc, total_fal, total_fin, total_chute):
     return f"""
 ⚽ *{casa_nome} 🆚 {fora_nome}* | {dt.strftime('%d/%m %H:%M')}
 
@@ -184,10 +180,10 @@ def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb):
 ✅ {casa_nome}: {dc['pV']}% | ⚖️ Empate: {round((dc['pE']+df['pE'])/2,1)}% | ✅ {fora_nome}: {df['pD']}%
 🔀 Dupla Chance: 1X {dup['1X']}% | X2 {dup['X2']}% | 12 {dup['12']}%
 
-📈 *Métricas do Jogo:*
-⚽ Média Gols: {mg} | Mais 2.5: {mais25}% | Ambos Marcam: {amb}%
-📐 Escanteios: {round((dc['esc']+df['esc'])/2,1)} | 👟 Faltas: {round((dc['fal']+df['fal'])/2,1)}
-🎯 Finalizações: {round((dc['fin']+df['fin'])/2,1)} | ⚽ Chutes ao Gol: {round((dc['chute_gol']+df['chute_gol'])/2,1)}
+📈 *MÉTRICAS GERAIS DO CONFRONTO:*
+⚽ Média Gols: {mg} | Mais 2.5 Gols: {mais25}% | Ambos Marcam: {amb}%
+📐 Escanteios: {total_esc} | 👟 Faltas: {total_fal}
+🎯 Finalizações: {total_fin} | ⚽ Chutes ao Gol: {total_chute}
 
 🟨 *Cartões por Equipe:*
 {casa_nome}: {dc['cartao']} média por jogo
@@ -202,7 +198,7 @@ def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb):
 """
 
 # ==============================
-# 🤖 ROTINA
+# 🤖 ROTINA AUTOMÁTICA
 # ==============================
 def alerta():
     while True:
@@ -215,8 +211,15 @@ def alerta():
                         dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
                         dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"], eh_casa=True)
                         df = calcular_base(j["awayTeam"]["id"], j["competition"]["code"], eh_casa=False)
-                        msg += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dupla(dc['pV'],dc['pE'],dc['pD']),
-                                       round((dc['mg']+df['mg'])/2,2), round((dc['ma25']+df['ma25'])/2,0), round((dc['amb']+df['amb'])/2,0))
+                        dup = dupla(dc['pV'],dc['pE'],dc['pD'])
+                        mg = round((dc['mg']+df['mg'])/2,2)
+                        mais25 = round((dc['ma25']+df['ma25'])/2,0)
+                        amb = round((dc['amb']+df['amb'])/2,0)
+                        total_esc = round((dc['esc']+df['esc'])/2,1)
+                        total_fal = round((dc['fal']+df['fal'])/2,1)
+                        total_fin = round((dc['fin']+df['fin'])/2,1)
+                        total_chute = round((dc['chute_gol']+df['chute_gol'])/2,1)
+                        msg += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg, mais25, amb, total_esc, total_fal, total_fin, total_chute)
                     except:pass
                 enviar_telegram(msg)
         except:pass
@@ -224,7 +227,7 @@ def alerta():
 threading.Thread(target=alerta, daemon=True).start()
 
 # ==============================
-# 🖥️ TELA
+# 🖥️ INTERFACE COMPLETA
 # ==============================
 esc = st.selectbox("Liga", list(LIGAS.keys()))
 dias = st.number_input("Dias à frente",1,14,DIAS_BUSCA)
@@ -244,23 +247,33 @@ if st.button("🔍 Atualizar e Enviar"):
             mg = round((dc['mg']+df['mg'])/2,2)
             mais25 = round((dc['ma25']+df['ma25'])/2,0)
             amb = round((dc['amb']+df['amb'])/2,0)
-            rel += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg, mais25, amb)
+            total_esc = round((dc['esc']+df['esc'])/2,1)
+            total_fal = round((dc['fal']+df['fal'])/2,1)
+            total_fin = round((dc['fin']+df['fin'])/2,1)
+            total_chute = round((dc['chute_gol']+df['chute_gol'])/2,1)
+            
+            rel += msg_jogo(j["homeTeam"]["name"], j["awayTeam"]["name"], dt, dc, df, dup, mg, mais25, amb, total_esc, total_fal, total_fin, total_chute)
             
             st.subheader(f"⚽ {j['homeTeam']['name']} 🆚 {j['awayTeam']['name']}")
+            
+            st.subheader("📈 MÉTRICAS GERAIS DO CONFRONTO")
+            st.write(f"⚽ Média Gols: {mg} | Mais 2.5: {mais25}% | Ambos Marcam: {amb}%")
+            st.write(f"📐 Escanteios: {total_esc} | 👟 Faltas: {total_fal}")
+            st.write(f"🎯 Finalizações: {total_fin} | ⚽ Chutes ao Gol: {total_chute}")
+            st.divider()
+            
             c1,c2=st.columns(2)
             with c1:
                 st.subheader("🏠 Time Casa")
                 st.write(f"✅ Vitória: {dc['pV']}% | ⚖️ Empate: {dc['pE']}% | ❌ Derrota: {dc['pD']}%")
                 st.write(f"🟨 Cartões: {dc['cartao']}")
-                st.write(f"🎯 Finalizações: {dc['fin']} | Chutes Gol: {dc['chute_gol']}")
                 st.write(f"Últimos: {' '.join(dc['resumo'])}")
             with c2:
                 st.subheader("🔴 Time Fora")
                 st.write(f"✅ Vitória: {df['pV']}% | ⚖️ Empate: {df['pE']}% | ❌ Derrota: {df['pD']}%")
                 st.write(f"🟨 Cartões: {df['cartao']}")
-                st.write(f"🎯 Finalizações: {df['fin']} | Chutes Gol: {df['chute_gol']}")
                 st.write(f"Últimos: {' '.join(df['resumo'])}")
             st.markdown("---")
         enviar_telegram(rel)
-        st.success("✅ Relatório enviado!")
-        
+        st.success("✅ Relatório completo enviado!")
+                
