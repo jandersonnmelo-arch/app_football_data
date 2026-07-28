@@ -57,7 +57,7 @@ LIGAS = {
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 # ==============================
-# 🔍 BUSCA COM FILTRO DE DATA CORRIGIDO
+# 🔍 BUSCA COM FILTRO DE DATA
 # ==============================
 @st.cache_data(ttl=1800)
 def buscar_jogos(sigla, dias):
@@ -77,7 +77,6 @@ def buscar_jogos(sigla, dias):
                 for j in r.json().get("matches", []):
                     try:
                         dt_jogo = datetime.fromisoformat(j["utcDate"].replace("Z","")).date()
-                        # Apenas jogos entre hoje e o limite definido
                         if hoje <= dt_jogo <= data_limite:
                             lista.append(j)
                     except:
@@ -99,12 +98,11 @@ def buscar_ultimos_5_jogos(time_id):
         return []
 
 # ==============================
-# ✅ ENVIO TELEGRAM SEM ERROS
+# ✅ ENVIO TELEGRAM
 # ==============================
 def enviar_mensagem_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        # Remove caracteres que causam erro
         texto = texto.replace("`", "").replace("*", "").replace("_", "")
         limite = 3700
         
@@ -112,7 +110,6 @@ def enviar_mensagem_telegram(texto):
             resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto, "disable_web_page_preview": True}, timeout=20)
             return resp.status_code == 200
         
-        # Divide mensagens longas
         while len(texto) > limite:
             corte = texto.rfind("\n", 0, limite)
             corte = corte if corte != -1 else limite
@@ -127,7 +124,7 @@ def enviar_mensagem_telegram(texto):
         return False
 
 # ==============================
-# 🧮 CÁLCULOS E VERIFICAÇÃO ✅/❌
+# 🧮 CÁLCULOS E ANÁLISE
 # ==============================
 def calcular_dados_time(time_id, sigla_liga, joga_em_casa=False):
     try:
@@ -197,10 +194,48 @@ def verificar_resultado(jogo, indicacoes, dupla, dc, df):
         elif "Mais de 1.5 gols" in ind and (pc+pf)>=2: stt="✅"
         elif "Mais de 7.5 escanteios" in ind and round((dc['mesc']+df['mesc']),1)>=7.5: stt="✅"
         ok.append(f"{stt} {ind.replace('🟢 ','')}")
-    info = f"📌 RESULTADO: {pc} x {pf}"
+    info = f"📌 RESULTADO FINAL: {pc} x {pf}"
     return ok, info
+
 # ==============================
-# 📝 RELATÓRIO COMPLETO
+# 📊 ANÁLISE COMPLETA DO JOGO
+# ==============================
+def gerar_analise_jogo(nome_casa, nome_fora, dc, df, dupla):
+    analise = []
+    analise.append("📊 ANÁLISE DO CONFRONTO:")
+    
+    # Desempenho recente
+    if dc['mg'] > df['mg']:
+        analise.append(f"- {nome_casa} tem ataque mais eficiente: média {dc['mg']} gols por jogo contra {df['mg']} do {nome_fora}")
+    elif df['mg'] > dc['mg']:
+        analise.append(f"- {nome_fora} leva vantagem no ataque: média {df['mg']} gols contra {dc['mg']} do {nome_casa}")
+    else:
+        analise.append(f"- Ataques equivalentes: ambos com média de {dc['mg']} gols por jogo")
+    
+    # Fator casa/fora
+    if dupla['1X'] > 55:
+        analise.append(f"- Fator casa favorece {nome_casa}: {dupla['1X']}% de chance de não perder")
+    if dupla['X2'] > 55:
+        analise.append(f"- {nome_fora} tem boa resistência fora de casa: {dupla['X2']}% de chance de não perder")
+    
+    # Tendência de gols
+    media_total = round((dc['mg'] + df['mg']),1)
+    if media_total >= 2.5:
+        analise.append(f"- Tendência de jogo com muitos gols: média total de {media_total} gols")
+    elif media_total >= 1.5:
+        analise.append(f"- Jogo com tendência de gols moderados: média total de {media_total} gols")
+    else:
+        analise.append(f"- Tendência de jogo truncado, poucos gols: média total de {media_total} gols")
+    
+    # Outros indicadores
+    if round((dc['mesc'] + df['mesc']),1) >= 8:
+        analise.append("- Jogo com tendência de muitos escanteios")
+    if round((dc['mfal'] + df['mfal']),1) >= 28:
+        analise.append("- Jogo com tendência de muitas faltas e jogo parado")
+    
+    return "\n".join(analise)
+# ==============================
+# 📝 RELATÓRIO COM ANÁLISE INCLUSA
 # ==============================
 def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
     tg = round((dc['mg']+df['mg']),1)
@@ -220,6 +255,7 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
 
     ind_final, info_res = verificar_resultado(jogo, ind, dupla, dc, df)
     lista_ind = "\n".join(ind_final) if ind_final else "Nenhuma acima de 70 por cento"
+    analise_jogo = gerar_analise_jogo(nc, nf, dc, df, dupla)
 
     return f"""⚽ {nc} VS {nf} | {dt.strftime('%d/%m %H:%M')}
 {info_res}
@@ -228,7 +264,9 @@ def gerar_relatorio(nc, nf, dt, dc, df, dupla, jogo):
 {nc}: {dc['pV']}% | Empate: {round((dc['pE']+df['pE'])/2,1)}% | {nf}: {df['pD']}%
 Dupla Chance: 1X {dupla['1X']}% | X2 {dupla['X2']}% | 12 {dupla['12']}%
 
-📈 Média Total:
+{analise_jogo}
+
+📈 Média Total Esperada:
 Gols: {tg} | Cartões: {tc} | Escanteios: {te}
 Finalizações: {tf} | Chutes ao gol: {tcg} | Faltas: {tfa}
 
@@ -238,19 +276,19 @@ Gols: {dc['mg']} | Escanteios: {dc['mesc']} | Últimos 5: {' '.join(dc['resumo']
 ✈️ {nf} (Fora):
 Gols: {df['mg']} | Escanteios: {df['mesc']} | Últimos 5: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
-💡 INDICAÇÕES:
+💡 INDICAÇÕES PRINCIPAIS:
 {lista_ind}
 """
 
 # ==============================
-# 🖥️ INTERFACE SEM ERROS
+# 🖥️ INTERFACE FINAL
 # ==============================
 escolha = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
 sigla = LIGAS[escolha]
 st.info(f"📅 Período: Hoje até {DIAS_BUSCA} dias à frente")
 
-if st.button("🔍 Carregar Jogos"):
-    with st.spinner("Buscando dados..."):
+if st.button("🔍 Carregar Jogos e Análises"):
+    with st.spinner("Buscando dados e gerando análises..."):
         jogos = buscar_jogos(sigla, DIAS_BUSCA)
         if not jogos:
             st.warning("⚠️ Nenhum jogo encontrado no período.")
@@ -273,10 +311,10 @@ if st.button("🔍 Carregar Jogos"):
                     st.markdown(rel)
                     
                     if dupla['X2']>=70 or dupla['1X']>=70:
-                        with st.spinner("Enviando ao Telegram..."):
+                        with st.spinner("Enviando análise ao Telegram..."):
                             ok_envio = enviar_mensagem_telegram(rel)
                             if ok_envio:
-                                st.success("✅ Enviado ao Telegram")
+                                st.success("✅ Análise enviada ao Telegram")
                             else:
                                 st.error("❌ Erro no envio")
                     time.sleep(0.5)
