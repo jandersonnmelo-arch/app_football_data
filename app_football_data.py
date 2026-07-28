@@ -35,19 +35,19 @@ def enviar_telegram(msg):
 # 🏆 LIGAS E MÉDIAS INCLUINDO CARTÕES
 # ==============================
 MEDIAS_LIGA = {
-    "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5},
-    "BRB": {"esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.5,"fal":27.5},
-    "WC": {"esc":8.8,"cartao":2.8,"fin":10.0,"chute_gol":4.5,"fal":24.0},
-    "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5},
-    "BL1": {"esc":9.8,"cartao":2.5,"fin":12.5,"chute_gol":5.8,"fal":21.0},
-    "ED": {"esc":9.2,"cartao":2.9,"fin":11.0,"chute_gol":5.0,"fal":22.5},
-    "PD": {"esc":9.0,"cartao":3.0,"fin":10.5,"chute_gol":4.5,"fal":24.0},
-    "FL1": {"esc":9.5,"cartao":2.8,"fin":10.8,"chute_gol":4.8,"fal":23.0},
-    "ELC": {"esc":8.5,"cartao":3.3,"fin":9.2,"chute_gol":4.0,"fal":25.5},
-    "PPL": {"esc":8.8,"cartao":3.1,"fin":10.2,"chute_gol":4.3,"fal":24.5},
-    "EC": {"esc":9.0,"cartao":2.9,"fin":10.5,"chute_gol":4.6,"fal":23.0},
-    "SA": {"esc":8.7,"cartao":3.4,"fin":9.5,"chute_gol":3.8,"fal":25.5},
-    "PL": {"esc":10.2,"cartao":2.6,"fin":11.5,"chute_gol":5.2,"fal":22.0}
+    "BSA": {"esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"gols":2.6},
+    "BRB": {"esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.5,"fal":27.5,"gols":2.4},
+    "WC": {"esc":8.8,"cartao":2.8,"fin":10.0,"chute_gol":4.5,"fal":24.0,"gols":2.8},
+    "CL": {"esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"gols":2.9},
+    "BL1": {"esc":9.8,"cartao":2.5,"fin":12.5,"chute_gol":5.8,"fal":21.0,"gols":3.1},
+    "ED": {"esc":9.2,"cartao":2.9,"fin":11.0,"chute_gol":5.0,"fal":22.5,"gols":2.8},
+    "PD": {"esc":9.0,"cartao":3.0,"fin":10.5,"chute_gol":4.5,"fal":24.0,"gols":2.6},
+    "FL1": {"esc":9.5,"cartao":2.8,"fin":10.8,"chute_gol":4.8,"fal":23.0,"gols":2.5},
+    "ELC": {"esc":8.5,"cartao":3.3,"fin":9.2,"chute_gol":4.0,"fal":25.5,"gols":2.4},
+    "PPL": {"esc":8.8,"cartao":3.1,"fin":10.2,"chute_gol":4.3,"fal":24.5,"gols":2.5},
+    "EC": {"esc":9.0,"cartao":2.9,"fin":10.5,"chute_gol":4.6,"fal":23.0,"gols":2.7},
+    "SA": {"esc":8.7,"cartao":3.4,"fin":9.5,"chute_gol":3.8,"fal":25.5,"gols":2.5},
+    "PL": {"esc":10.2,"cartao":2.6,"fin":11.5,"chute_gol":5.2,"fal":22.0,"gols":2.8}
 }
 
 LIGAS = {
@@ -58,7 +58,7 @@ LIGAS = {
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 
 # ==============================
-# 🔍 BUSCA CORRIGIDA DOS ÚLTIMOS JOGOS
+# 🔍 BUSCA JOGOS E HISTÓRICO
 # ==============================
 @st.cache_data(ttl=3600)
 def buscar_jogos(sigla, dias):
@@ -82,25 +82,29 @@ def buscar_jogos(sigla, dias):
 def ultimos_5(time_id):
     time.sleep(0.3)
     try:
-        # ✅ SEM FILTRO DE COMPETIÇÃO, PEGA TODOS OS JOGOS DISPONÍVEIS
+        # Primeira busca: sem filtro de competição
         r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
                         headers=HEADERS, params={"status":"FINISHED","limit":5}, timeout=15)
-        return r.json().get("matches",[])
+        dados = r.json().get("matches",[])
+        if dados: return dados
+        # Segunda busca: sem limite de competição, sem status
+        r = requests.get(f"https://api.football-data.org/v4/teams/{time_id}/matches",
+                        headers=HEADERS, params={"limit":10}, timeout=15)
+        return [j for j in r.json().get("matches",[]) if j.get("status")=="FINISHED"][:5]
     except:return []
 
 # ==============================
-# 🧮 CÁLCULO COM CARTÕES E DADOS GARANTIDOS
+# 🧮 CÁLCULO COM EXPLICAÇÃO CLARA
 # ==============================
 def calcular_base(time_id, sigla):
     jogos = ultimos_5(time_id)
     med = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     
-    # ✅ SE NÃO TIVER JOGOS, USA MÉDIAS E NÃO ZERA NEM COLOCA ❔
     if not jogos:
         return {
-            "pV":33.3,"pE":33.3,"pD":33.4,"mg":2.5,"ma25":50,"amb":50,
+            "pV":33.3,"pE":33.3,"pD":33.4,"mg":med["gols"],"ma25":50,"amb":50,
             "esc":med["esc"],"cartao":med["cartao"],"fin":med["fin"],"chute_gol":med["chute_gol"],"fal":med["fal"],
-            "resumo":["📊 Média Liga"]*5,"placares":["Sem dados recentes"]
+            "resumo":["📊 Sem dados → Média Liga"]*5,"placares":["Usando média da competição"]
         }
     
     v=e=d=gf=gs=amb=0; resumo=[]; placares=[]; total_cartao=0
@@ -141,7 +145,7 @@ def calcular_base(time_id, sigla):
 def dupla(v,e,d): return {"1X":round(v+e,1),"X2":round(e+d,1),"12":round(v+d,1)}
 
 # ==============================
-# 📝 MENSAGEM SEM CONFRONTO, COM CARTÕES
+# 📝 MENSAGEM E INTERFACE
 # ==============================
 def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb):
     return f"""
@@ -168,9 +172,7 @@ def msg_jogo(casa_nome, fora_nome, dt, dc, df, dup, mg, mais25, amb):
 ---
 """
 
-# ==============================
-# 🤖 ROTINA
-# ==============================
+# ROTINA AUTOMÁTICA
 def alerta():
     while True:
         try:
@@ -190,10 +192,7 @@ def alerta():
         time.sleep(30)
 threading.Thread(target=alerta, daemon=True).start()
 
-# ==============================
-# 🖥️ TELA
-# ==============================
-st.title("⚽ Análise Completa | Cartões | Últimos Jogos")
+# TELA PRINCIPAL
 esc = st.selectbox("Liga", list(LIGAS.keys()))
 dias = st.number_input("Dias à frente",1,14,DIAS_BUSCA)
 
@@ -202,8 +201,8 @@ if st.button("🔍 Atualizar e Enviar"):
     jogos = buscar_jogos(LIGAS[esc], dias)
     if not jogos: st.info("Nenhum jogo encontrado")
     else:
-        st.success(f"{len(jogos)} jogos")
-        rel = f"🔔 *RELATÓRIO*\n🕒 {datetime.now().strftime('%d/%m %H:%M')}\n\n"
+        st.success(f"{len(jogos)} jogos carregados!")
+        rel = f"🔔 *RELATÓRIO SOLICITADO*\n🕒 {datetime.now().strftime('%d/%m %H:%M')}\n\n"
         for j in jogos:
             dt = datetime.fromisoformat(j["utcDate"].replace("Z","")) - timedelta(hours=4)
             dc = calcular_base(j["homeTeam"]["id"], j["competition"]["code"])
@@ -221,14 +220,15 @@ if st.button("🔍 Atualizar e Enviar"):
                 st.write(f"V:{dc['pV']}% E:{dc['pE']}% D:{dc['pD']}%")
                 st.write(f"🟨 Cartões: {dc['cartao']}")
                 st.write(f"🎯 Finalizações: {dc['fin']} | Chutes Gol: {dc['chute_gol']}")
-                st.write(f"Últimos: {' '.join(dc['resumo'])} | {' | '.join(dc['placares'])}")
+                st.write(f"Últimos: {' '.join(dc['resumo'])}")
+                st.caption(f"📌 {dc['placares'][0]}")
             with c2:
                 st.subheader("🔴 Time Fora")
                 st.write(f"V:{df['pV']}% E:{df['pE']}% D:{df['pD']}%")
                 st.write(f"🟨 Cartões: {df['cartao']}")
                 st.write(f"🎯 Finalizações: {df['fin']} | Chutes Gol: {df['chute_gol']}")
-                st.write(f"Últimos: {' '.join(df['resumo'])} | {' | '.join(df['placares'])}")
+                st.write(f"Últimos: {' '.join(df['resumo'])}")
+                st.caption(f"📌 {df['placares'][0]}")
             st.markdown("---")
         enviar_telegram(rel)
-        st.success("Enviado ao Telegram!")
-        
+        st.success("✅ Relatório enviado ao Telegram!")
