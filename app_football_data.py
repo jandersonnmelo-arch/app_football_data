@@ -22,7 +22,7 @@ except Exception as e:
 LIMITE_CONFIANCA = 70
 FUSO_MAN = ZoneInfo("America/Manaus")
 HORARIO_ALERTA = "07:00"
-PERIODOS_BUSCA = 7 # 7 dias como solicitado
+PERIODOS_BUSCA = 7
 STATUS_INVALIDOS = ["CANCELLED", "POSTPONED", "SUSPENDED", "ABANDONED"]
 STATUS_JOGOS_VALIDOS = ["SCHEDULED", "TIMED", "FINISHED"]
 HEADERS = {"X-Auth-Token": API_KEY}
@@ -89,23 +89,35 @@ def atualizar_aprendizado(id_casa, id_fora, analise_vencedor, resultado_real):
     memoria["ultima_atualizacao"] = datetime.now(FUSO_MAN).strftime("%d/%m %H:%M")
 
 # ==============================
-# 🏆 CAMPEONATOS E MÉDIAS
+# 🏆 TODOS OS CAMPEONATOS DA LISTA
 # ==============================
 MEDIAS_LIGA = {
+    "WC": {"nome":"FIFA World Cup","esc":8.0,"cartao":2.7,"fin":9.0,"chute_gol":4.0,"fal":24.5,"defesa_gk":3.9,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Equilibrado"},
+    "CL": {"nome":"UEFA Champions League","esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Equilibrado"},
+    "BL1": {"nome":"Bundesliga","esc":9.2,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.6,"gols":3.1,"gols_1t":1.3,"gols_2t":1.8,"juiz_tipo":"Permissivo"},
+    "ERD": {"nome":"Eredivisie","esc":9.8,"cartao":2.8,"fin":11.5,"chute_gol":5.0,"fal":23.0,"defesa_gk":3.4,"gols":3.2,"gols_1t":1.4,"gols_2t":1.8,"juiz_tipo":"Permissivo"},
     "BSA": {"nome":"Campeonato Brasileiro Série A","esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,"gols_1t":1.1,"gols_2t":1.5,"juiz_tipo":"Rigoroso"},
-    "BRB": {"nome":"Campeonato Brasileiro Série B","esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.8,"fal":27.0,"defesa_gk":4.5,"gols":2.4,"gols_1t":1.0,"gols_2t":1.4,"juiz_tipo":"Rigoroso"},
-    "CB": {"nome":"Copa do Brasil","esc":8.8,"cartao":3.4,"fin":9.2,"chute_gol":3.9,"fal":26.8,"defesa_gk":4.3,"gols":2.5,"gols_1t":1.05,"gols_2t":1.45,"juiz_tipo":"Muito rigoroso"},
-    "CL": {"nome":"Liga dos Campeões UEFA","esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Equilibrado"},
-    "PD": {"nome":"La Liga","esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Muito rigoroso"},
+    "PD": {"nome":"Primera División","esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Muito rigoroso"},
+    "FL1": {"nome":"Ligue 1","esc":9.1,"cartao":3.0,"fin":10.3,"chute_gol":4.6,"fal":25.0,"defesa_gk":3.8,"gols":2.7,"gols_1t":1.1,"gols_2t":1.6,"juiz_tipo":"Equilibrado"},
+    "ELC": {"nome":"Championship","esc":8.6,"cartao":3.5,"fin":9.2,"chute_gol":3.9,"fal":27.0,"defesa_gk":4.3,"gols":2.5,"gols_1t":1.0,"gols_2t":1.5,"juiz_tipo":"Rigoroso"},
+    "PPL": {"nome":"Primeira Liga","esc":8.8,"cartao":3.2,"fin":9.7,"chute_gol":4.2,"fal":26.0,"defesa_gk":4.0,"gols":2.6,"gols_1t":1.1,"gols_2t":1.5,"juiz_tipo":"Equilibrado"},
+    "EC": {"nome":"European Championship","esc":8.5,"cartao":2.8,"fin":9.5,"chute_gol":4.1,"fal":24.0,"defesa_gk":3.8,"gols":2.7,"gols_1t":1.2,"gols_2t":1.5,"juiz_tipo":"Equilibrado"},
+    "SA": {"nome":"Serie A","esc":9.3,"cartao":3.1,"fin":10.6,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.6,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Muito rigoroso"},
     "PL": {"nome":"Premier League","esc":9.6,"cartao":2.9,"fin":11.3,"chute_gol":4.9,"fal":24.0,"defesa_gk":3.5,"gols":3.0,"gols_1t":1.3,"gols_2t":1.7,"juiz_tipo":"Permissivo"}
 }
 
 LIGAS = {
-    "🇧🇷 Brasileirão Série A": "BSA",
-    "🇧🇷 Brasileirão Série B": "BRB",
-    "🏆 Copa do Brasil": "CB",
-    "🏆 Liga dos Campeões": "CL",
-    "🇪🇸 La Liga": "PD",
+    "🌍 FIFA World Cup": "WC",
+    "🏆 UEFA Champions League": "CL",
+    "🇩🇪 Bundesliga": "BL1",
+    "🇳🇱 Eredivisie": "ERD",
+    "🇧🇷 Campeonato Brasileiro Série A": "BSA",
+    "🇪🇸 Primera División": "PD",
+    "🇫🇷 Ligue 1": "FL1",
+    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship": "ELC",
+    "🇵🇹 Primeira Liga": "PPL",
+    "🇪🇺 European Championship": "EC",
+    "🇮🇹 Serie A": "SA",
     "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
     "📋 Todas as Ligas": "TODAS"
 }
@@ -259,7 +271,7 @@ def gerar_validacao(nc, nf, jogo, indicacoes, idc, idf, vencedor_analise):
     gc = jogo["score"]["fullTime"].get("home",0) or 0
     ga = jogo["score"]["fullTime"].get("away",0) or 0
     placar = f"{nc} {gc}x{ga} {nf}"
-    res_real = "casa" if gc>ga else "fora" if ga>gc else "empate"
+    res_real = "casa" if gc>ga else "fora" if ga>ga else "empate"
     atualizar_aprendizado(idc, idf, vencedor_analise, res_real)
     
     g1c = jogo["score"]["halfTime"].get("home",0) or 0
@@ -402,7 +414,7 @@ def gerar_relatorio_pre(nc, nf, dt, dc, df, idc, idf, dupla, juiz, confronto, si
 """, vencedor_analise, ind
 
 # ==============================
-# ⏰ ENVIO AUTOMÁTICO GARANTIDO
+# ⏰ ENVIO AUTOMÁTICO PRÉ E PÓS JOGO
 # ==============================
 def executar_envio_automatico():
     agora = datetime.now(FUSO_MAN)
@@ -456,8 +468,9 @@ def executar_envio_automatico():
         st.session_state.ultimo_envio_diario = hoje
         st.success(f"""✅ ENVIO CONCLUÍDO!
 📨 Pré-análises enviadas: {qtd_pre}
-🧾 Validações completas enviadas: {qtd_val}
+🧾 Validações pós-jogo enviadas: {qtd_val}
 📅 Período de busca: {PERIODOS_BUSCA} dias
+🏆 Campeonatos carregados: {len(MEDIAS_LIGA)}
 """)
         if erros: st.warning(f"⚠️ Avisos: {len(erros)}")
 
@@ -471,6 +484,7 @@ st.sidebar.info(f"""
 ⏰ Alerta automático: {HORARIO_ALERTA} (Manaus)
 📅 Período de busca: {PERIODOS_BUSCA} dias
 🎯 Limite de confiança: {LIMITE_CONFIANCA}%
+🏆 Total de campeonatos: {len(MEDIAS_LIGA)}
 🧠 Taxa de acerto: {round((memoria["acertos"] / max(1, memoria["acertos"]+memoria["erros"]))*100,1)}%
 """)
 
