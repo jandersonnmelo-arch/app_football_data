@@ -22,7 +22,7 @@ except Exception as e:
 LIMITE_CONFIANCA = 70
 FUSO_MAN = ZoneInfo("America/Manaus")
 HORARIO_ALERTA = "07:00"
-PERIODOS_BUSCA = 7 # ✅ PERÍODO AJUSTADO PARA 7 DIAS
+PERIODOS_BUSCA = 7 # 7 dias como solicitado
 STATUS_INVALIDOS = ["CANCELLED", "POSTPONED", "SUSPENDED", "ABANDONED"]
 STATUS_JOGOS_VALIDOS = ["SCHEDULED", "TIMED", "FINISHED"]
 HEADERS = {"X-Auth-Token": API_KEY}
@@ -89,48 +89,36 @@ def atualizar_aprendizado(id_casa, id_fora, analise_vencedor, resultado_real):
     memoria["ultima_atualizacao"] = datetime.now(FUSO_MAN).strftime("%d/%m %H:%M")
 
 # ==============================
-# 🏆 CAMPEONATOS
+# 🏆 CAMPEONATOS E MÉDIAS
 # ==============================
 MEDIAS_LIGA = {
-    "WC": {"nome":"Copa do Mundo FIFA","esc":8.0,"cartao":2.7,"fin":9.0,"chute_gol":4.0,"fal":24.5,"defesa_gk":3.9,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Equilibrado"},
-    "CL": {"nome":"Liga dos Campeões UEFA","esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Equilibrado"},
-    "BL1": {"nome":"Bundesliga","esc":9.2,"cartao":3.0,"fin":10.8,"chute_gol":4.7,"fal":25.0,"defesa_gk":3.6,"gols":3.1,"gols_1t":1.3,"gols_2t":1.8,"juiz_tipo":"Permissivo"},
-    "ERD": {"nome":"Eredivisie","esc":9.8,"cartao":2.8,"fin":11.5,"chute_gol":5.0,"fal":23.0,"defesa_gk":3.4,"gols":3.2,"gols_1t":1.4,"gols_2t":1.8,"juiz_tipo":"Permissivo"},
     "BSA": {"nome":"Campeonato Brasileiro Série A","esc":9.0,"cartao":3.2,"fin":9.5,"chute_gol":4.0,"fal":26.5,"defesa_gk":4.2,"gols":2.6,"gols_1t":1.1,"gols_2t":1.5,"juiz_tipo":"Rigoroso"},
-    "PD": {"nome":"Primera División (La Liga)","esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Muito rigoroso"},
-    "FL1": {"nome":"Ligue 1","esc":9.1,"cartao":3.0,"fin":10.3,"chute_gol":4.6,"fal":25.0,"defesa_gk":3.8,"gols":2.7,"gols_1t":1.1,"gols_2t":1.6,"juiz_tipo":"Equilibrado"},
-    "ELC": {"nome":"Championship (Inglaterra)","esc":8.6,"cartao":3.5,"fin":9.2,"chute_gol":3.9,"fal":27.0,"defesa_gk":4.3,"gols":2.5,"gols_1t":1.0,"gols_2t":1.5,"juiz_tipo":"Rigoroso"},
-    "PPL": {"nome":"Primeira Liga (Portugal)","esc":8.8,"cartao":3.2,"fin":9.7,"chute_gol":4.2,"fal":26.0,"defesa_gk":4.0,"gols":2.6,"gols_1t":1.1,"gols_2t":1.5,"juiz_tipo":"Equilibrado"},
-    "EC": {"nome":"Campeonato Europeu","esc":8.5,"cartao":2.8,"fin":9.5,"chute_gol":4.1,"fal":24.0,"defesa_gk":3.8,"gols":2.7,"gols_1t":1.2,"gols_2t":1.5,"juiz_tipo":"Equilibrado"},
-    "SA": {"nome":"Série A Italiana","esc":9.3,"cartao":3.1,"fin":10.6,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.6,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Muito rigoroso"},
+    "BRB": {"nome":"Campeonato Brasileiro Série B","esc":8.5,"cartao":3.5,"fin":9.0,"chute_gol":3.8,"fal":27.0,"defesa_gk":4.5,"gols":2.4,"gols_1t":1.0,"gols_2t":1.4,"juiz_tipo":"Rigoroso"},
+    "CB": {"nome":"Copa do Brasil","esc":8.8,"cartao":3.4,"fin":9.2,"chute_gol":3.9,"fal":26.8,"defesa_gk":4.3,"gols":2.5,"gols_1t":1.05,"gols_2t":1.45,"juiz_tipo":"Muito rigoroso"},
+    "CL": {"nome":"Liga dos Campeões UEFA","esc":9.5,"cartao":2.7,"fin":11.0,"chute_gol":4.8,"fal":23.5,"defesa_gk":3.5,"gols":2.9,"gols_1t":1.2,"gols_2t":1.7,"juiz_tipo":"Equilibrado"},
+    "PD": {"nome":"La Liga","esc":9.4,"cartao":3.1,"fin":10.5,"chute_gol":4.7,"fal":25.5,"defesa_gk":3.7,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Muito rigoroso"},
     "PL": {"nome":"Premier League","esc":9.6,"cartao":2.9,"fin":11.3,"chute_gol":4.9,"fal":24.0,"defesa_gk":3.5,"gols":3.0,"gols_1t":1.3,"gols_2t":1.7,"juiz_tipo":"Permissivo"}
 }
 
 LIGAS = {
-    "🌍 Copa do Mundo FIFA": "WC",
-    "🏆 Liga dos Campeões UEFA": "CL",
-    "🇩🇪 Bundesliga": "BL1",
-    "🇳🇱 Eredivisie": "ERD",
     "🇧🇷 Brasileirão Série A": "BSA",
+    "🇧🇷 Brasileirão Série B": "BRB",
+    "🏆 Copa do Brasil": "CB",
+    "🏆 Liga dos Campeões": "CL",
     "🇪🇸 La Liga": "PD",
-    "🇫🇷 Ligue 1": "FL1",
-    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship": "ELC",
-    "🇵🇹 Primeira Liga": "PPL",
-    "🇪🇺 Campeonato Europeu": "EC",
-    "🇮🇹 Série A Italiana": "SA",
     "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": "PL",
     "📋 Todas as Ligas": "TODAS"
 }
 TODAS_SIGLAS = list(MEDIAS_LIGA.keys())
 # ==============================
-# 🔍 BUSCA DE DADOS COM 7 DIAS
+# 🔍 BUSCA DE DADOS
 # ==============================
 @st.cache_data(ttl=900, show_spinner=False)
 def buscar_jogos(sigla):
-    time.sleep(0.3)
+    time.sleep(0.2)
     hoje_man = datetime.now(FUSO_MAN).date()
-    data_ini = hoje_man - timedelta(days=2) # Mostra últimos 2 dias para validação
-    data_fim = hoje_man + timedelta(days=PERIODOS_BUSCA) # ✅ ATÉ 7 DIAS À FRENTE
+    data_ini = hoje_man - timedelta(days=2)
+    data_fim = hoje_man + timedelta(days=PERIODOS_BUSCA)
     lista = []
     siglas = TODAS_SIGLAS if sigla == "TODAS" else [sigla]
     
@@ -155,7 +143,6 @@ def buscar_jogos(sigla):
                         lista.append(j)
                     except: continue
         except Exception as e:
-            st.warning(f"⚠️ Erro na busca de {MEDIAS_LIGA.get(s,{}).get('nome',s)}: {str(e)}")
             continue
     return lista
 
@@ -174,22 +161,99 @@ def buscar_confrontos(id1, id2):
     except: return []
 
 # ==============================
-# ✅ ENVIO INDIVIDUAL PARA TELEGRAM
+# ✅ ENVIO PARA TELEGRAM
 # ==============================
 def enviar_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        texto = texto.replace("`","").replace("*","").replace("_"," ").replace("[","").replace("]","")
-        resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto}, timeout=30)
+        texto_limpo = texto.replace("`","").replace("*","").replace("_"," ").replace("[","").replace("]","")
+        resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto_limpo}, timeout=30)
         if resp.status_code == 200:
-            return True, "✅ Enviado com sucesso"
+            return True, "✅ Relatório enviado com sucesso"
         else:
-            return False, f"❌ Erro: {resp.status_code}"
+            return False, f"❌ Erro Telegram: {resp.status_code}"
     except Exception as e:
-        return False, f"❌ Falha: {str(e)}"
+        return False, f"❌ Falha no envio: {str(e)}"
 
 # ==============================
-# ✅ VALIDAÇÃO DETALHADA COM ACERTO/ERRO
+# ✅ FUNÇÃO CORRIGIDA: DADOS DO TIME
+# ==============================
+def dados_time(time_id, sigla, casa=False):
+    jogos = buscar_ultimos5(time_id)
+    m = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
+    fator_casa = 1.15 if casa else 0.90
+    fator_fora = 0.92 if casa else 1.10
+
+    if not jogos:
+        return {
+            "pV": round(45 * fator_casa, 1),
+            "pE": 28.0,
+            "pD": round(45 * fator_fora, 1),
+            "mg": m["gols"],
+            "mg_1t": m["gols_1t"],
+            "mg_2t": m["gols_2t"],
+            "mcartao": m["cartao"],
+            "mesc": m["esc"],
+            "resumo": ["📊 Sem dados"]*5,
+            "placares": ["-"]*5
+        }
+    
+    vitorias = empates = derrotas = gols_marcados = gols_sofridos = gols_1t = gols_2t = 0
+    resumo = []
+    placares = []
+
+    for j in jogos:
+        try:
+            id_casa_jogo = j["homeTeam"]["id"]
+            gc = j["score"]["fullTime"].get("home", 0) or 0
+            ga = j["score"]["fullTime"].get("away", 0) or 0
+            g1c = j["score"]["halfTime"].get("home", 0) or 0
+            g1a = j["score"]["halfTime"].get("away", 0) or 0
+
+            if id_casa_jogo == time_id:
+                gm, gs = gc, ga
+                g1m, g1s = g1c, g1a
+            else:
+                gm, gs = ga, gc
+                g1m, g1s = g1a, g1c
+
+            gols_marcados += gm
+            gols_sofridos += gs
+            gols_1t += g1m
+            gols_2t += (gm - g1m)
+            placares.append(f"{gm}x{gs}")
+
+            if gm > gs:
+                vitorias +=1
+                resumo.append("✅")
+            elif gm == gs:
+                empates +=1
+                resumo.append("⚖️")
+            else:
+                derrotas +=1
+                resumo.append("❌")
+        except: continue
+
+    total = len(jogos)
+    mg = round(gols_marcados / total * fator_casa, 1)
+    mg_1t = round(gols_1t / total * fator_casa, 1)
+    mg_2t = round(gols_2t / total * fator_casa, 1)
+    pv = round((vitorias / total) * 100 * fator_casa, 1)
+    pe = round((empates / total) * 100, 1)
+    pd = round((derrotas / total) * 100 * fator_fora, 1)
+    total_prob = max(pv + pe + pd, 100)
+    pv, pe, pd = round(pv/total_prob*100,1), round(pe/total_prob*100,1), round(pd/total_prob*100,1)
+
+    return {
+        "pV": pv, "pE": pe, "pD": pd,
+        "mg": mg, "mg_1t": mg_1t, "mg_2t": mg_2t,
+        "mcartao": round(m["cartao"] * (mg / m["gols"]), 1) if m["gols"] > 0 else m["cartao"],
+        "mesc": round(m["esc"] * (mg / m["gols"]), 1) if m["gols"] > 0 else m["esc"],
+        "resumo": resumo, "placares": placares
+    }
+
+# ==============================
+# ✅ VALIDAÇÃO COMPLETA COM ACERTOS/ERROS
 # ==============================
 def gerar_validacao(nc, nf, jogo, indicacoes, idc, idf, vencedor_analise):
     gc = jogo["score"]["fullTime"].get("home",0) or 0
@@ -205,9 +269,7 @@ def gerar_validacao(nc, nf, jogo, indicacoes, idc, idf, vencedor_analise):
     gols_2t = total_gols - gols_1t
 
     res = []
-    acertos = 0
-    erros = 0
-
+    acertos = erros = 0
     for ind in indicacoes:
         ok = False
         if "Mais de 1.5" in ind: ok = total_gols > 1.5
@@ -218,10 +280,6 @@ def gerar_validacao(nc, nf, jogo, indicacoes, idc, idf, vencedor_analise):
         elif "Menos de 3.5" in ind: ok = total_gols < 3.5
         elif "1º Tempo tem gol" in ind: ok = gols_1t >= 1
         elif "2º Tempo tem gol" in ind: ok = gols_2t >= 1
-        elif f"{nc} marca no 1º" in ind: ok = g1c >= 1
-        elif f"{nf} marca no 1º" in ind: ok = g1a >= 1
-        elif f"{nc} marca no 2º" in ind: ok = (gc - g1c) >= 1
-        elif f"{nf} marca no 2º" in ind: ok = (ga - g1a) >= 1
         elif "Dupla Chance 1X" in ind: ok = res_real in ["casa", "empate"]
         elif "Dupla Chance X2" in ind: ok = res_real in ["fora", "empate"]
 
@@ -234,97 +292,44 @@ def gerar_validacao(nc, nf, jogo, indicacoes, idc, idf, vencedor_analise):
     
     status_final = "🎉 TODAS AS INDICAÇÕES ACERTARAM!" if erros == 0 else f"📊 Resultado: {acertos} acertos | {erros} erros"
 
-    msg = f"""🧾 VALIDAÇÃO DE JOGO FINALIZADO
+    return f"""🧾 VALIDAÇÃO COMPLETA
 ⚽ {nc} VS {nf}
 🏁 PLACAR FINAL: {placar}
 ⏱️ 1º Tempo: {g1c}x{g1a} | 2º Tempo: {gc-g1c}x{ga-g1a}
 
-📊 ANÁLISE DE ACERTOS/ERROS:
+📊 ANÁLISE DE ACERTOS E ERROS:
 {chr(10).join(res)}
 
 {status_final}
 """
-    return msg
 
 # ==============================
-# 🧮 DEMAIS FUNÇÕES
+# DEMAIS FUNÇÕES AUXILIARES
 # ==============================
-def dados_time(time_id, sigla, casa=False):
-    jogos = buscar_ultimos5(time_id)
-    m = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
-    fc = 1.15 if casa else 0.90
-    ff = 0.92 if casa else 1.10
-    if not jogos:
-        return {
-            "pV":round(45*fc,1),"pE":28,"pD":round(45*ff,1),
-            "mg":m["gols"],"mg_1t":m["gols_1t"],"mg_2t":m["gols_2t"],
-            "mcartao":m["cartao"],"mesc":m["esc"],
-            "resumo":["📊 Sem dados"]*5,"placares":["-"]
-        }
-    v=e=d=gf=gs=gf1=gf2=0
-    resumo=[]
-    placares=[]
-    for j in jogos:
-        try:
-            idc = j["homeTeam"]["id"]
-            gc = j["score"]["fullTime"].get("home",0) or 0
-            ga = j["score"]["fullTime"].get("away",0) or 0
-            g1c = j["score"]["halfTime"].get("home",0) or 0
-            g1a = j["score"]["halfTime"].get("away",0) or 0
-            if idc == time_id:
-                gf+=gc; gs+=ga; gf1+=g1c; gf2+=gc-g1c
-                resumo.append("✅"if gc>ga else "⚖️"if gc==ga else "❌")
-                placares.append(f"{gc}x{ga}")
-                v +=1 if gc>ga else 0
-                e +=1 if gc==ga else 0
-                d +=1 if gc<ga else 0
-            else:
-                gf+=ga; gs+=gc; gf1+=g1a; gf2+=ga-g1a
-                resumo.append("✅"if ga>gc else "⚖️"if ga==gc else "❌")
-                placares.append(f"{ga}x{gc}")
-                v +=1 if ga>gc else 0
-                e +=1 if ga==gc else 0
-                d +=1 if ga<gc else 0
-        except: continue
-    tj = max(len(jogos),1)
-    mg = round((gf+gs)/tj,1)
-    mg1t = round(gf1/tj*fc,1)
-    mg2t = round(gf2/tj*fc,1)
-    pv = round((v/tj)*100*fc,1)
-    pe = round((e/tj)*100,1)
-    pd = round((d/tj)*100*ff,1)
-    total = max(pv+pe+pd,1)
-    pv,pe,pd = round(pv/total*100,1), round(pe/total*100,1), round(pd/total*100,1)
-    return {
-        "pV":pv,"pE":pe,"pD":pd,"mg":"mg","mg_1t":mg1t,"mg_2t":mg2t,
-        "mcartao":round(m["cartao"]*(mg/m["gols"]),1),"mesc":round(m["esc"]*(mg/m["gols"]),1),
-        "resumo":resumo,"placares":placares
-    }
-
 def calcular_gols_tempo(dc, df):
     return {
-        "casa_1t":dc['mg_1t'],"casa_2t":dc['mg_2t'],
-        "fora_1t":df['mg_1t'],"fora_2t":df['mg_2t'],
-        "total_1t":round(dc['mg_1t']+df['mg_1t'],1),
-        "total_2t":round(dc['mg_2t']+df['mg_2t'],1)
+        "casa_1t": dc['mg_1t'], "casa_2t": dc['mg_2t'],
+        "fora_1t": df['mg_1t'], "fora_2t": df['mg_2t'],
+        "total_1t": round(dc['mg_1t'] + df['mg_1t'], 1),
+        "total_2t": round(dc['mg_2t'] + df['mg_2t'], 1)
     }
 
-def dupla_chance(pv,pe,pd):
-    return {"1X":round(pv+pe,1),"X2":round(pe+pd,1),"12":round(pv+pd,1)}
+def dupla_chance(pv, pe, pd):
+    return {"1X": round(pv+pe,1), "X2": round(pe+pd,1), "12": round(pv+pd,1)}
 
-def confMaior(v,l):
-    return min(round((v/l)*100,1),95) if v>0 else 0
+def confMaior(v, l):
+    return min(round((v/l)*100,1),95) if v > 0 else 0
 
 def analise_juiz(sigla):
     m = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
-    return f"⚖️ Perfil: {m['juiz_tipo']}"
+    return f"⚖️ Perfil do árbitro: {m['juiz_tipo']}"
 
 def analise_confronto(idc, idf, nc, nf):
     jogos = buscar_confrontos(idc, idf)
     if not jogos:
         return "🤝 Sem dados de confrontos diretos"
     vc=ve=vf=0
-    txt="🤝 Últimos confrontos:\n"
+    txt = "🤝 Últimos confrontos:\n"
     for j in jogos:
         try:
             gc = j["score"]["fullTime"].get("home",0) or 0
@@ -341,70 +346,63 @@ def analise_confronto(idc, idf, nc, nf):
                 vf +=1 if time_casa == nc else 0
                 vc +=1 if time_fora == nc else 0
         except: continue
-    txt += f"📌 {nc}: {vc} vitórias | {ve} empates | {nf}: {vf} vitórias"
+    txt += f"📌 Histórico: {nc} {vc} vitórias | {ve} empates | {nf} {vf} vitórias"
     return txt
 # ==============================
-# 📝 RELATÓRIO PRÉ-JOGO
+# 📝 RELATÓRIO DE PRÉ-ANÁLISE
 # ==============================
-def gerar_relatorio_pre(nc,nf,dt,dc,df,idc,idf,dupla,juiz,confronto,sigla):
-    tg=round(dc['mg']+df['mg'],1)
+def gerar_relatorio_pre(nc, nf, dt, dc, df, idc, idf, dupla, juiz, confronto, sigla):
+    tg = round(dc['mg'] + df['mg'], 1)
     gols_t = calcular_gols_tempo(dc, df)
     m_liga = MEDIAS_LIGA.get(sigla, MEDIAS_LIGA["BSA"])
     vencedor_analise = "casa" if dc['pV']>df['pV'] else "fora" if df['pV']>dc['pV'] else "empate"
-    ia_res, ia_conf, ia_mot = analise_ia(nc,nf,idc,idf,dc,df,dupla,m_liga,confronto,gols_t)
+    ia_res, ia_conf, ia_mot = analise_ia(nc, nf, idc, idf, dc, df, dupla, m_liga, confronto, gols_t)
 
-    ind=[]
-    if dupla['1X']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance 1X - {dupla['1X']}%")
-    if dupla['X2']>=LIMITE_CONFIANCA: ind.append(f"Dupla Chance X2 - {dupla['X2']}%")
-    if confMaior(tg,1.5)>=LIMITE_CONFIANCA: ind.append(f"Mais de 1.5 gols - {confMaior(tg,1.5)}%")
-    if confMaior(tg,2.5)>=LIMITE_CONFIANCA: ind.append(f"Mais de 2.5 gols - {confMaior(tg,2.5)}%")
-    if confMaior(tg,3.5)>=LIMITE_CONFIANCA: ind.append(f"Mais de 3.5 gols - {confMaior(tg,3.5)}%")
-    conf_1t = confMaior(gols_t['total_1t'],0.8)
-    conf_2t = confMaior(gols_t['total_2t'],0.9)
-    conf_casa1 = confMaior(gols_t['casa_1t'],0.4)
-    conf_fora1 = confMaior(gols_t['fora_1t'],0.3)
-    conf_casa2 = confMaior(gols_t['casa_2t'],0.5)
-    conf_fora2 = confMaior(gols_t['fora_2t'],0.4)
-    if conf_1t>=LIMITE_CONFIANCA: ind.append(f"1º Tempo tem gol - {conf_1t}%")
-    if conf_2t>=LIMITE_CONFIANCA: ind.append(f"2º Tempo tem gol - {conf_2t}%")
-    if conf_casa1>=LIMITE_CONFIANCA: ind.append(f"{nc} marca no 1º tempo - {conf_casa1}%")
-    if conf_fora1>=LIMITE_CONFIANCA: ind.append(f"{nf} marca no 1º tempo - {conf_fora1}%")
-    if conf_casa2>=LIMITE_CONFIANCA: ind.append(f"{nc} marca no 2º tempo - {conf_casa2}%")
-    if conf_fora2>=LIMITE_CONFIANCA: ind.append(f"{nf} marca no 2º tempo - {conf_fora2}%")
+    ind = []
+    if dupla['1X'] >= LIMITE_CONFIANCA: ind.append(f"Dupla Chance 1X - {dupla['1X']}%")
+    if dupla['X2'] >= LIMITE_CONFIANCA: ind.append(f"Dupla Chance X2 - {dupla['X2']}%")
+    if confMaior(tg,1.5) >= LIMITE_CONFIANCA: ind.append(f"Mais de 1.5 gols - {confMaior(tg,1.5)}%")
+    if confMaior(tg,2.5) >= LIMITE_CONFIANCA: ind.append(f"Mais de 2.5 gols - {confMaior(tg,2.5)}%")
+    if confMaior(tg,3.5) >= LIMITE_CONFIANCA: ind.append(f"Mais de 3.5 gols - {confMaior(tg,3.5)}%")
+    conf_1t = confMaior(gols_t['total_1t'], 0.8)
+    conf_2t = confMaior(gols_t['total_2t'], 0.9)
+    if conf_1t >= LIMITE_CONFIANCA: ind.append(f"1º Tempo tem gol - {conf_1t}%")
+    if conf_2t >= LIMITE_CONFIANCA: ind.append(f"2º Tempo tem gol - {conf_2t}%")
 
     ind_txt = "\n".join(ind) if ind else f"Nenhuma indicação acima de {LIMITE_CONFIANCA}%"
 
-    return f"""⚽ PRÉ-JOGO: {nc} VS {nf} | 🕒 {dt.strftime('%d/%m %H:%M')} Manaus
+    return f"""⚽ PRÉ-ANÁLISE COMPLETA
+⚽ {nc} 🆚 {nf} | 🕒 {dt.strftime('%d/%m %H:%M')} Manaus
 🏆 Competição: {m_liga['nome']}
-📅 Período de busca: últimos 2 dias até {PERIODOS_BUSCA} dias à frente
 
-📊 PROBABILIDADES:
+📊 PROBABILIDADES FINAIS:
 ✅ {nc}: {dc['pV']}% | ⚖️ Empate: {dc['pE']}% | ✅ {nf}: {dc['pD']}%
+🔀 Dupla Chance: 1X {dupla['1X']}% | X2 {dupla['X2']}% | 12 {dupla['12']}%
 
-🧠 ANÁLISE DA IA:
+🧠 ANÁLISE DA INTELIGÊNCIA ARTIFICIAL:
 {ia_res} | Confiança: {ia_conf}%
 {ia_mot}
 
-⏱️ GOLS POR TEMPO:
+⏱️ DESEMPENHO POR TEMPO:
 1º Tempo: Total {gols_t['total_1t']} | {nc} {gols_t['casa_1t']} | {nf} {gols_t['fora_1t']}
 2º Tempo: Total {gols_t['total_2t']} | {nc} {gols_t['casa_2t']} | {nf} {gols_t['fora_2t']}
+
+📈 MÉDIAS GERAIS DO CONFRONTO:
+⚽ Gols esperados: {tg} | 🟨 Cartões: {round(dc['mcartao'] + df['mcartao'],1)} | 📐 Escanteios: {round(dc['mesc'] + df['mesc'],1)}
+
+📊 DESEMPENHO DOS ÚLTIMOS 5 JOGOS:
+🏠 {nc}: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
+✈️ {nf}: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
 
 {confronto}
 {juiz}
 
-📈 TOTAIS:
-⚽ Gols: {tg} | 🟨 Cartões: {round(dc['mcartao']+df['mcartao'],1)} | 📐 Escanteios: {round(dc['mesc']+df['mesc'],1)}
-
-📊 DESEMPENHO RECENTE:
-🏠 {nc}: {' '.join(dc['resumo'])} | Placares: {' '.join(dc['placares'])}
-✈️ {nf}: {' '.join(df['resumo'])} | Placares: {' '.join(df['placares'])}
-
-💡 INDICAÇÕES PARA ACOMPANHAR:
+💡 INDICAÇÕES PRINCIPAIS PARA ACOMPANHAR:
 {ind_txt}
 """, vencedor_analise, ind
 
 # ==============================
-# ⏰ ENVIO AUTOMÁTICO COM 7 DIAS
+# ⏰ ENVIO AUTOMÁTICO GARANTIDO
 # ==============================
 def executar_envio_automatico():
     agora = datetime.now(FUSO_MAN)
@@ -412,11 +410,10 @@ def executar_envio_automatico():
     hoje = agora.date()
 
     if horario_atual == HORARIO_ALERTA and st.session_state.ultimo_envio_diario != hoje:
-        st.toast(f"⏰ Iniciando envio automático das {HORARIO_ALERTA} (busca de {PERIODOS_BUSCA} dias)...")
+        st.toast(f"⏰ Iniciando envio automático das {HORARIO_ALERTA} (período de {PERIODOS_BUSCA} dias)...")
         jogos = buscar_jogos("TODAS")
-        qtd_pre_enviados = 0
-        qtd_valid_enviados = 0
-        erros_envio = []
+        qtd_pre = qtd_val = 0
+        erros = []
 
         for jg in jogos:
             try:
@@ -429,118 +426,104 @@ def executar_envio_automatico():
                 idf = jg["awayTeam"]["id"]
                 dc = dados_time(idc, "TODAS", True)
                 df = dados_time(idf, "TODAS", False)
-                dupla = dupla_chance(dc['pV'],dc['pE'],dc['pD'])
+                dupla = dupla_chance(dc['pV'], dc['pE'], dc['pD'])
                 juiz = analise_juiz("TODAS")
-                confronto = analise_confronto(idc,idf,nc,nf)
+                confronto = analise_confronto(idc, idf, nc, nf)
 
                 if status in ["SCHEDULED", "TIMED"] and dt_jogo > agora:
-                    rel_pre, vencedor_analise, indicacoes = gerar_relatorio_pre(nc,nf,dt_jogo,dc,df,idc,idf,dupla,juiz,confronto,"TODAS")
-                    memoria["jogos_enviados"][id_jogo] = {
-                        "vencedor":vencedor_analise, "indicacoes":indicacoes,
-                        "nc":nc, "nf":nf, "idc":idc, "idf":idf
-                    }
-                    if dupla['1X']>=LIMITE_CONFIANCA or dupla['X2']>=LIMITE_CONFIANCA:
-                        ok, msg = enviar_telegram(rel_pre)
-                        if ok: qtd_pre_enviados +=1
-                        else: erros_envio.append(f"{nc} x {nf}: {msg}")
-                        time.sleep(1.2)
+                    rel_pre, venc, ind = gerar_relatorio_pre(nc, nf, dt_jogo, dc, df, idc, idf, dupla, juiz, confronto, "TODAS")
+                    memoria["jogos_enviados"][id_jogo] = {"venc":venc, "ind":ind, "nc":nc, "nf":nf, "idc":idc, "idf":idf}
+                    ok, msg = enviar_telegram(rel_pre)
+                    if ok: qtd_pre +=1
+                    else: erros.append(f"{nc} x {nf}: {msg}")
+                    time.sleep(1)
 
                 elif status == "FINISHED":
                     if id_jogo in memoria["jogos_enviados"]:
-                        dados_salvos = memoria["jogos_enviados"][id_jogo]
-                        msg_val = gerar_validacao(
-                            dados_salvos["nc"], dados_salvos["nf"], jg,
-                            dados_salvos["indicacoes"], dados_salvos["idc"],
-                            dados_salvos["idf"], dados_salvos["vencedor"]
-                        )
-                        ok, msg = enviar_telegram(msg_val)
+                        dados = memoria["jogos_enviados"][id_jogo]
+                        rel_val = gerar_validacao(dados["nc"], dados["nf"], jg, dados["ind"], dados["idc"], dados["idf"], dados["venc"])
+                        ok, msg = enviar_telegram(rel_val)
                         if ok:
-                            qtd_valid_enviados +=1
+                            qtd_val +=1
                             del memoria["jogos_enviados"][id_jogo]
                         else:
-                            erros_envio.append(f"Validação {nc} x {nf}: {msg}")
-                        time.sleep(1.2)
-
+                            erros.append(f"Validação {nc} x {nf}: {msg}")
+                        time.sleep(1)
             except Exception as e:
-                erros_envio.append(f"Erro: {str(e)}")
+                erros.append(f"Erro no jogo: {str(e)}")
                 continue
 
         st.session_state.ultimo_envio_diario = hoje
-        st.success(f"""✅ PROCESSO CONCLUÍDO!
-📨 Pré-jogos enviados: {qtd_pre_enviados}
-🧾 Validações enviadas: {qtd_valid_enviados}
+        st.success(f"""✅ ENVIO CONCLUÍDO!
+📨 Pré-análises enviadas: {qtd_pre}
+🧾 Validações completas enviadas: {qtd_val}
 📅 Período de busca: {PERIODOS_BUSCA} dias
 """)
-        if erros_envio: st.warning(f"⚠️ Problemas:\n" + "\n".join(erros_envio[:6]))
+        if erros: st.warning(f"⚠️ Avisos: {len(erros)}")
 
 executar_envio_automatico()
 
 # ==============================
-# 🖥️ INTERFACE
+# 🖥️ INTERFACE DO USUÁRIO
 # ==============================
-st.sidebar.header("⚙️ STATUS DO SISTEMA")
+st.sidebar.header("⚙️ CONTROLES")
 st.sidebar.info(f"""
-🧠 Taxa de acerto: {round((memoria["acertos"] / max(1, memoria["acertos"]+memoria["erros"]))*100,1)}%
-⏰ Envio automático: {HORARIO_ALERTA} Manaus
+⏰ Alerta automático: {HORARIO_ALERTA} (Manaus)
 📅 Período de busca: {PERIODOS_BUSCA} dias
-🔍 Limite de confiança: {LIMITE_CONFIANCA}%
+🎯 Limite de confiança: {LIMITE_CONFIANCA}%
+🧠 Taxa de acerto: {round((memoria["acertos"] / max(1, memoria["acertos"]+memoria["erros"]))*100,1)}%
 """)
 
-sel = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
+sel = st.selectbox("🏆 Selecione a competição", list(LIGAS.keys()))
 sigla = LIGAS[sel]
 
-st.info(f"✅ Buscando jogos até {PERIODOS_BUSCA} dias à frente | Validação automática com acertos/erros")
-if st.button("🔍 Analisar e enviar agora"):
-    with st.spinner(f"Buscando jogos de até {PERIODOS_BUSCA} dias..."):
-        jogos = buscar_jogos(sigla)
-        if not jogos:
-            st.warning("⚠️ Nenhum jogo encontrado no período")
-        else:
-            st.success(f"✅ {len(jogos)} jogos encontrados em {PERIODOS_BUSCA} dias")
-            enviados = 0
-            validados = 0
-            for jg in jogos:
-                try:
-                    status = jg.get("status","")
-                    dt = jg["dt_manaus"]
-                    nc = jg["homeTeam"]["name"]
-                    nf = jg["awayTeam"]["name"]
-                    id_jogo = str(jg.get("id",""))
-                    dc = dados_time(jg["homeTeam"]["id"], sigla, True)
-                    df = dados_time(jg["awayTeam"]["id"], sigla, False)
-                    dupla = dupla_chance(dc['pV'],dc['pE'],dc['pD'])
+if st.button("🔍 Analisar e enviar relatórios agora"):
+    jogos = buscar_jogos(sigla)
+    if not jogos:
+        st.warning("⚠️ Nenhum jogo encontrado no período selecionado")
+    else:
+        st.success(f"✅ {len(jogos)} jogos encontrados em {PERIODOS_BUSCA} dias")
+        enviados = validados = 0
+        for jg in jogos:
+            try:
+                st.markdown("---")
+                dt = jg["dt_manaus"]
+                nc = jg["homeTeam"]["name"]
+                nf = jg["awayTeam"]["name"]
+                id_jogo = str(jg.get("id",""))
+                dc = dados_time(jg["homeTeam"]["id"], sigla, True)
+                df = dados_time(jg["awayTeam"]["id"], sigla, False)
+                dupla = dupla_chance(dc['pV'], dc['pE'], dc['pD'])
 
-                    st.markdown("---")
-                    st.subheader(f"⚽ {nc} 🆚 {nf} | {dt.strftime('%d/%m %H:%M')}")
-                    
-                    if status in ["SCHEDULED", "TIMED"]:
-                        st.info("🔮 Pré-análise:")
-                        rel_pre, _, _ = gerar_relatorio_pre(nc,nf,dt,dc,df,jg["homeTeam"]["id"],jg["awayTeam"]["id"],dupla,analise_juiz(sigla),analise_confronto(jg["homeTeam"]["id"],jg["awayTeam"]["id"],nc,nf),sigla)
-                        st.markdown(rel_pre)
-                        if dupla['1X']>=LIMITE_CONFIANCA or dupla['X2']>=LIMITE_CONFIANCA:
-                            ok, msg_envio = enviar_telegram(rel_pre)
-                            if ok:
-                                enviados +=1
-                                st.success(f"📨 Enviado: {msg_envio}")
-                    
-                    elif status == "FINISHED":
-                        st.success("✅ Jogo finalizado - Validação:")
-                        gc = jg["score"]["fullTime"].get("home",0) or 0
-                        ga = jg["score"]["fullTime"].get("away",0) or 0
-                        st.write(f"🏁 Placar: **{nc} {gc}x{ga} {nf}**")
-                        if id_jogo in memoria["jogos_enviados"]:
-                            msg_val = gerar_validacao(nc,nf,jg,memoria["jogos_enviados"][id_jogo]["indicacoes"],jg["homeTeam"]["id"],jg["awayTeam"]["id"],memoria["jogos_enviados"][id_jogo]["vencedor"])
-                            st.markdown(msg_val)
-                            ok, msg_envio = enviar_telegram(msg_val)
-                            if ok:
-                                validados +=1
-                                st.success(f"📨 Validação enviada: {msg_envio}")
-                                del memoria["jogos_enviados"][id_jogo]
+                st.subheader(f"⚽ {nc} 🆚 {nf} | 📅 {dt.strftime('%d/%m %H:%M')}")
+                status = jg.get("status","")
 
-                except Exception as e:
-                    st.error(f"⚠️ Erro: {str(e)}")
-            
-            st.success(f"""
-📨 Total pré-jogos enviados: {enviados}
-🧾 Total validações enviadas: {validados}
-""")
+                if status in ["SCHEDULED", "TIMED"]:
+                    st.info("🔮 Pré-análise:")
+                    rel_pre, venc, ind = gerar_relatorio_pre(nc, nf, dt, dc, df, jg["homeTeam"]["id"], jg["awayTeam"]["id"], dupla, analise_juiz(sigla), analise_confronto(jg["homeTeam"]["id"], jg["awayTeam"]["id"], nc, nf), sigla)
+                    st.markdown(rel_pre)
+                    memoria["jogos_enviados"][id_jogo] = {"venc":venc, "ind":ind, "nc":nc, "nf":nf, "idc":jg["homeTeam"]["id"], "idf":jg["awayTeam"]["id"]}
+                    ok, msg = enviar_telegram(rel_pre)
+                    if ok:
+                        enviados +=1
+                        st.success(f"📨 {msg}")
+
+                elif status == "FINISHED":
+                    st.success("✅ Jogo finalizado - Validação completa:")
+                    gc = jg["score"]["fullTime"].get("home",0) or 0
+                    ga = jg["score"]["fullTime"].get("away",0) or 0
+                    st.write(f"🏁 Placar oficial: **{nc} {gc}x{ga} {nf}**")
+                    if id_jogo in memoria["jogos_enviados"]:
+                        rel_val = gerar_validacao(nc, nf, jg, memoria["jogos_enviados"][id_jogo]["ind"], jg["homeTeam"]["id"], jg["awayTeam"]["id"], memoria["jogos_enviados"][id_jogo]["venc"])
+                        st.markdown(rel_val)
+                        ok, msg = enviar_telegram(rel_val)
+                        if ok:
+                            validados +=1
+                            st.success(f"📨 {msg}")
+                            del memoria["jogos_enviados"][id_jogo]
+                        else:
+                            st.error(f"❌ {msg}")
+                    else:
+                        st.info("ℹ️ Nenhuma pré-análise encontrada para este jogo")
+            except Exception as e:
+                st.error(f"⚠️ Erro neste jogo: {str(e)}")
