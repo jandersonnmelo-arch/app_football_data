@@ -88,7 +88,7 @@ def atualizar_aprendizado(id_casa, id_fora, analise_vencedor, resultado_real):
     memoria["ultima_atualizacao"] = datetime.now(FUSO_MAN).strftime("%d/%m %H:%M")
 
 # ==============================
-# 🏆 CAMPEONATOS EXATOS
+# 🏆 CAMPEONATOS
 # ==============================
 MEDIAS_LIGA = {
     "WC": {"nome":"Copa do Mundo FIFA","esc":8.0,"cartao":2.7,"fin":9.0,"chute_gol":4.0,"fal":24.5,"defesa_gk":3.9,"gols":2.8,"gols_1t":1.2,"gols_2t":1.6,"juiz_tipo":"Equilibrado"},
@@ -173,34 +173,23 @@ def buscar_confrontos(id1, id2):
     except: return []
 
 # ==============================
-# ✅ FUNÇÃO DE ENVIO TELEGRAM CORRIGIDA E GARANTIDA
+# ✅ ENVIO INDIVIDUAL PARA TELEGRAM
 # ==============================
 def enviar_telegram(texto):
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        # Limpa caracteres que quebram o envio
+        # Limpa caracteres que causam erro
         texto = texto.replace("`","").replace("*","").replace("_"," ").replace("[","").replace("]","")
-        # Envia em partes se for muito longo
-        max_tam = 3500
-        if len(texto) <= max_tam:
-            resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto}, timeout=30)
-            if resp.status_code == 200:
-                return True, "Enviado com sucesso"
-            else:
-                return False, f"Erro Telegram: {resp.status_code} - {resp.text}"
-        # Divide em partes
-        partes = [texto[i:i+max_tam] for i in range(0, len(texto), max_tam)]
-        for p in partes:
-            resp = requests.post(url, data={"chat_id": CHAT_ID, "text": p}, timeout=30)
-            time.sleep(1)
-            if resp.status_code != 200:
-                return False, f"Erro na parte: {resp.status_code}"
-        return True, "Enviado em partes"
+        resp = requests.post(url, data={"chat_id": CHAT_ID, "text": texto}, timeout=30)
+        if resp.status_code == 200:
+            return True, "✅ Enviado com sucesso"
+        else:
+            return False, f"❌ Erro: {resp.status_code}"
     except Exception as e:
-        return False, f"Falha no envio: {str(e)}"
+        return False, f"❌ Falha: {str(e)}"
 
 # ==============================
-# 🧮 CÁLCULOS E FUNÇÕES AUXILIARES
+# 🧮 CÁLCULOS
 # ==============================
 def dados_time(time_id, sigla, casa=False):
     jogos = buscar_ultimos5(time_id)
@@ -286,13 +275,13 @@ def analise_confronto(idc, idf, nc, nf):
             time_fora = j["awayTeam"].get("name", "")
             txt += f"• {time_casa} {gc}x{ga} {time_fora}\n"
             if gc > ga:
-                if time_casa == nc: vc +=1
-                elif time_fora == nc: vf +=1
+                vc +=1 if time_casa == nc else 0
+                vf +=1 if time_fora == nc else 0
             elif gc == ga:
                 ve +=1
             else:
-                if time_casa == nc: vf +=1
-                elif time_fora == nc: vc +=1
+                vf +=1 if time_casa == nc else 0
+                vc +=1 if time_fora == nc else 0
         except: continue
     txt += f"📌 {nc}: {vc} vitórias | {ve} empates | {nf}: {vf} vitórias"
     return txt
@@ -384,7 +373,7 @@ def gerar_relatorio_pre(nc,nf,dt,dc,df,idc,idf,dupla,juiz,confronto,sigla):
 """, vencedor_analise, ind
 
 # ==============================
-# ⏰ ENVIO AUTOMÁTICO COM FEEDBACK
+# ⏰ ENVIO AUTOMÁTICO
 # ==============================
 def executar_envio_automatico():
     agora = datetime.now(FUSO_MAN)
@@ -413,7 +402,7 @@ def executar_envio_automatico():
                 juiz = analise_juiz("TODAS")
                 confronto = analise_confronto(idc,idf,nc,nf)
 
-                # Jogos futuros
+                # Jogo futuro: envia pré-jogo individualmente
                 if status in ["SCHEDULED", "TIMED"] and dt_jogo > agora:
                     rel_pre, vencedor_analise, indicacoes = gerar_relatorio_pre(nc,nf,dt_jogo,dc,df,idc,idf,dupla,juiz,confronto,"TODAS")
                     memoria["jogos_enviados"][id_jogo] = {
@@ -422,36 +411,31 @@ def executar_envio_automatico():
                     }
                     if dupla['1X']>=LIMITE_CONFIANCA or dupla['X2']>=LIMITE_CONFIANCA:
                         ok, msg = enviar_telegram(rel_pre)
-                        if ok:
-                            qtd_pre_enviados +=1
-                        else:
-                            erros_envio.append(f"{nc} x {nf}: {msg}")
-                        time.sleep(0.8)
+                        if ok: qtd_pre_enviados +=1
+                        else: erros_envio.append(f"{nc} x {nf}: {msg}")
+                        time.sleep(1)
 
-                # Jogos finalizados
+                # Jogo finalizado: envia validação individualmente
                 elif status == "FINISHED":
                     if id_jogo in memoria["jogos_enviados"]:
                         dados_salvos = memoria["jogos_enviados"][id_jogo]
                         msg_val = gerar_validacao(dados_salvos["nc"], dados_salvos["nf"], jg, dados_salvos["indicacoes"], dados_salvos["idc"], dados_salvos["idf"], dados_salvos["vencedor"])
                         ok, msg = enviar_telegram(msg_val)
-                        if ok:
-                            qtd_valid_enviados +=1
-                        else:
-                            erros_envio.append(f"Validação {nc} x {nf}: {msg}")
+                        if ok: qtd_valid_enviados +=1
+                        else: erros_envio.append(f"Validação {nc} x {nf}: {msg}")
                         del memoria["jogos_enviados"][id_jogo]
-                        time.sleep(0.8)
+                        time.sleep(1)
 
             except Exception as e:
-                erros_envio.append(f"Erro no jogo: {str(e)}")
+                erros_envio.append(f"Erro: {str(e)}")
                 continue
 
         st.session_state.ultimo_envio_diario = hoje
         st.success(f"""✅ Envio concluído!
-📨 Pré-jogos enviados: {qtd_pre_enviados}
-🧾 Validações enviadas: {qtd_valid_enviados}
+📨 Pré-jogos enviados individualmente: {qtd_pre_enviados}
+🧾 Validações enviadas individualmente: {qtd_valid_enviados}
 """)
-        if erros_envio:
-            st.warning(f"⚠️ Problemas encontrados:\n" + "\n".join(erros_envio[:6]))
+        if erros_envio: st.warning(f"⚠️ Problemas:\n" + "\n".join(erros_envio[:6]))
 
 executar_envio_automatico()
 
@@ -469,22 +453,23 @@ st.sidebar.info(f"""
 sel = st.selectbox("🏆 Selecione a Competição", list(LIGAS.keys()))
 sigla = LIGAS[sel]
 
-st.info("✅ Funcionamento: Pré-jogo para jogos futuros | Somente validação para finalizados")
-if st.button("🔍 Analisar e enviar agora"):
-    with st.spinner("Processando e enviando..."):
+st.info("✅ Cada partida é enviada individualmente ao Telegram | Somente validação para jogos finalizados")
+if st.button("🔍 Analisar e enviar cada partida agora"):
+    with st.spinner("Processando cada jogo individualmente..."):
         jogos = buscar_jogos(sigla)
         if not jogos:
-            st.warning("⚠️ Nenhum jogo encontrado no período")
+            st.warning("⚠️ Nenhum jogo encontrado")
         else:
             st.success(f"✅ {len(jogos)} jogos encontrados")
-            enviados_agora = 0
-            validados_agora = 0
+            enviados = 0
+            validados = 0
             for jg in jogos:
                 try:
                     status = jg.get("status","")
                     dt = jg["dt_manaus"]
                     nc = jg["homeTeam"]["name"]
                     nf = jg["awayTeam"]["name"]
+                    id_jogo = str(jg.get("id","")) # ✅ Variável corrigida
                     dc = dados_time(jg["homeTeam"]["id"], sigla, True)
                     df = dados_time(jg["awayTeam"]["id"], sigla, False)
                     dupla = dupla_chance(dc['pV'],dc['pE'],dc['pD'])
@@ -499,10 +484,10 @@ if st.button("🔍 Analisar e enviar agora"):
                         if dupla['1X']>=LIMITE_CONFIANCA or dupla['X2']>=LIMITE_CONFIANCA:
                             ok, msg_envio = enviar_telegram(rel_pre)
                             if ok:
-                                enviados_agora +=1
-                                st.success(f"📨 Enviado ao Telegram: {msg_envio}")
+                                enviados +=1
+                                st.success(f"📨 Enviado individualmente: {msg_envio}")
                             else:
-                                st.error(f"❌ Falha no envio: {msg_envio}")
+                                st.error(f"❌ Falha: {msg_envio}")
                     
                     elif status == "FINISHED":
                         st.success("✅ Jogo finalizado")
@@ -513,15 +498,15 @@ if st.button("🔍 Analisar e enviar agora"):
                             msg_val = gerar_validacao(nc,nf,jg,memoria["jogos_enviados"][id_jogo]["indicacoes"],jg["homeTeam"]["id"],jg["awayTeam"]["id"],memoria["jogos_enviados"][id_jogo]["vencedor"])
                             ok, msg_envio = enviar_telegram(msg_val)
                             if ok:
-                                validados_agora +=1
-                                st.success(f"📨 Validação enviada: {msg_envio}")
+                                validados +=1
+                                st.success(f"📨 Validação enviada individualmente: {msg_envio}")
                             else:
-                                st.error(f"❌ Falha na validação: {msg_envio}")
+                                st.error(f"❌ Falha: {msg_envio}")
 
                 except Exception as e:
-                    st.error(f"⚠️ Erro: {str(e)}")
+                    st.error(f"⚠️ Erro no jogo: {str(e)}")
             
             st.success(f"""
-📨 Total enviados agora: {enviados_agora}
-🧾 Validações enviadas agora: {validados_agora}
+📨 Total enviados individualmente: {enviados}
+🧾 Total validados individualmente: {validados}
 """)
